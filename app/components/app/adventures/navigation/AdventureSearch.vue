@@ -1,0 +1,310 @@
+<template>
+  <Popover v-model:open="searchPopoverOpen">
+    <PopoverTrigger as-child>
+      <Button
+        variant="secondary"
+        size="icon"
+        class="rounded-full"
+        :class="hasActiveFilters && 'ring-2 ring-primary ring-offset-1'"
+      >
+        <SlidersHorizontalIcon />
+        <span class="sr-only">Abenteuer filtern</span>
+      </Button>
+    </PopoverTrigger>
+
+    <PopoverContent class="p-0 w-72" :align="'start'">
+      <!-- Header -->
+      <div class="px-3 pt-3 pb-2">
+        <h2 class="text-sm font-semibold">
+          Filter
+        </h2>
+        <p class="text-xs text-muted-foreground">
+          Passe die Suche an deine Vorstellungen an.
+        </p>
+      </div>
+
+      <Separator />
+
+      <!-- Schnell-Filter -->
+      <div class="p-1.5 space-y-0.5">
+        <!-- Suchbegriff -->
+        <div class="px-2 py-1.5">
+          <div class="relative">
+            <SearchIcon class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            <Input
+              v-model.trim.lazy="searchMask.query"
+              placeholder="Stichwort suchen..."
+              class="pl-8 h-8 text-sm bg-muted/50 border-0 focus-visible:ring-1"
+              @keydown.enter="applyAndClose"
+            />
+          </div>
+        </div>
+
+        <Separator class="my-1" />
+
+        <!-- Schwierigkeit -->
+        <p class="px-2 pt-1 text-xs font-medium text-muted-foreground">
+          Schwierigkeit
+        </p>
+        <div class="flex items-center gap-1 px-2 pb-1">
+          <Button
+            v-for="opt in difficultyOptions"
+            :key="opt.value"
+            variant="outline"
+            size="sm"
+            class="flex-1 h-7 text-xs gap-1.5"
+            :class="mask.difficulty === opt.value && 'border-primary bg-primary/10 text-primary'"
+            @click="toggleDifficulty(opt.value)"
+          >
+            <component :is="opt.icon" class="size-3" />
+            {{ opt.label }}
+          </Button>
+        </div>
+
+        <Separator class="my-1" />
+
+        <!-- Schnell-Optionen als Items -->
+        <p class="px-2 pt-1 text-xs font-medium text-muted-foreground">
+          Sortierung
+        </p>
+        <button
+          v-for="opt in sortOptions"
+          :key="opt.value"
+          class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors"
+          :class="mask.sort === opt.value && 'bg-accent text-accent-foreground'"
+          @click="toggleSort(opt.value)"
+        >
+          <div
+            class="flex items-center justify-center size-6 rounded-md bg-muted shrink-0"
+            :class="mask.sort === opt.value && 'bg-primary/15 text-primary'"
+          >
+            <component :is="opt.icon" class="size-3.5" />
+          </div>
+          <div class="flex-1 text-left">
+            <p class="text-xs font-medium leading-none">
+              {{ opt.label }}
+            </p>
+            <p class="text-xs text-muted-foreground mt-0.5">
+              {{ opt.description }}
+            </p>
+          </div>
+          <Check v-if="mask.sort === opt.value" class="size-3.5 text-primary shrink-0" />
+        </button>
+      </div>
+
+      <Separator />
+
+      <!-- Footer: Erweitert + Reset -->
+      <div class="p-1.5 flex items-center justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          class="h-7 text-xs"
+          :disabled="!hasActiveFilters"
+          @click="resetAllFilters()"
+        >
+          <X class="size-3 mr-1" />
+          Zurücksetzen
+        </Button>
+
+        <div class="flex items-center gap-1">
+          <!-- Erweiterte Filter als Sheet -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-7 text-xs"
+            @click="openAdvanced()"
+          >
+            <Settings2 class="size-3 mr-1" />
+            Erweitert
+          </Button>
+          <Button size="sm" class="h-7 text-xs" @click="applyAndClose()">
+            Suchen
+          </Button>
+        </div>
+      </div>
+    </PopoverContent>
+  </Popover>
+
+  <!-- Erweiterter Filter Sheet (Radius, Dauer, Tags) -->
+  <Sheet v-model:open="extendedSearchOpen">
+    <SheetContent side="bottom" class="max-w-2xl mx-auto rounded-t-2xl px-4 pb-8">
+      <SheetHeader class="text-left pb-4">
+        <SheetTitle>Erweiterte Filter</SheetTitle>
+        <SheetDescription>
+          Verfeinere deine Suche mit weiteren Kriterien.
+        </SheetDescription>
+      </SheetHeader>
+
+      <div class="space-y-5">
+        <!-- Radius -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium">Suchradius</label>
+            <span class="text-xs font-mono text-muted-foreground">{{ mask.radius ?? 50 }} km</span>
+          </div>
+          <Slider
+            v-model="radiusModel"
+            :min="5"
+            :max="200"
+            :step="5"
+          />
+        </div>
+
+        <!-- Dauer -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium">Dauer</label>
+            <span class="text-xs font-mono text-muted-foreground">
+              {{ formatDuration(durationModel[0]) }} – {{ formatDuration(durationModel[1]) }}
+            </span>
+          </div>
+          <Slider
+            v-model="durationModel"
+            :min="15"
+            :max="1440"
+            :step="15"
+          />
+        </div>
+
+        <!-- Tags -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium">Tags</label>
+          <TagsInput v-model="tagsModel" class="w-full">
+            <TagsInputItem v-for="tag in tagsModel" :key="tag" :value="tag">
+              <TagsInputItemText />
+              <TagsInputItemDelete />
+            </TagsInputItem>
+            <TagsInputInput placeholder="Tag hinzufügen..." />
+          </TagsInput>
+        </div>
+      </div>
+
+      <SheetFooter class="mt-6 flex-row gap-2">
+        <Button variant="outline" class="flex-1" @click="extendedSearchOpen = false">
+          Abbrechen
+        </Button>
+        <Button class="flex-1" @click="applyAdvancedAndClose">
+          Übernehmen
+        </Button>
+      </SheetFooter>
+    </SheetContent>
+  </Sheet>
+</template>
+
+<script lang="ts" setup>
+import {
+  Check,
+  Clock,
+  Dumbbell,
+  Flame,
+  MapPin,
+  Mountain,
+  SearchIcon,
+  Settings2,
+  SlidersHorizontalIcon,
+  TrendingUp,
+  X,
+  Zap
+} from 'lucide-vue-next';
+import { formatDuration } from '~~/shared/types/EventTypes';
+
+const { mask, resetFilters, searchPopoverOpen: _sPO, extendedSearchOpen: _eSO, refreshSearch } = useSearchMask();
+const extendedSearchOpen = toRef(_eSO);
+const searchPopoverOpen = toRef(_sPO);
+const searchMask = toRef(mask);
+
+// ── Difficulty ────────────────────────────────────────────────────────────────
+const difficultyOptions = [
+  { value: 'easy', label: 'Leicht', icon: Zap },
+  { value: 'medium', label: 'Mittel', icon: Mountain },
+  { value: 'hard', label: 'Schwer', icon: Dumbbell },
+] as const;
+
+const toggleDifficulty = (val: 'easy' | 'medium' | 'hard') => {
+  searchMask.value.difficulty = searchMask.value.difficulty === val ? undefined : val;
+};
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
+const sortOptions = [
+  {
+    value: 'near_me',
+    label: 'In meiner Nähe',
+    description: 'Sortiert nach Entfernung zu deinem Standort',
+    icon: MapPin,
+  },
+  {
+    value: 'recommended',
+    label: 'Trends',
+    description: 'Beliebt in den letzten 7 Tagen',
+    icon: Flame,
+  },
+  {
+    value: 'new',
+    label: 'Neueste',
+    description: 'Zuletzt hinzugefügte Adventures',
+    icon: Clock,
+  },
+  {
+    value: 'popular',
+    label: 'Beliebteste',
+    description: 'Nach Aufrufen sortiert',
+    icon: TrendingUp,
+  },
+] as const;
+
+const toggleSort = (val: "popular" | "new" | "recommended" | "near_me" | undefined) => {
+  searchMask.value.sort = searchMask.value.sort === val ? undefined : val;
+};
+
+// ── Advanced Sliders (Array-Binding für Slider-Komponente) ───────────────────
+const radiusModel = computed<number[]>({
+  get: () => [searchMask.value.radius ?? 50],
+  set: ([val]) => { searchMask.value.radius = val; },
+});
+
+const durationModel = computed<number[]>({
+  get: () => searchMask.value.duration ?? [15, 720],
+  set: ([min, max]) => {
+    if (!max || !min) return;
+    searchMask.value.duration = [min, max];
+  },
+});
+
+const tagsModel = computed<string[]>({
+  get: () => searchMask.value.tags ?? [],
+  set: (val) => { searchMask.value.tags = val; },
+});
+
+// ── Active Filters Badge ──────────────────────────────────────────────────────
+const hasActiveFilters = computed(() => {
+  return Object.entries(searchMask.value).some(([key, value]) => {
+    if (key === 'location') return false; // Standortfilter nicht berücksichtigen
+    if (Array.isArray(value)) return value.length > 0; // Bei Arrays prüfen,
+    return value !== undefined; // Bei anderen Werten prüfen
+  })
+});
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+const applyAndClose = () => {
+  searchPopoverOpen.value = false;
+  refreshSearch();
+};
+
+const resetAllFilters = () => {
+  resetFilters();
+  searchPopoverOpen.value = false;
+  extendedSearchOpen.value = false;
+  refreshSearch();
+};
+
+const openAdvanced = () => {
+  searchPopoverOpen.value = false;
+  extendedSearchOpen.value = true;
+};
+
+const applyAdvancedAndClose = () => {
+  extendedSearchOpen.value = false;
+  refreshSearch();
+};
+</script>

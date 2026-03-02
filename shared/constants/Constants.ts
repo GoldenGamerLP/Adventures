@@ -1,0 +1,44 @@
+export const COLOR_MODE_STORAGE_KEY = 'color-mode';
+export const COLOR_MODE_STORAGE_AGE_SECONDS = 60 * 60 * 24 * 365;
+
+export enum AdventureSearchQueryKeys {
+    QUERY = 'query',
+    DIFFICULTY = 'difficulty',
+    DURATION = 'duration',
+    LOCATION = 'location',
+    RADIUS = 'radius',
+    SORT = 'sort',
+    CATEGORY = 'category',
+    TAGS = 'tags',
+}
+
+export const DEFAULT_MAX_SEARCH_RADIUS_KM = 550;
+
+// File upload related constants
+export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+export const MAX_BUNDLE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+export const SUPPORTED_FILE_TYPES = ["jpeg", "jpg", "png", "gif", "bmp", "tiff", "webp"];
+
+export const DRAFT_CONFIG = {
+    /** Lebensdauer eines Drafts in Millisekunden (24 Stunden) */
+    TTL_MS: 24 * 60 * 60 * 1000,
+
+    EDIT_TTL_MS: 60 * 60 * 1000, // 1 Stunde für veröffentlichte Drafts (Edit-Referenzen)
+
+    MIN_PICTURES_PER_DRAFT: 1,
+
+    /** Maximale Anzahl aktiver Drafts pro User */
+    MAX_DRAFTS_PER_USER: 5,
+
+    /** Maximale Anzahl Bilder pro Draft */
+    MAX_PICTURES_PER_DRAFT: 10,
+} as const;
+
+/**
+ * Maximale Anzahl an Adventure-Views die von nicht eingeloggten Usern gespeichert werden, danach werden die Views von nicht eingeloggten Usern nicht mehr gezählt.
+ */
+export const ADVENTURE_NONE_CLIENT_VIEW_LIMIT = 300;
+
+export const PICTURE_API_PATH = '/api/v1/app/pictures/%s'; // %s wird durch die Bild-ID ersetzt
+
+export const FETCH_KEY_FOR_YOU_PAGE = 'adventures-for-you-page';
