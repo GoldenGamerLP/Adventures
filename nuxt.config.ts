@@ -70,7 +70,6 @@ export default defineNuxtConfig({
     restoreState: true,
   },
   app: {
-    keepalive: true,
     head: {
       title: 'Adventures - Finde und erstelle spannende Outdoor-Abenteuer',
       meta: [

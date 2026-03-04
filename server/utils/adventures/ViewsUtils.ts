@@ -9,14 +9,15 @@ const MAX_GUEST_VIEWS_PER_ADVENTURE = 100; // Danach keine neuen Gäste mehr tra
 const VIEW_COOLDOWN_MS = 5 * 60 * 1000;      // 5 Min Cooldown zwischen Views
 
 export const ensureViewIndexes = async (): Promise<void> => {
-    // Compound-Index für schnelle Lookups
+    // Compound-Index für schnelle Lookups - partialFilterExpression statt sparse
+    // um null-Werte korrekt zu ignorieren
     await viewRecords.createIndex(
         { adventureId: 1, userId: 1 },
-        { unique: true, sparse: true }
+        { unique: true, partialFilterExpression: { userId: { $exists: true, $type: 'string' } } }
     );
     await viewRecords.createIndex(
         { adventureId: 1, fingerprint: 1 },
-        { unique: true, sparse: true }
+        { unique: true, partialFilterExpression: { fingerprint: { $exists: true, $type: 'string' } } }
     );
     // Counter: ein Dokument pro Adventure
     await viewCounters.createIndex(
@@ -36,13 +37,13 @@ export const logView = async (
     identifier: { userId: string } | { fingerprint: string }
 ): Promise<void> => {
     const now = new Date().toISOString();
-    const isUser = 'userId' in identifier && !!identifier.userId;
+    const isUser = 'userId' in identifier;
 
     const filter = isUser
         ? { adventureId, userId: identifier.userId }
         : { adventureId, fingerprint: identifier.fingerprint };
 
-    // 1. Cooldown
+    // 1. Cooldown-Check und atomares Update/Insert
     const existing = await viewRecords.findOne(filter);
 
     if (existing) {
@@ -54,7 +55,7 @@ export const logView = async (
         if (!isUser) {
             const guestCount = await viewRecords.countDocuments({
                 adventureId,
-                fingerprint: { $exists: true },
+                fingerprint: { $exists: true, $type: 'string' },
             });
 
             //Maximale anzahl an Gästen angeschaut / Verhindern von pushen von views
@@ -68,26 +69,32 @@ export const logView = async (
         });
     }
 
-    //Kein View Record
+    //Kein View Record - atomares upsert um Race Conditions zu vermeiden
     if (!existing) {
         // Neuer Record — bei Gästen erst Limit prüfen
         if (!isUser) {
             const guestCount = await viewRecords.countDocuments({
                 adventureId,
-                fingerprint: { $exists: true },
+                fingerprint: { $exists: true, $type: 'string' },
             });
             if (guestCount >= MAX_GUEST_VIEWS_PER_ADVENTURE) {
                 return; // Gast-Limit erreicht
             }
         }
 
-
-        await viewRecords.insertOne({
-            ...filter,
-            firstViewedAt: now,
-            lastViewedAt: now,
-            viewCount: 1,
-        })
+        // Verwende updateOne mit upsert statt insertOne um Race Conditions zu vermeiden
+        await viewRecords.updateOne(
+            filter,
+            {
+                $setOnInsert: {
+                    ...filter,
+                    firstViewedAt: now,
+                },
+                $set: { lastViewedAt: now },
+                $inc: { viewCount: 1 },
+            },
+            { upsert: true }
+        );
     }
 
     // 2. Globalen Counter atomar inkrementieren

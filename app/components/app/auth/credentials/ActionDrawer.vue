@@ -13,7 +13,7 @@
         <span class="sr-only">Anmelden / Registrieren</span>
       </Button>
     </DrawerTrigger>
-    <DrawerContent class="max-w-2xl mx-auto w-full">
+    <DrawerContent class="max-w-2xl mx-auto w-full overflow-y-auto">
       <DrawerHeader>
         <DrawerTitle>Willkommen bei Adventures</DrawerTitle>
         <DrawerDescription>
