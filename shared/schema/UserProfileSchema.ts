@@ -1,12 +1,5 @@
 import * as z from 'zod';
-
-/**
- * Validierung für den Profil-Header (kurzer Untertitel)
- * z.B. "Outdoor-Enthusiast", "Bücherwurm"
- */
-export const UpdateHeaderSchema = z.object({
-    header: z.string().trim().min(2, 'Mindestens 2 Zeichen').max(60, 'Maximal 60 Zeichen'),
-});
+import { INTEREST_KEY_SET, MAX_INTERESTS } from '../types/UserProfileTypes';
 
 /**
  * Validierung für die Biografie (längerer Text)
@@ -16,14 +9,11 @@ export const UpdateBiographySchema = z.object({
 });
 
 /**
- * Validierung für Tags (Interessen / Stichworte)
+ * Validierung für Interessen (vorgegebene Keys)
  */
-export const UpdateTagsSchema = z.object({
-    tags: z.array(
-        z.string().trim().min(2, 'Mindestens 2 Zeichen pro Tag').max(30, 'Maximal 30 Zeichen pro Tag')
-    ).max(15, 'Maximal 15 Tags'),
+export const UpdateInterestsSchema = z.object({
+    interests: z.enum(INTEREST_KEY_SET).array().max(MAX_INTERESTS),
 });
 
-export type UpdateHeaderInput = z.infer<typeof UpdateHeaderSchema>;
 export type UpdateBiographyInput = z.infer<typeof UpdateBiographySchema>;
-export type UpdateTagsInput = z.infer<typeof UpdateTagsSchema>;
+export type UpdateInterestsInput = z.infer<typeof UpdateInterestsSchema>;

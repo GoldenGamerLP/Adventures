@@ -21,7 +21,7 @@
             </Button>
           </NuxtLink>
           <Separator orientation="vertical" />
-          <AppAdventuresCreateLikeButton
+          <AppAdventuresLikeButton
             :is-liked="adventure.isLikedByUser"
             :adventure-id="adventure._id"
           />

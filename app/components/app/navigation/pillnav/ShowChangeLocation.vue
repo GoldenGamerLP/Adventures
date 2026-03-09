@@ -59,7 +59,6 @@ import Spinner from '~/components/ui/spinner/Spinner.vue';
 
 const { getGeolocation, lookupPermissionState } = useDeviceGeoLocation();
 const { entry, pending, coordinates, setCity } = useGeoLocation();
-const { applyGeoFilter } = useSearchMask();
 
 const isRequesting = ref(false);
 const isError = ref(false);
@@ -70,14 +69,12 @@ const requestGeolocation = async () => {
 
   try {
     const permissionState = await lookupPermissionState();
-    console.log(permissionState);
     if (permissionState.state === 'denied') {
       isError.value = true;
       return;
     }
 
     const position = await getGeolocation();
-    console.log('Aktuelle Position:', position);
   } catch (error) {
     toast.error('Fehler beim Abrufen der Geolocation. Bitte versuche es erneut.');
     console.error('Geolocation-Fehler:', error);

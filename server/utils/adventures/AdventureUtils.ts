@@ -14,7 +14,7 @@ export const ensureAdventureIndexes = async (): Promise<void> => {
     await adventureDB.createIndex({ draftId: 1 });
     await adventureDB.createIndex({ 'location.coordinates': '2dsphere' });
 
-    console.log('Adventure indexes created');
+    console.log('[AdventureUtils] Adventure indexes created');
 }
 
 

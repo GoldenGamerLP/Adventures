@@ -27,7 +27,7 @@ const getUserProfileByUserId = async (userId: string): Promise<UserProfileWithMe
                 userId: 1,
                 biography: 1,
                 header: 1,
-                tags: 1,
+                interests: 1,
                 backgroundPictureId: 1,
                 name: "$userInfo.name",
                 profilePictureId: "$userInfo.profilePictureId",
@@ -35,7 +35,7 @@ const getUserProfileByUserId = async (userId: string): Promise<UserProfileWithMe
             }
         }
     ]).toArray();
-    
+
     return response.length > 0 ? response[0]! as UserProfileWithMeta : null;
 }
 
@@ -43,6 +43,7 @@ const createUserProfile = async (userId: string): Promise<UserProfile> => {
     const newProfile: UserProfile = {
         _id: new ObjectId().toString(),
         userId,
+        interests: [],
     };
 
     await profileDatabase.insertOne(newProfile);
@@ -61,3 +62,4 @@ const updateUserProfile = async (userId: string, updates: Partial<UserProfile>):
 export {
     createUserProfile, getUserProfileByUserId, updateUserProfile
 };
+

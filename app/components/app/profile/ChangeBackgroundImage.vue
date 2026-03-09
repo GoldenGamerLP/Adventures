@@ -1,27 +1,28 @@
 <template>
-  <Dialog v-model:open="isOpen">
+  <Dialog>
     <DialogTrigger as-child>
       <slot></slot>
     </DialogTrigger>
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Ändere dein Profilbild</DialogTitle>
+        <DialogTitle>Ändere dein Hintergrundbild</DialogTitle>
         <DialogDescription>
           <Avatar>
             <AvatarFallback>
               <ImageOffIcon />
             </AvatarFallback>
-            <AvatarImage :src="toPicturePath(model.profilePictureId)" alt="Profilbild ändern" />
-          </Avatar> Wähle ein neues Profilbild aus, um es hochzuladen und zu verwenden. Unterstützte Formate
+            <AvatarImage :src="toPicturePath(model.backgroundPictureId)" alt="Hintergrundbild ändern" />
+          </Avatar> Wähle ein neues Hintergrundbild aus, um es hochzuladen und zu verwenden. Unterstützte
+          Formate
           sind JPG,
           PNG und WEBP mit einer maximalen Größe von 5MB.
         </DialogDescription>
         <DialogFooter>
           <Button variant="outline" :disabled="isLoading" @click="open">
-            Profilbild ändern
+            Hintergrundbild ändern
           </Button>
-          <Button variant="outline" :disabled="isLoading" @click="deleteProfilePicture">
-            Profilbild entfernen
+          <Button variant="outline" :disabled="isLoading" @click="deleteBackgroundPicture">
+            Hintergrundbild entfernen
           </Button>
         </DialogFooter>
       </DialogHeader>
@@ -39,7 +40,6 @@ import type { UserProfile, UserProfileWithMeta } from "~~/shared/types/UserProfi
 
 
 const model = defineModel<UserProfileWithMeta>({ required: true });
-const isOpen = ref(false);
 
 const { open, onChange: handleFilesChange } = useFileDialog({
   multiple: false,
@@ -48,24 +48,24 @@ const { open, onChange: handleFilesChange } = useFileDialog({
 
 const isLoading = ref(false);
 
-const deleteProfilePicture = async () => {
+const deleteBackgroundPicture = async () => {
   isLoading.value = true;
   try {
-    await $fetch('/api/v1/app/profile/avatar/delete', {
+    await $fetch('/api/v1/app/profile/banner/delete', {
       method: 'DELETE',
     });
 
-    model.value.profilePictureId = undefined;
+    model.value.backgroundPictureId = undefined;
   } catch (error) {
-    alert('Beim Entfernen des Profilbildes ist ein Fehler aufgetreten. Bitte versuche es erneut.');
-    console.error('Error removing profile picture:', error);
+    alert('Beim Entfernen des Hintergrundbildes ist ein Fehler aufgetreten. Bitte versuche es erneut.');
+    console.error('Error removing background picture:', error);
   } finally {
     isLoading.value = false;
   }
 };
 
 handleFilesChange(async (event: FileList | null) => {
-  if (!event || event.length === 0 || isLoading.value) {
+  if (!event || event.length === 0) {
     return;
   }
 
@@ -96,18 +96,16 @@ handleFilesChange(async (event: FileList | null) => {
   formData.append('image', image, sanitizedFileName(file.name, 0));
 
   try {
-    //Response is the new profile picture id
-    const response = await $fetch<UserProfile>('/api/v1/app/profile/avatar/upload', {
+    //Response is the new background picture id
+    const response = await $fetch<UserProfile>('/api/v1/app/profile/banner/upload', {
       method: 'POST',
       body: formData,
     });
 
-    model.value.profilePictureId = response.profilePictureId;
-    useUser().value!.profilePictureId = response.profilePictureId; // Update global user state
-    isOpen.value = false;
+    model.value.backgroundPictureId = response.backgroundPictureId;
   } catch (error) {
-    alert('Beim Hochladen des Profilbildes ist ein Fehler aufgetreten. Bitte versuche es erneut.');
-    console.error('Error uploading profile picture:', error);
+    alert('Beim Hochladen des Hintergrundbildes ist ein Fehler aufgetreten. Bitte versuche es erneut.');
+    console.error('Error uploading background picture:', error);
   } finally {
     isLoading.value = false;
   }

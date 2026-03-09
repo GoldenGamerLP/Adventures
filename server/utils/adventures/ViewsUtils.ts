@@ -138,7 +138,7 @@ export const getRecentlyViewed = async (
 ): Promise<AdventureViewRecord[]> => {
     return viewRecords
         .find({ userId })
-        .sort({ lastViewedAt: -1 })
+        .sort({ firstViewedAt: -1 })
         .limit(limit)
         .toArray();
 };

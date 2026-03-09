@@ -3,7 +3,7 @@
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
 
-# TODO
+## TODO
 
 - For-You page adventures anzeigen an mobiles design anpassen
 - Die Geolocation abfrage nicht direkt abfragen
@@ -15,9 +15,20 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 - WEbsite Meta daten anpassen
 - Fixen:  ERROR  [unhandledRejection] E11000 duplicate key error collection: adventures.adventure_view_records index: adventureId_1_userId_1 dup key: { adventureId: "699b21cfd379072b89cdd3d7", userId: null }                                                                                                                                                                                 - Bewertungssystem mit sternen/kommentare
 - Crop Editor für Bilder
+- Mehr farbe/primäre Farbe anpassen
+- Kommentare/Bewertungssystem
+- Auf Profil verlauf schöneres layout von informationen
+- Auf Profil Seite die Abenteuer in Kartenansicht anzeigen
 
+## How to contribute
 
-# Env Datei
+Always use 
+```bash
+bunx --bun eslint --fix
+```
+before commiting to ensure code quality and consistency.
+
+## Env Datei
 ```json
 MONGODB_URI=mongodb+srv://...
 MONGODB_DATABASE=adventures

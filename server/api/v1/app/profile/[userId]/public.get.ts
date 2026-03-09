@@ -1,4 +1,4 @@
-import { getUserProfileByUserId } from "~~/server/utils/adventures/UserProfileUtils";
+import { getUserProfileByUserId } from "~~/server/utils/profiles/UserProfileUtils";
 
 export default defineEventHandler(async (event) => {
     const userId = getRouterParam(event, 'userId');

@@ -45,7 +45,7 @@
         <ImageOffIcon v-else class="text-muted-foreground" />
       </div>
 
-      <div class="rounded-lg p-4 bg-background -mt-8 z-10 relative shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+      <div class="rounded-lg p-4 bg-background -mt-8 z-10 relative shadow-[0_-4px_20px_rgba(0,0,0,0.1)] border">
         <header class="flex items-center gap-4 mb-4">
           <Avatar class="size-10">
             <AvatarFallback>
@@ -57,22 +57,20 @@
               alt="Profilbild"
             />
           </Avatar>
-          <div>
-            <h1 class="text-xl font-bold">
-              Profil von {{ userData.name }}
+          <div class="min-w-0 flex-1">
+            <h1 class="text-lg font-bold truncate">
+              {{ userData.name }}
             </h1>
-            <p class="text-sm text-muted-foreground">
-              {{ userData.header || 'Noch keine Profilbeschreibung...' }}
+            <p class="text-xs text-muted-foreground">
+              Beigetreten
+              <NuxtTime :datetime="userData.createdAt" relative />
             </p>
           </div>
         </header>
         <RekaTabsRoot default-value="about" class="flex flex-col">
-          <RekaTabsList
-            class="relative shrink-0 flex mb-4 bg-accent p-2 rounded-lg"
-            aria-label="Profile Tabs"
-          >
+          <RekaTabsList class="relative shrink-0 flex mb-4 bg-accent p-2 rounded-lg" aria-label="Profile Tabs">
             <RekaTabsIndicator
-              class="absolute px-8 left-0 h-0.5 bottom-0 w-[var(--reka-tabs-indicator-size)] translate-x-[var(--reka-tabs-indicator-position)] translate-y-[1px] rounded-tr-lg rounded-tl-lg transition-all duration-300"
+              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300"
             >
               <div class="bg-primary w-full h-full"></div>
             </RekaTabsIndicator>
@@ -93,20 +91,9 @@
             <div class="space-y-8">
               <div>
                 <h2 class="text-lg font-semibold mb-2">
-                  Tags
+                  Interessen
                 </h2>
-                <ol v-if="userData.tags && userData.tags.length > 0" class="flex flex-wrap gap-2">
-                  <Badge
-                    v-for="tag in userData.tags"
-                    :key="tag"
-                    variant="secondary"
-                    as-child
-                  >
-                    <li>
-                      #{{ tag }}
-                    </li>
-                  </Badge>
-                </ol>
+                <AppProfileInterestsPreview :interests="userData.interests" />
               </div>
               <div>
                 <h2 class="text-lg font-semibold mb-2">
@@ -116,10 +103,7 @@
                   {{ userData.biography }}
                 </p>
               </div>
-              <Empty
-                v-if="!userData.biography && (!userData.tags || userData.tags.length === 0)"
-                class="pt-6"
-              >
+              <Empty v-if="!userData.biography && (!userData.interests || userData.interests.length === 0)" class="pt-6">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
                     <ImageOffIcon />
@@ -130,10 +114,6 @@
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
-              <p class="text-sm text-muted-foreground text-right">
-                Beigetreten am
-                <NuxtTime :datetime="userData.createdAt" :date-style="'full'" />
-              </p>
             </div>
           </RekaTabsContent>
           <RekaTabsContent value="adventures">

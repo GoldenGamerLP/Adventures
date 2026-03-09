@@ -7,7 +7,7 @@ const ensureLikeIndexes = async (): Promise<void> => {
     await likeDatabase.createIndex({ adventureId: 1 });
     await likeDatabase.createIndex({ userId: 1 });
     await likeDatabase.createIndex({ adventureId: 1, userId: 1 }, { unique: true });
-    console.log('Like indexes created');
+    console.log('[LikeUtils] Like indexes created');
 }
 
 /**

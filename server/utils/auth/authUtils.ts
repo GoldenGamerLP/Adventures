@@ -5,8 +5,8 @@ import type { EventHandlerRequest, H3Event } from "h3";
 import type { Collection } from "mongodb";
 import { ObjectId } from "mongodb";
 import type { UserSummary } from "~~/shared/types/UserProfileTypes";
-import { createUserProfile } from "../adventures/UserProfileUtils";
 import database from "../database/DBUtils";
+import { createUserProfile } from "../profiles/UserProfileUtils";
 
 export const sessionCookieName = "auth_session";
 export const expireAfterSeconds = 60 * 60 * 24 * 7; // 1 week
@@ -42,9 +42,9 @@ export async function createUser(userToCreate: RegisterSchemaType, currentIp: st
     email: userToCreate.email.toLowerCase(),
     name: userToCreate.name,
     password_hash: hashPassword(userToCreate.password),
-    created_at: new Date().toUTCString(),
-    last_login: new Date().toUTCString(),
-    last_IP: currentIp,
+    createdAt: new Date().toUTCString(),
+    lastLogin: new Date().toUTCString(),
+    lastIP: currentIp,
   };
 
   const response = await users.insertOne(user);

@@ -27,9 +27,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  console.log(
-    `Adventure ${adventureId} viewed by ${user ? `user ${user._id}` : "guest"}`,
-  );
   if (user) {
     logView(adventureId, { userId: user._id });
   } else {

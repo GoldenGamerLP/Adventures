@@ -22,7 +22,7 @@ export async function ensurePictureIndexes(): Promise<void> {
     // Index für User-Abfragen
     await pictureDatabase.createIndex({ uploadedBy: 1 });
 
-    console.log('Picture indexes created');
+    console.log('[PictureUtils] Picture indexes created');
 }
 
 /**
@@ -73,10 +73,11 @@ const uploadDraftPictures = async (
 };
 
 const removeDecorationPictures = async (userId: string, type: 'profile' | 'background') => {
-    const result = await pictureDatabase.findOneAndDelete({ uploadedBy: userId, status: type });
-    
-    if(result) {
-        await deleteFile(new ObjectId(result.fileId));
+    const result = await pictureDatabase.find({ uploadedBy: userId, status: type }).toArray();
+
+    if (result) {
+        await Promise.all(result.map((img) => deleteFile(new ObjectId(img.fileId))));
+        await pictureDatabase.deleteMany({ uploadedBy: userId, status: type });
     }
 
     return result;
@@ -341,3 +342,4 @@ export {
     // Legacy API
     uploadPictures
 };
+

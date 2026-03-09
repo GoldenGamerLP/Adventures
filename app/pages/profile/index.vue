@@ -12,100 +12,216 @@
       </EmptyHeader>
     </Empty>
     <main v-else class="relative">
-      <Button
-        variant="default"
-        size="icon"
-        class="absolute top-4 left-4 z-20"
-        as-child
-      >
-        <NuxtLink :to="{ name: 'index' }">
-          <ChevronLeft />
-          <span class="sr-only">Profil Einstellungen</span>
-        </NuxtLink>
-      </Button>
-      <div class="w-full h-72 flex justify-center items-center sticky top-0">
-        <AppProfileBackgroundImage v-model="userData" />
+      <!-- Top action bar -->
+      <div class="absolute top-4 inset-x-4 z-20 flex items-center justify-between">
+        <Button variant="default" size="icon" as-child>
+          <NuxtLink :to="{ name: 'index' }">
+            <ChevronLeft />
+            <span class="sr-only">Zurück</span>
+          </NuxtLink>
+        </Button>
+        <Button variant="default" size="icon" @click="settingsOpen = true">
+          <Settings />
+          <span class="sr-only">Einstellungen</span>
+        </Button>
       </div>
-      <div class="rounded-lg shadow p-2 bg-background -mt-8 z-10 relative">
-        <header class="flex items-center gap-4 mb-4">
+
+      <!-- Background image -->
+      <div class="w-full h-48 sm:h-72 flex justify-center items-center sticky top-0">
+        <template v-if="userData.backgroundPictureId">
+          <img
+            :src="toPicturePath(userData.backgroundPictureId)"
+            alt="Hintergrundbild"
+            class="w-full h-full object-cover"
+          />
+          <AppProfileChangeBackgroundImage v-model="userData">
+            <Button size="sm" class="absolute bottom-8 right-4 z-20">
+              <EditIcon />
+              Hintergrund ändern
+            </Button>
+          </AppProfileChangeBackgroundImage>
+        </template>
+      </div>
+      <div class="absolute bg-linear-to-t from-background pointer-events-none inset-x-0 top-36 sm:top-56 h-16"></div>
+
+      <!-- Content card -->
+      <div class="rounded-lg p-4 bg-background -mt-6 z-10 relative shadow-[0_-4px_20px_rgba(0,0,0,0.08)] border">
+        <!-- Profile header -->
+        <header class="flex items-center gap-4 mb-2">
           <AppProfileImage v-model="userData" />
           <div class="min-w-0 flex-1">
-            <h1 class="text-xl font-bold truncate">
+            <h1 class="text-lg font-bold truncate">
               {{ userData.name }}
             </h1>
-            <p v-if="userData.header" class="text-sm text-muted-foreground truncate">
-              {{ userData.header }}
+            <p class="text-xs text-muted-foreground">
+              Beigetreten
+              <NuxtTime :datetime="userData.createdAt" relative />
             </p>
           </div>
         </header>
+
+        <!-- Tabs -->
         <RekaTabsRoot default-value="about" class="flex flex-col">
-          <RekaTabsList class="relative shrink-0 flex mb-4 bg-accent p-2 rounded-lg text-sm" aria-label="Profile Tabs">
+          <RekaTabsList
+            class="relative shrink-0 flex mb-4 bg-accent p-1.5 rounded-lg text-sm overflow-x-auto overflow-y-hidden"
+            aria-label="Profil-Tabs"
+          >
             <RekaTabsIndicator
-              class="absolute px-8 left-0 h-0.5 bottom-0 w-[var(--reka-tabs-indicator-size)] translate-x-[var(--reka-tabs-indicator-position)] translate-y-[1px] rounded-tr-lg rounded-tl-lg transition-all duration-300"
+              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300"
             >
               <div class="bg-primary w-full h-full"></div>
             </RekaTabsIndicator>
             <RekaTabsTrigger
               value="about"
-              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
             >
               Über
             </RekaTabsTrigger>
             <RekaTabsTrigger
               value="adventures"
-              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
             >
               Abenteuer
             </RekaTabsTrigger>
             <RekaTabsTrigger
-              value="seen_adventures"
-              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
+              value="history"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
             >
-              Angesehene Abenteuer
-            </RekaTabsTrigger>
-            <RekaTabsTrigger
-              value="dangerZone"
-              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
-            >
-              Einstellungen
+              Verlauf
             </RekaTabsTrigger>
           </RekaTabsList>
+
+          <!-- Über -->
           <RekaTabsContent value="about">
-            <div class="space-y-8">
-              <AppProfileEditHeader :header="userData.header" @update:header="userData.header = $event" />
+            <div class="space-y-6">
+              <!-- Interests -->
+              <section>
+                <h2 class="text-base font-semibold">
+                  Deine Interessen
+                </h2>
+                <p class="text-sm text-muted-foreground mb-3">
+                  Wähle bis zu {{ MAX_INTERESTS }} Interessen aus.
+                </p>
+                <AppProfileInterestSelector :max="MAX_INTERESTS" :interests="userData.interests" />
+              </section>
 
               <Separator />
 
-              <AppProfileEditBiography
-                :biography="userData.biography"
-                @update:biography="userData.biography = $event"
-              />
+              <!-- Biography -->
+              <section>
+                <AppProfileBiographyEditor :initial-biography="userData.biography" />
+              </section>
 
               <Separator />
 
-              <AppProfileEditTags :tags="userData.tags" @update:tags="userData.tags = $event" />
+              <!-- Profile picture -->
+              <section class="flex items-center gap-4">
+                <Avatar class="size-12 shrink-0">
+                  <AvatarFallback>
+                    <ImageOffIcon class="size-5" />
+                  </AvatarFallback>
+                  <AvatarImage
+                    v-if="userData.profilePictureId"
+                    :src="toPicturePath(userData.profilePictureId)"
+                    alt="Profilbild"
+                  />
+                </Avatar>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-sm font-semibold">Profilbild</span>
+                  <span class="text-xs text-muted-foreground">Ändere dein Profilbild, um deinen Account zu
+                    personalisieren.</span>
+                </div>
+                <AppProfileImage v-model="userData">
+                  <Button variant="outline" size="sm" class="shrink-0">
+                    Ändern
+                  </Button>
+                </AppProfileImage>
+              </section>
             </div>
           </RekaTabsContent>
+
+          <!-- Abenteuer -->
           <RekaTabsContent value="adventures">
             <LazyAppProfileAdventuresList :author-id="userData._id" />
           </RekaTabsContent>
-          <RekaTabsContent value="seen_adventures">
+
+          <!-- Verlauf -->
+          <RekaTabsContent value="history">
             <LazyAppProfileAdventureVisitHistory />
-          </RekaTabsContent>
-          <RekaTabsContent value="dangerZone">
-            Danger zone
-            <AppAuthLogoutButton />
           </RekaTabsContent>
         </RekaTabsRoot>
       </div>
+
+      <!-- Settings Sheet -->
+      <Sheet v-model:open="settingsOpen">
+        <SheetContent side="bottom" class="max-w-2xl mx-auto rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Einstellungen</SheetTitle>
+            <SheetDescription>
+              App-Einstellungen und Account-Verwaltung.
+            </SheetDescription>
+          </SheetHeader>
+          <div class="space-y-2 py-4">
+            <Item>
+              <ItemMedia variant="icon">
+                <Palette />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>Design</ItemTitle>
+                <ItemDescription>Wechsle zwischen Hell und Dunkel.</ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <AppMiscThemeToggle />
+              </ItemActions>
+            </Item>
+            <ItemSeparator />
+            <Item>
+              <ItemMedia variant="icon">
+                <Languages />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>Sprache</ItemTitle>
+                <ItemDescription>Ändere die Anzeigesprache.</ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <AppMiscLanguageSwitcher />
+              </ItemActions>
+            </Item>
+            <ItemSeparator />
+            <Item>
+              <ItemMedia variant="icon">
+                <LogOut class="text-destructive" />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle class="text-destructive">
+                  Abmelden
+                </ItemTitle>
+                <ItemDescription>Von deinem Account abmelden.</ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <AppAuthLogoutButton />
+              </ItemActions>
+            </Item>
+          </div>
+        </SheetContent>
+      </Sheet>
     </main>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ChevronLeft, SearchAlert } from 'lucide-vue-next';
-import { TabsContent as RekaTabsContent, TabsIndicator as RekaTabsIndicator, TabsList as RekaTabsList, TabsRoot as RekaTabsRoot, TabsTrigger as RekaTabsTrigger } from 'reka-ui';
+import { toPicturePath } from '#shared/utils/SharedUtils';
+import { ChevronLeft, EditIcon, ImageOffIcon, Languages, LogOut, Palette, SearchAlert, Settings } from 'lucide-vue-next';
+import {
+  TabsContent as RekaTabsContent,
+  TabsIndicator as RekaTabsIndicator,
+  TabsList as RekaTabsList,
+  TabsRoot as RekaTabsRoot,
+  TabsTrigger as RekaTabsTrigger,
+} from 'reka-ui';
 import type { UserProfileWithMeta } from '~~/shared/types/UserProfileTypes';
+import { MAX_INTERESTS } from '~~/shared/types/UserProfileTypes';
+
 
 const user = useUser();
 
@@ -114,5 +230,10 @@ definePageMeta({
   middleware: 'auth-requirement',
 });
 
-const { data: userData, error } = await useFetch<UserProfileWithMeta>(`/api/v1/app/profile/${user.value?._id}/public`);
+const settingsOpen = ref(false);
+
+const { data: userData } = await useFetch<UserProfileWithMeta>(
+  `/api/v1/app/profile/${user.value?._id}/public`,
+  { deep: true }
+);
 </script>

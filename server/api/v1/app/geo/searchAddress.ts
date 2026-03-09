@@ -26,8 +26,6 @@ export default defineEventHandler(async (event) => {
             },
         });
 
-        console.log('Nominatim response:', response);
-
         // Map Nominatim response to our internal GeoLocation type
         const locations: GeoLocation[] = response.map((item) => ({
             type: 'Point',

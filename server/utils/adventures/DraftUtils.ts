@@ -28,7 +28,7 @@ export async function ensureDraftIndexes(): Promise<void> {
     // Index für schnelle User-Abfragen
     await draftCollection.createIndex({ authorId: 1 });
 
-    console.log('Draft indexes created');
+    console.log('[DraftUtils] Draft indexes created');
 }
 
 export async function canCreateNewDraft(authorId: string): Promise<boolean> {

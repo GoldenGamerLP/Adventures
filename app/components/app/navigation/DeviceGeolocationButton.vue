@@ -35,14 +35,12 @@ const requestGeolocation = async () => {
 
     try {
         const permissionState = await lookupPermissionState();
-        console.log(permissionState);
         if (permissionState.state === 'denied') {
             toast.error('Der Zugriff auf deine Geolocation wurde verweigert. Bitte erlaube den Zugriff in deinen Browser-Einstellungen und versuche es erneut.');
             return;
         }
 
         const position = await getGeolocation();
-        console.log('Aktuelle Position:', position);
     } catch (error) {
         toast.error('Fehler beim Abrufen der Geolocation. Bitte versuche es erneut.');
         console.error('Geolocation-Fehler:', error);

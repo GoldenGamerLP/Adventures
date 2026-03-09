@@ -12,7 +12,18 @@
         </ItemMedia>
         <ItemContent class="gap-1">
           <ItemTitle>{{ adventure.title }}</ItemTitle>
-          <ItemDescription>{{ adventure.description }} | {{ adventure.view.firstViewedAt }}</ItemDescription>
+          <ItemDescription>{{ adventure.description }}</ItemDescription>
+          <div class="space-x-2">
+            <Badge variant="outline">
+              <ClockPlusIcon />
+              <NuxtTime :datetime="adventure.view.firstViewedAt" relative />
+            </Badge>
+            <Badge variant="outline">
+              <HistoryIcon />
+              Zuletzt angesehen:
+              <NuxtTime :datetime="adventure.view.lastViewedAt" relative />
+            </Badge>
+          </div>
         </ItemContent>
         <ItemActions>
           <NuxtLink :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id } }">
@@ -41,9 +52,9 @@
 </template>
 
 <script lang="ts" setup>
-import { SearchAlert } from 'lucide-vue-next';
+import { ClockPlusIcon, HistoryIcon, SearchAlert } from 'lucide-vue-next';
 import type { EnrichedViewRecord } from '~~/shared/types/AdventureTypes';
 import { toPicturePath } from '~~/shared/utils/SharedUtils';
 
-const { data: adventureHistory, pending, error } = await useFetch<EnrichedViewRecord[]>('/api/v1/app/profile/own/adventureHistory');
+const { data: adventureHistory } = await useFetch<EnrichedViewRecord[]>('/api/v1/app/profile/own/adventureHistory');
 </script>
