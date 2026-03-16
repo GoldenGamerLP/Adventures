@@ -10,24 +10,14 @@
         <!-- Action Buttons -->
         <div class="flex items-center gap-1">
           <!-- Create Adventure Button -->
-          <Button
-            v-if="user"
-            variant="ghost"
-            size="icon"
-            as-child
-          >
+          <Button v-if="user" variant="ghost" size="icon" as-child>
             <NuxtLink :to="{ name: 'adventures-drafts' }">
               <BookMarkedIcon />
               <span class="sr-only">Entwürfe ansehen</span>
             </NuxtLink>
           </Button>
 
-          <Button
-            v-if="user"
-            variant="ghost"
-            size="icon"
-            as-child
-          >
+          <Button v-if="user" variant="ghost" size="icon" as-child>
             <NuxtLink :to="{ name: 'profile' }">
               <UserCog />
               <span class="sr-only">Profil Einstellungen</span>
@@ -67,7 +57,7 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" size="sm" @click="refresh">
+          <Button variant="outline" size="sm" @click="refreshAndReload" :disabled="pending">
             Erneut laden
           </Button>
         </EmptyContent>
@@ -85,7 +75,7 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" size="sm" @click="resetFilters()">
+          <Button variant="outline" size="sm" @click="refreshAndReload()" :disabled="pending">
             Filter zurücksetzen
           </Button>
         </EmptyContent>
@@ -93,12 +83,9 @@
 
       <!-- Adventures List -->
       <ol v-else class="mt-6 flex flex-col gap-4 mx-1 sm:mx-0">
-        <li
-          v-for="(adventure, index) in adventures"
-          :key="adventure._id"
+        <li v-for="(adventure, index) in adventures" :key="adventure._id"
           :style="{ 'animation-delay': `${index * 100}ms`, 'animation-fill-mode': 'both' }"
-          class="animate-in fade-in slide-in-from-bottom-8 duration-300"
-        >
+          class="animate-in fade-in slide-in-from-bottom-8 duration-300">
           <LazyAppAdventuresNavigationAdventureDisplay :adventure="adventure" />
         </li>
       </ol>
@@ -107,6 +94,7 @@
 </template>
 
 <script lang="ts" setup>
+import { refDebounced } from '@vueuse/core';
 import { BookMarkedIcon, SearchAlert, UserCog } from 'lucide-vue-next';
 import { FETCH_KEY_FOR_YOU_PAGE } from '~~/shared/constants/Constants';
 import type { AdventureWithMeta } from '~~/shared/types/AdventureTypes';
@@ -130,7 +118,11 @@ const computedIcon = computed(() => {
 //TODO: SSR oder nicht ssr sodass die initale website schneller lädt und die adventures erst nachträglich geladen werden?
 const { data: adventures, pending, error, refresh } = await useFetch<AdventureWithMeta[]>('/api/v1/app/adventures/', {
   key: FETCH_KEY_FOR_YOU_PAGE,
-  query: mask,
-  watch: false,
+  query: refDebounced(mask, 1500),
 });
+
+const refreshAndReload = () => {
+  resetFilters();
+  refresh();
+};
 </script>

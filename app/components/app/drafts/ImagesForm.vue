@@ -84,12 +84,12 @@
 </template>
 
 <script lang="ts" setup>
-import { useFileDialog, useDebounceFn } from '@vueuse/core';
+import { DRAFT_CONFIG, MAX_BUNDLE_SIZE_BYTES, SUPPORTED_FILE_TYPES } from '#shared/constants/Constants';
+import type { DraftPicture } from "#shared/types/PictureTypes";
+import { formatFileSize, sanitizedFileName, toPicturePath } from "#shared/utils/SharedUtils";
+import { useDebounceFn, useFileDialog } from '@vueuse/core';
 import { useDragAndDrop } from 'fluid-dnd/vue';
 import { FileExclamationPointIcon, PlusIcon, Trash, Trash2Icon } from 'lucide-vue-next';
-import type { DraftPicture } from "#shared/types/PictureTypes";
-import { MAX_BUNDLE_SIZE_BYTES, SUPPORTED_FILE_TYPES, DRAFT_CONFIG } from '#shared/constants/Constants';
-import { formatFileSize, sanitizedFileName, toPicturePath } from "#shared/utils/SharedUtils"
 import { compressImages } from '~~/app/utils/PictureUtils';
 
 const props = defineProps<{
@@ -254,8 +254,10 @@ const registerFiles = async () => {
     try {
         const compressedFiles: Blob[] = await compressImages(notRegisteredImages.value.map(file => file.file));
         const formData = new FormData();
+
         compressedFiles.forEach((blob, index) => {
-            formData.append('images', blob, sanitizedFileName(notRegisteredImages.value[index]!.name, index));
+            const fileName = notRegisteredImages.value[index]!.name;
+            formData.append('pictures', blob, sanitizedFileName(fileName, index));
         });
 
         // Separater Draft-Upload-Endpoint

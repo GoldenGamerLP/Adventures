@@ -6,7 +6,9 @@
     @click="navigateAndEdit"
   >
     <template v-if="!isLoading">
-      <EditIcon class="w-5 h-5" />
+      <slot>
+        <EditIcon />
+      </slot>
       <span class="sr-only">Editieren</span>
     </template>
     <template v-else>
@@ -20,23 +22,23 @@
 import { EditIcon } from "lucide-vue-next";
 
 const props = defineProps<{
-    adventure: Adventure;
+  adventure: Adventure;
 }>();
 
 const isLoading = ref(false);
 
 const navigateAndEdit = async () => {
-    isLoading.value = true;
-    try {
-        const res = await $fetch<string>(`/api/v1/app/adventures/${props.adventure._id}/edit`, {
-            method: 'POST'
-        });
+  isLoading.value = true;
+  try {
+    const res = await $fetch<string>(`/api/v1/app/adventures/${props.adventure._id}/edit`, {
+      method: 'POST'
+    });
 
-        await navigateTo(`/adventures/drafts/${res}`);
-    } catch (error) {
-        console.error("Fehler beim Veröffentlichen des Drafts:", error);
-    } finally {
-        isLoading.value = false;
-    }
+    await navigateTo(`/adventures/drafts/${res}`);
+  } catch (error) {
+    console.error("Fehler beim Veröffentlichen des Drafts:", error);
+  } finally {
+    isLoading.value = false;
+  }
 }
 </script>

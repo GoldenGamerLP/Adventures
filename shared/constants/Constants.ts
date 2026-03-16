@@ -42,3 +42,7 @@ export const ADVENTURE_NONE_CLIENT_VIEW_LIMIT = 300;
 export const PICTURE_API_PATH = '/api/v1/app/pictures/%s'; // %s wird durch die Bild-ID ersetzt
 
 export const FETCH_KEY_FOR_YOU_PAGE = 'adventures-for-you-page';
+
+export const MAX_ADVENTURE_DURATION_MINUTES = 24 * 60; // 24 Stunden in Minuten
+
+export const MAX_SELECTORS_SELECTED = 2; 

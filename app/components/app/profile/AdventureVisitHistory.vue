@@ -1,5 +1,5 @@
 <template>
-  <ItemGroup v-if="adventureHistory?.length">
+  <ItemGroup v-if="adventureHistory?.length" class="border rounded-lg">
     <template v-for="(adventure, index) in adventureHistory" :key="adventure._id">
       <Item>
         <ItemMedia>

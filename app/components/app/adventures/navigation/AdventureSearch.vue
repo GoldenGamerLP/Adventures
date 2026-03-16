@@ -1,12 +1,8 @@
 <template>
   <Popover v-model:open="searchPopoverOpen">
     <PopoverTrigger as-child>
-      <Button
-        variant="secondary"
-        size="icon"
-        class="rounded-full"
-        :class="hasActiveFilters && 'ring-2 ring-primary ring-offset-1'"
-      >
+      <Button variant="secondary" size="icon" class="rounded-full"
+        :class="hasActiveFilters && 'ring-2 ring-primary ring-offset-1'">
         <SlidersHorizontalIcon />
         <span class="sr-only">Abenteuer filtern</span>
       </Button>
@@ -31,12 +27,8 @@
         <div class="px-2 py-1.5">
           <div class="relative">
             <SearchIcon class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input
-              v-model.trim.lazy="searchMask.query"
-              placeholder="Stichwort suchen..."
-              class="pl-8 h-8 text-sm bg-muted/50 border-0 focus-visible:ring-1"
-              @keydown.enter="applyAndClose"
-            />
+            <Input v-model.lazy="searchMask.query" placeholder="Stichwort suchen..."
+              class="pl-8 h-8 text-sm bg-muted/50 border-0 focus-visible:ring-1" @keydown.enter="applyAndClose" />
           </div>
         </div>
 
@@ -47,15 +39,10 @@
           Schwierigkeit
         </p>
         <div class="flex items-center gap-1 px-2 pb-1">
-          <Button
-            v-for="opt in difficultyOptions"
-            :key="opt.value"
-            variant="outline"
-            size="sm"
+          <Button v-for="opt in difficultyOptions" :key="opt.value" variant="outline" size="sm"
             class="flex-1 h-7 text-xs gap-1.5"
             :class="mask.difficulty === opt.value && 'border-primary bg-primary/10 text-primary'"
-            @click="toggleDifficulty(opt.value)"
-          >
+            @click="toggleDifficulty(opt.value)">
             <component :is="opt.icon" class="size-3" />
             {{ opt.label }}
           </Button>
@@ -67,17 +54,11 @@
         <p class="px-2 pt-1 text-xs font-medium text-muted-foreground">
           Sortierung
         </p>
-        <button
-          v-for="opt in sortOptions"
-          :key="opt.value"
+        <button v-for="opt in sortOptions" :key="opt.value"
           class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors"
-          :class="mask.sort === opt.value && 'bg-accent text-accent-foreground'"
-          @click="toggleSort(opt.value)"
-        >
-          <div
-            class="flex items-center justify-center size-6 rounded-md bg-muted shrink-0"
-            :class="mask.sort === opt.value && 'bg-primary/15 text-primary'"
-          >
+          :class="mask.sort === opt.value && 'bg-accent text-accent-foreground'" @click="toggleSort(opt.value)">
+          <div class="flex items-center justify-center size-6 rounded-md bg-muted shrink-0"
+            :class="mask.sort === opt.value && 'bg-primary/15 text-primary'">
             <component :is="opt.icon" class="size-3.5" />
           </div>
           <div class="flex-1 text-left">
@@ -96,25 +77,14 @@
 
       <!-- Footer: Erweitert + Reset -->
       <div class="p-1.5 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          class="h-7 text-xs"
-          :disabled="!hasActiveFilters"
-          @click="resetAllFilters()"
-        >
+        <Button variant="ghost" size="sm" class="h-7 text-xs" :disabled="!hasActiveFilters" @click="resetAllFilters()">
           <X class="size-3 mr-1" />
           Zurücksetzen
         </Button>
 
         <div class="flex items-center gap-1">
           <!-- Erweiterte Filter als Sheet -->
-          <Button
-            variant="outline"
-            size="sm"
-            class="h-7 text-xs"
-            @click="openAdvanced()"
-          >
+          <Button variant="outline" size="sm" class="h-7 text-xs" @click="openAdvanced()">
             <Settings2 class="size-3 mr-1" />
             Erweitert
           </Button>
@@ -143,12 +113,7 @@
             <label class="text-sm font-medium">Suchradius</label>
             <span class="text-xs font-mono text-muted-foreground">{{ mask.radius ?? 50 }} km</span>
           </div>
-          <Slider
-            v-model="radiusModel"
-            :min="5"
-            :max="200"
-            :step="5"
-          />
+          <Slider v-model="radiusModel" :min="5" :max="200" :step="5" />
         </div>
 
         <!-- Dauer -->
@@ -159,24 +124,13 @@
               {{ formatDuration(durationModel[0]) }} – {{ formatDuration(durationModel[1]) }}
             </span>
           </div>
-          <Slider
-            v-model="durationModel"
-            :min="15"
-            :max="1440"
-            :step="15"
-          />
+          <Slider v-model="durationModel" :min="15" :max="1440" :step="15" />
         </div>
 
         <!-- Tags -->
         <div class="space-y-2">
           <label class="text-sm font-medium">Tags</label>
-          <TagsInput v-model="tagsModel" class="w-full">
-            <TagsInputItem v-for="tag in tagsModel" :key="tag" :value="tag">
-              <TagsInputItemText />
-              <TagsInputItemDelete />
-            </TagsInputItem>
-            <TagsInputInput placeholder="Tag hinzufügen..." />
-          </TagsInput>
+          <LazyAppDraftsTagsSelector v-model="tagsModel" :max="5" />
         </div>
       </div>
 
@@ -207,14 +161,13 @@ import {
   X,
   Zap
 } from 'lucide-vue-next';
-import { formatDuration } from '~~/shared/types/EventTypes';
 
 const { mask, resetFilters, searchPopoverOpen: _sPO, extendedSearchOpen: _eSO, refreshSearch } = useSearchMask();
 const extendedSearchOpen = toRef(_eSO);
 const searchPopoverOpen = toRef(_sPO);
-const searchMask = toRef(mask);
+const searchMask = mask;
 
-// ── Difficulty ────────────────────────────────────────────────────────────────
+//Difficulty
 const difficultyOptions = [
   { value: 'easy', label: 'Leicht', icon: Zap },
   { value: 'medium', label: 'Mittel', icon: Mountain },
@@ -222,10 +175,14 @@ const difficultyOptions = [
 ] as const;
 
 const toggleDifficulty = (val: 'easy' | 'medium' | 'hard') => {
-  searchMask.value.difficulty = searchMask.value.difficulty === val ? undefined : val;
+  if (searchMask.value.difficulty === val) {
+    searchMask.value.difficulty = undefined; // Schwierigkeit zurücksetzen, wenn erneut auf die gleiche Option geklickt wird
+  } else {
+    searchMask.value.difficulty = val;
+  }
 };
 
-// ── Sort ──────────────────────────────────────────────────────────────────────
+//Sortierung
 const sortOptions = [
   {
     value: 'near_me',
@@ -254,7 +211,11 @@ const sortOptions = [
 ] as const;
 
 const toggleSort = (val: "popular" | "new" | "recommended" | "near_me" | undefined) => {
-  searchMask.value.sort = searchMask.value.sort === val ? undefined : val;
+  if (searchMask.value.sort === val) {
+    searchMask.value.sort = undefined; // Sortierung zurücksetzen, wenn erneut auf die gleiche Option geklickt wird
+  } else {
+    searchMask.value.sort = val;
+  }
 };
 
 // ── Advanced Sliders (Array-Binding für Slider-Komponente) ───────────────────

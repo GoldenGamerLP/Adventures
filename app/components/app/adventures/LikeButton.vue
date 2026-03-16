@@ -1,12 +1,12 @@
 <template>
   <Button
     variant="ghost"
-    size="icon"
     :class="{ 'text-red-500': changeableLikeStatus }"
     :disabled="!user || isLoading"
     @click.stop.prevent="toggleLikeStatus(!changeableLikeStatus)"
   >
     <Heart :class="{ 'fill-red-500': changeableLikeStatus }" />
+    {{ changeableLikeStatus ? props.likesCount + 1 : props.likesCount }}
     <span class="sr-only">{{ changeableLikeStatus ? 'Abenteuer entliken' : 'Abenteuer liken' }}</span>
   </Button>
 </template>
@@ -18,8 +18,10 @@ import { Heart } from 'lucide-vue-next';
 const props = withDefaults(defineProps<{
     adventureId: string;
     isLiked: boolean;
+    likesCount: number;
 }>(), {
     isLiked: false,
+    likesCount: 0,
 });
 
 const user = useUser();

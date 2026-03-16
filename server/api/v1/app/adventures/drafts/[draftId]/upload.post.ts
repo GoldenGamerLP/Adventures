@@ -24,8 +24,22 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const formData = await readFormData(event);
-    const images = formData.getAll('images') as File[];
+    const formData = await readMultipartFormData(event);
+    const images: File[] = [];
+
+    if (formData) {
+        for (let i = 0; i < formData.length; i++) {
+            const item = formData[i];
+            if (!item) continue;
+            const { data, filename, name, type } = item;
+            if (name === 'pictures') {
+                const buffer: Buffer<ArrayBuffer> = data as Buffer<ArrayBuffer>;
+
+                const file = new File([buffer], filename!, { type });
+                images.push(file);
+            }
+        }
+    }
 
     if (!images || images.length === 0) {
         throw createError({

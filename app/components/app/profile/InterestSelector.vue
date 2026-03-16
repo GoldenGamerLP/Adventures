@@ -1,31 +1,25 @@
 <template>
-  <div class="space-y-3">
-    <!-- Interest Grid -->
-    <div role="group" aria-label="Interessen auswählen" class="flex flex-wrap gap-2">
-      <Button
-        v-for="interest in availableInterests"
-        :key="interest.key"
-        role="checkbox"
-        :variant="isSelected(interest.key) ? 'default' : 'outline'"
-        :aria-checked="!isSelected(interest.key)"
-        :disabled="!isSelected(interest.key) && !!max && selectedInterests.length >= max"
-        @click="toggle(interest.key)"
-        @keydown.space.prevent="toggle(interest.key)"
-        @keydown.enter.prevent="toggle(interest.key)"
-      >
-        <component :is="ICON_MAP[interest.iconKey]" aria-hidden="true" />
-        {{ interest.label }}
-      </Button>
-    </div>
+    <div class="space-y-3">
+        <!-- Interest Grid -->
+        <div role="group" aria-label="Interessen auswählen" class="flex flex-wrap gap-2">
+            <Button v-for="interest in availableInterests" :key="interest.key" role="checkbox"
+                :variant="isSelected(interest.key) ? 'default' : 'outline'" :aria-checked="!isSelected(interest.key)"
+                :disabled="!isSelected(interest.key) && !!max && selectedInterests.length >= max"
+                @click="toggle(interest.key)" @keydown.space.prevent="toggle(interest.key)"
+                @keydown.enter.prevent="toggle(interest.key)">
+                <component :is="ICON_MAP[interest.iconKey]" aria-hidden="true" />
+                {{ interest.label }}
+            </Button>
+        </div>
 
-    <!-- Counter -->
-    <p v-if="max" class="text-xs text-muted-foreground" aria-live="polite">
-      <span :class="selectedInterests.length >= max && 'text-primary font-medium'">
-        {{ selectedInterests.length }}
-      </span>
-      / {{ max }} ausgewählt
-    </p>
-  </div>
+        <!-- Counter -->
+        <p v-if="max" class="text-xs text-muted-foreground" aria-live="polite">
+            <span :class="selectedInterests.length >= max && 'text-primary font-medium'">
+                {{ selectedInterests.length }}
+            </span>
+            / {{ max }} ausgewählt
+        </p>
+    </div>
 </template>
 
 <script lang="ts" setup>

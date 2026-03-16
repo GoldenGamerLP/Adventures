@@ -1,5 +1,5 @@
-import type { GeoLocation } from "#shared/types/GeoTypes";
 import type { EventSchedule } from "#shared/types/EventTypes";
+import type { GeoLocation } from "#shared/types/GeoTypes";
 import type { UserSummary } from "./UserProfileTypes";
 
 //Interface for protoyping purposes
@@ -9,13 +9,13 @@ export interface Adventure {
     description: string;
     location?: GeoLocation;
     /** Event-Zeitplanung mit flexibler Dauer */
-    schedule?: EventSchedule;
+    schedule: EventSchedule;
     difficulty: 'easy' | 'medium' | 'hard';
     category: AdventureCategory;
     createdAt: Date;
     updatedAt: Date;
     pictureIds: string[];
-    tags: string[];
+    tags: AdventureTypeKey[];
     authorId: string;
     draftId: string;
     visibility: 'public' | 'private' | 'unlisted';
@@ -28,6 +28,7 @@ export interface AdventureWithMeta extends Adventure {
     };
     viewCount: AdventureViewCounter;
     isLikedByUser: boolean;
+    likesCount: number;
 }
 
 export enum AdventureCategory {
@@ -77,3 +78,64 @@ export interface AdventureViewCounter {
 }
 
 export type EnrichedViewRecord = Adventure & { view: AdventureViewRecord };
+
+
+export const SELECTOR_ICON_KEYS = [
+    // Outdoor
+    'Footprints', 'Bike', 'MountainSnow', 'Mountain', 'Waves', 'Tent', 'Fish', 'Leaf', 'Sailboat',
+    // Indoor / Sport
+    'Dumbbell', 'Swords', 'Gamepad2', 'GraduationCap',
+    // Creative
+    'Camera', 'Palette', 'Ticket',
+    // Social / Events
+    'Music', 'PartyPopper', 'Tv', 'CookingPot', 'Users',
+    // Travel
+    'Car', 'Landmark', 'Backpack',
+    // Misc
+    'Headset',
+] as const;
+
+export type SelectorIconKey = typeof SELECTOR_ICON_KEYS[number];
+
+export interface AdventureType {
+    key: string;
+    label: string;
+    iconKey: SelectorIconKey;
+    category: 'outdoor' | 'indoor' | 'social' | 'creative' | 'travel';
+}
+
+export const ADVENTURE_TYPES: AdventureType[] = [
+    // Outdoor
+    { key: 'hiking', label: 'Wandern', iconKey: 'Footprints', category: 'outdoor' },
+    { key: 'cycling', label: 'Radfahren', iconKey: 'Bike', category: 'outdoor' },
+    { key: 'mountainbiking', label: 'Mountainbiking', iconKey: 'MountainSnow', category: 'outdoor' },
+    { key: 'climbing', label: 'Klettern', iconKey: 'Mountain', category: 'outdoor' },
+    { key: 'swimming', label: 'Schwimmen', iconKey: 'Waves', category: 'outdoor' },
+    { key: 'water_sports', label: 'Wassersport', iconKey: 'Sailboat', category: 'outdoor' },
+    { key: 'camping', label: 'Camping', iconKey: 'Tent', category: 'outdoor' },
+    { key: 'fishing', label: 'Angeln', iconKey: 'Fish', category: 'outdoor' },
+    { key: 'nature', label: 'Natur erkunden', iconKey: 'Leaf', category: 'outdoor' },
+    // Indoor / Sport
+    { key: 'fitness', label: 'Fitness', iconKey: 'Dumbbell', category: 'indoor' },
+    { key: 'combat_sports', label: 'Kampfsport', iconKey: 'Swords', category: 'indoor' },
+    { key: 'gaming_night', label: 'Spieleabend', iconKey: 'Gamepad2', category: 'indoor' },
+    { key: 'workshop', label: 'Workshop / Kurs', iconKey: 'GraduationCap', category: 'indoor' },
+    // Creative
+    { key: 'photography', label: 'Fotografie', iconKey: 'Camera', category: 'creative' },
+    { key: 'crafts', label: 'Kreativ / Kunst', iconKey: 'Palette', category: 'creative' },
+    { key: 'theater', label: 'Theater / Kultur', iconKey: 'Ticket', category: 'creative' },
+    // Social / Events
+    { key: 'concert', label: 'Konzert', iconKey: 'Music', category: 'social' },
+    { key: 'festival', label: 'Festival', iconKey: 'PartyPopper', category: 'social' },
+    { key: 'public_viewing', label: 'Public Viewing', iconKey: 'Tv', category: 'social' },
+    { key: 'culinary', label: 'Kulinarik', iconKey: 'CookingPot', category: 'social' },
+    { key: 'meetup', label: 'Meetup / Treffen', iconKey: 'Users', category: 'social' },
+    // Travel
+    { key: 'day_trip', label: 'Tagesausflug', iconKey: 'Backpack', category: 'travel' },
+    { key: 'roadtrip', label: 'Roadtrip', iconKey: 'Car', category: 'travel' },
+    { key: 'sightseeing', label: 'Sightseeing', iconKey: 'Landmark', category: 'travel' },
+    // Misc
+    { key: 'esports', label: 'E-Sports / LAN', iconKey: 'Headset', category: 'indoor' },
+];
+export const ADVENTURE_TYPE_KEYS = ADVENTURE_TYPES.map(t => t.key) as [string, ...string[]];
+export type AdventureTypeKey = typeof ADVENTURE_TYPES[number]['key'];

@@ -5,20 +5,28 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 
 ## TODO
 
-- For-You page adventures anzeigen an mobiles design anpassen
-- Die Geolocation abfrage nicht direkt abfragen
-- Doppelklick auf in Navbar Entdecken Link soll die Einträge refreshen - Fertig
-- Bei Adventure Eintrag die nav leiste oben verbessern - Fertig
 - mehr Informationen zu den Einträgen anzeigen (z.B. Entfernung, Dauer, etc.)
 - Bei Standort aktualisierung direkt Seite refreshen
-- WEbsite Icon zu Adventure Icon ändern
 - WEbsite Meta daten anpassen
-- Fixen:  ERROR  [unhandledRejection] E11000 duplicate key error collection: adventures.adventure_view_records index: adventureId_1_userId_1 dup key: { adventureId: "699b21cfd379072b89cdd3d7", userId: null }                                                                                                                                                                                 - Bewertungssystem mit sternen/kommentare
 - Crop Editor für Bilder
 - Mehr farbe/primäre Farbe anpassen
 - Kommentare/Bewertungssystem
 - Auf Profil verlauf schöneres layout von informationen
 - Auf Profil Seite die Abenteuer in Kartenansicht anzeigen
+
+- Auf Profil seite adventures richtig sortieren
+- For you page algorithmus verbessern
+
+- For you page: Popover für karte bei Entfernung anzeigen - Bei Zeitpunkt auch popover mit zeitraum oder termin anzeigen?
+
+- Über all titel festlegen
+
+- Markdown in der Beschreibung erlauben
+
+- DSGVO konformität prüfen
+
+- Deployment Pipeline aufsetzen
+
 
 ## How to contribute
 

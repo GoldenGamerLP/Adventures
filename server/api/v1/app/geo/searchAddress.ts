@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
         // Map Nominatim response to our internal GeoLocation type
         const locations: GeoLocation[] = response.map((item) => ({
             type: 'Point',
-            displayName: item.display_name,
+            displayname: item.display_name,
             name: item.name,
             coordinates: [parseFloat(item.lat), parseFloat(item.lon)],
             address: item.address,

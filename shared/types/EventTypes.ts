@@ -13,6 +13,23 @@ export const DURATION_PRESETS = {
     MULTI_DAY: { min: 480, max: 1440, label: 'Mehrtägig' },
 } as const;
 
+export const OPENING_HOURS_PRESETS = {
+    FULL_DAY: { label: 'Ganztägig', hours: { from: 0, to: 1440 } },
+    MORNING: { label: 'Morgens', hours: { from: 360, to: 720 } },
+    AFTERNOON: { label: 'Nachmittags', hours: { from: 720, to: 1080 } },
+    EVENING: { label: 'Abends', hours: { from: 1080, to: 1440 } },
+} as const;
+
+export const WEEK_DAYS = [
+    { label: 'Montag', value: 0 },
+    { label: 'Dienstag', value: 1 },
+    { label: 'Mittwoch', value: 2 },
+    { label: 'Donnerstag', value: 3 },
+    { label: 'Freitag', value: 4 },
+    { label: 'Samstag', value: 5 },
+    { label: 'Sonntag', value: 6 },
+] as const;
+
 export type DurationPreset = keyof typeof DURATION_PRESETS;
 
 /**
@@ -26,13 +43,18 @@ export interface DurationRange {
     max: number;
 }
 
+export interface OpeningHours {
+    dayOfWeek: number; // 0=Montag, 6=Sonntag
+    from: number; // Minuten seit Mitternacht (0-1439)
+    to: number;   // Minuten seit Mitternacht (0-1439)
+}
+
 /**
  * Event-Typ zur Unterscheidung der Zeitangabe
  */
 export type EventType =
     | 'single'      // Einzelner Termin (z.B. "15. März 2026, 14:00")
     | 'range'       // Zeitraum (z.B. "15. - 17. März 2026")
-    | 'recurring'   // Wiederkehrend (zukünftig) - not used TODO: implementation
     | 'flexible';   // Flexibel / Jederzeit möglich
 
 /**
@@ -42,64 +64,27 @@ export interface EventSchedule {
     /** Art des Events */
     type: EventType;
 
-    /** Startdatum/zeit als ISO String */
+    /** Startdatum/zeit als ZonedDateTime String, ISO 8601 */
     startDate?: string;
 
-    /** Enddatum für mehrtägige Events (ISO String) */
+    /** Enddatum für mehrtägige Events als ZonedDateTime String, ISO 8601 */
     endDate?: string;
-
-    /** Startzeit als HH:MM String (optional, für ganztägige Events) */
-    startTime?: string;
 
     /** Geschätzte Dauer als Range */
     estimatedDuration: DurationRange;
+
+    /** Jährlich wiederholend - nur bei single/range */
+    repeatsAnnually?: boolean;
+
+    /** Öffnungszeiten */
+    slots?: OpeningSlots[];
 
     /** Markiert ungefähre/flexible Angaben */
     isApproximate?: boolean;
 }
 
-/**
- * Helper: Minuten zu lesbarem String formatieren
- */
-export function formatDuration(minutes: number): string {
-    if (minutes < 60) {
-        return `${minutes} Min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) {
-        return hours === 1 ? '1 Stunde' : `${hours} Stunden`;
-    }
-    return `${hours}h ${remainingMinutes}min`;
+export interface OpeningSlots {
+    dayOfWeek: number; // 0=Montag, 6=Sonntag
+    from: number; // Minuten seit Mitternacht (0-1439)
+    to: number;   // Minuten seit Mitternacht (0-1439)
 }
-
-/**
- * Helper: DurationRange zu lesbarem String formatieren
- */
-export function formatDurationRange(range: DurationRange): string {
-    if (range.min === range.max) {
-        return formatDuration(range.min);
-    }
-    return `${formatDuration(range.min)} - ${formatDuration(range.max)}`;
-}
-
-/**
- * Helper: Prüft ob Duration ein Preset entspricht
- */
-export function matchDurationPreset(range: DurationRange): DurationPreset | null {
-    for (const [key, preset] of Object.entries(DURATION_PRESETS)) {
-        if (preset.min === range.min && preset.max === range.max) {
-            return key as DurationPreset;
-        }
-    }
-    return null;
-}
-
-/**
- * Default EventSchedule für neue Adventures
- */
-export const DEFAULT_EVENT_SCHEDULE: EventSchedule = {
-    type: 'flexible',
-    estimatedDuration: { min: 60, max: 120 },
-    isApproximate: true,
-};

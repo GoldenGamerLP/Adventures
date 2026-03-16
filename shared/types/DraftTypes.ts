@@ -1,7 +1,8 @@
-import type { GeoLocation } from './GeoTypes';
-import type { AdventureCategory } from './AdventureTypes';
 import type { DraftPicture } from '#shared/types/PictureTypes';
+import type { DraftFormInput } from '../schema/DraftSchema';
+import type { AdventureCategory } from './AdventureTypes';
 import type { EventSchedule } from './EventTypes';
+import type { GeoLocation } from './GeoTypes';
 
 /**
  * Draft status für Picture und Adventure-Drafts
@@ -23,9 +24,10 @@ export interface AdventureDraftFormData {
     category?: AdventureCategory;
     tags?: string[];
     /** Event-Zeitplanung (ersetzt date/duration) */
-    schedule?: EventSchedule;
+    schedule: EventSchedule;
     visibility?: 'public' | 'private' | 'unlisted';
 }
+
 
 /**
  * Adventure Draft - temporärer Entwurf vor Veröffentlichung
@@ -40,7 +42,7 @@ export interface AdventureDraft {
     authorId: string;
 
     /** Formular-Daten (teilweise ausgefüllt) */
-    formData: AdventureDraftFormData;
+    formData: DraftFormInput;
 
     /** IDs der hochgeladenen Bilder */
     pictureIds: string[];

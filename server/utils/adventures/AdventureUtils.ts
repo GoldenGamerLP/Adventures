@@ -13,6 +13,10 @@ export const ensureAdventureIndexes = async (): Promise<void> => {
     //Index für schnelle Abfragen nach DraftId
     await adventureDB.createIndex({ draftId: 1 });
     await adventureDB.createIndex({ 'location.coordinates': '2dsphere' });
+    await adventureDB.createIndex({ 'title': 'text' });
+    await adventureDB.createIndex({ authorId: 1 });
+    await adventureDB.createIndex({ visibility: 1 });
+    await adventureDB.createIndex({ createdAt: -1 });
 
     console.log('[AdventureUtils] Adventure indexes created');
 }
@@ -93,6 +97,7 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
             query: {
                 'location.coordinates': { $exists: true },
                 'visibility': 'public', // Nur öffentliche Abenteuer in Geo-Abfrage einbeziehen
+                ...(filter.query && { $text: { $search: filter.query } })
             }
         }
     });
@@ -125,6 +130,25 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
         }
     });
 
+    query.push({
+        $lookup: {
+            from: 'adventure_likes',
+            let: { adventureId: '$_id' },
+            pipeline: [
+                //group and sum
+                { $match: { $expr: { $and: [{ $eq: ['$adventureId', '$$adventureId'] }] } } },
+                { $group: { _id: null, count: { $sum: 1 } } }
+            ],
+            as: 'likes'
+        }
+    })
+
+    query.push({
+        $addFields: {
+            likesCount: { $cond: { if: { $isArray: "$likes" }, then: { $arrayElemAt: ["$likes.count", 0] }, else: 0 } }
+        }
+    });
+
     //GeoQuery must be first stage, second stage author lookup
     query.push({
         $lookup: {
@@ -151,7 +175,7 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
 
     //Duration filter
     if (filter.duration) {
-        const { min, max } = filter.duration;
+        const [min, max] = filter.duration;
         query.push({
             $match: {
                 duration: {
@@ -191,6 +215,11 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
     }
 
     if (filter.sort) {
+        console.log('Sorting by', filter.sort);
+        //Sortierung: "popular"
+        //Wichtung auf Basis von:
+        //1. Anzahl Views
+        //2. Aktualität (createdAt)
         if (filter.sort === 'popular') {
             query.push({
                 $lookup: {
@@ -215,6 +244,7 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
             });
         }
 
+        //Sortierung: "new" - einfach nach Erstellungsdatum sortieren
         if (filter.sort === 'new') {
             query.push({
                 $sort: {
@@ -223,6 +253,13 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
             });
         }
 
+        //Sortierung: "recommend"
+        //Wichtung auf Basis von:
+        //1. Anzahl Likes
+        //2. Aktualität (createdAt)
+        //3. Entfernung zum User (location.distance)
+        //4. Anzahl Views
+        //Ähnlich wie "popular", aber mit zusätzlicher Gewichtung für Entfernung und Views, damit nicht nur die beliebtesten Abenteuer ganz oben landen, sondern auch neuere und näher gelegene Abenteuer eine Chance haben
         if (filter.sort === 'recommended') {
             query.push({
                 $lookup: {
@@ -239,10 +276,17 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
                 }
             });
 
+            //Sort:
+            //1. nach likeCount
+            //2. nach createdAt (neuere Abenteuer zuerst)
+            //3. nach Entfernung (näher zuerst)
+            //4. nach viewCount (beliebtere Abenteuer zuerst)
             query.push({
                 $sort: {
                     likeCount: -1,
                     createdAt: -1,
+                    "location.distance": 1,
+                    "viewCount": -1,
                 }
             });
         }
@@ -323,6 +367,25 @@ const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise
         });
     }
 
+    query.push({
+        $lookup: {
+            from: 'adventure_likes',
+            let: { adventureId: '$_id' },
+            pipeline: [
+                //group and sum
+                { $match: { $expr: { $and: [{ $eq: ['$adventureId', '$$adventureId'] }] } } },
+                { $group: { _id: null, count: { $sum: 1 } } }
+            ],
+            as: 'likes'
+        }
+    })
+
+    query.push({
+        $addFields: {
+            likesCount: { $cond: { if: { $isArray: "$likes" }, then: { $arrayElemAt: ["$likes.count", 0] }, else: 0 } }
+        }
+    });
+
     const result = await adventureDB.aggregate<AdventureWithMeta>(query).toArray();
 
     if (result.length === 0) {
@@ -356,9 +419,54 @@ const getAdventuresByAuthor = async (authorId: string, user?: UserSummary, visib
         });
 
         query.push({
+            $lookup: {
+                from: 'adventure_likes',
+                let: { adventureId: '$_id' },
+                pipeline: [
+                    //group and sum
+                    { $match: { $expr: { $and: [{ $eq: ['$adventureId', '$$adventureId'] }] } } },
+                    { $group: { _id: null, count: { $sum: 1 } } }
+                ],
+                as: 'likes'
+            }
+        })
+
+        query.push({
+            $addFields: {
+                likesCount: { $cond: { if: { $isArray: "$likes" }, then: { $arrayElemAt: ["$likes.count", 0] }, else: 0 } }
+            }
+        });
+
+        query.push({
             $addFields: {
                 isLikedByUser: { $cond: { if: { $isArray: "$userLikes" }, then: { $gt: [{ $size: "$userLikes" }, 0] }, else: false } }
 
+            }
+        });
+
+        query.push({
+            $lookup: {
+                from: 'users',
+                localField: 'authorId',
+                foreignField: '_id',
+                as: 'author',
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            profilePictureId: 1,
+                        }
+                    }
+                ]
+            }
+        });
+
+        query.push({ $unwind: '$author' });
+
+        query.push({
+            $sort: {
+                createdAt: -1,
             }
         });
     }

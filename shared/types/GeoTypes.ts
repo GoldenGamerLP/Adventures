@@ -21,7 +21,7 @@ export interface GeoEntry {
 // Internal type (camelCase, used in your app)
 export interface GeoLocation {
     type: 'Point';
-    displayName: string;
+    displayname: string;
     name?: string;
     coordinates: [number, number];
     address?: Record<string, string>;

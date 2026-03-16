@@ -24,21 +24,19 @@
         <ItemContent>
           <ItemTitle>
             <NuxtTime :datetime="schedule.startDate!" format="long" />
-            <template v-if="schedule.startTime">
-              &middot; {{ schedule.startTime }} Uhr
-            </template>
           </ItemTitle>
           <ItemDescription>
             <NuxtTime :datetime="schedule.startDate!" format="short" relative />
           </ItemDescription>
         </ItemContent>
-        <Badge variant="secondary">
-          Termin
+        <Badge variant="secondary" @click="downloadCalendar">
+          <CalendarPlusIcon />
+          Zum Kalender hinzufügen
         </Badge>
       </Item>
     </template>
     <template v-else-if="schedule.type === 'range'">
-      <Item variant="muted">
+      <Item variant="outline">
         <ItemMedia variant="icon">
           <CalendarRange />
         </ItemMedia>
@@ -54,13 +52,35 @@
             <NuxtTime :datetime="schedule.endDate!" format="short" relative />
           </ItemDescription>
         </ItemContent>
-        <Badge variant="secondary">
-          Zeitraum
+        <Badge variant="secondary" @click="downloadCalendar">
+          <CalendarPlusIcon />
+          Zum Kalender hinzufügen
         </Badge>
       </Item>
     </template>
 
-    <Separator />
+    <template v-if="schedule.slots">
+      <div class="space-y-2">
+        <h3 class="text-sm font-medium">
+          Wöchentliche Öffnungszeiten
+        </h3>
+        <div class="flex flex-col gap-1">
+          <Item v-for="slot in schedule.slots" :key="slot.dayOfWeek" variant="outline">
+            <ItemMedia variant="icon">
+              <CalendarIcon />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>
+                {{ getDayOfWeeklabel(slot.dayOfWeek) }}
+              </ItemTitle>
+              <ItemDescription>
+                Von {{ formatRelativeTime(slot.from) }} bis {{ formatRelativeTime(slot.to) }}
+              </ItemDescription>
+            </ItemContent>
+          </Item>
+        </div>
+      </div>
+    </template>
 
     <!-- Wie lange? -->
     <div class="space-y-2">
@@ -82,10 +102,7 @@
             <FlagTriangleRightIcon class="size-4" />
           </div>
           <div class="flex-1 h-2 bg-border mx-2 rounded-full relative overflow-hidden">
-            <div
-              class="absolute inset-y-0 rounded-full bg-primary transition-all"
-              :style="durationBarStyle"
-            ></div>
+            <div class="absolute inset-y-0 rounded-full bg-primary transition-all" :style="durationBarStyle"></div>
           </div>
           <div class="flex flex-col items-center text-xs text-muted-foreground shrink-0 w-6">
             <FlagTriangleLeftIcon class="size-4" />
@@ -101,58 +118,88 @@
       </div>
     </div>
 
-    <Item v-if="schedule.isApproximate" variant="outline">
-      <ItemMedia variant="icon">
-        <BadgeAlert />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle>Ungefähre Angaben</ItemTitle>
-        <ItemDescription>
-          Die angegebenen Daten sind ungefähre Angaben und können variieren.
-        </ItemDescription>
-      </ItemContent>
-    </Item>
+    <ItemGroup class="border rounded-lg">
+      <Item v-if="schedule.isApproximate">
+        <ItemMedia variant="icon">
+          <BadgeAlert />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>Ungefähre Angaben</ItemTitle>
+          <ItemDescription>
+            Die angegebenen Daten sind ungefähre Angaben und können variieren.
+          </ItemDescription>
+        </ItemContent>
+      </Item>
+      <ItemSeparator v-if="schedule.isApproximate && schedule.repeatsAnnually" />
+      <Item v-if="schedule.repeatsAnnually">
+        <ItemMedia variant="icon">
+          <CalendarClockIcon />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>Jährliche Wiederholung</ItemTitle>
+          <ItemDescription>
+            Dieses Event findet jedes Jahr am selben Datum statt.
+          </ItemDescription>
+        </ItemContent>
+      </Item>
+    </ItemGroup>
   </div>
 </template>
 
 <script lang="ts" setup>
 import {
-    Calendar as CalendarIcon,
-    CalendarRange,
-    InfinityIcon,
-    BadgeAlert,
-    FlagTriangleRightIcon,
-    FlagTriangleLeftIcon,
+  BadgeAlert,
+  CalendarClockIcon,
+  Calendar as CalendarIcon,
+  CalendarPlusIcon,
+  CalendarRange,
+  FlagTriangleLeftIcon,
+  FlagTriangleRightIcon,
+  InfinityIcon
 } from 'lucide-vue-next';
-
-import {
-    formatDuration,
-} from '~~/shared/types/EventTypes';
+import { MAX_ADVENTURE_DURATION_MINUTES } from '~~/shared/constants/Constants';
+import { formatDuration, formatRelativeTime, scheduleToCalenderFormat } from '~~/shared/utils/SharedUtils';
 
 // 24h — matching form slider max
-
 const props = defineProps<{
-    schedule: EventSchedule;
-}>(); const MAX_MINUTES = 1440;const minLabel = computed(() => formatDuration(props.schedule.estimatedDuration.min));
+  schedule: EventSchedule;
+}>();
+
+const minLabel = computed(() => formatDuration(props.schedule.estimatedDuration.min));
 const maxLabel = computed(() => formatDuration(props.schedule.estimatedDuration.max));
 
 const durationBarPercent = computed(() => {
-    const dur = props.schedule.estimatedDuration;
-    const leftPer = (dur.min / MAX_MINUTES) * 100;
-    const rightPer = ((dur.max) / MAX_MINUTES) * 100;
-    const midPer = Math.max(Math.min(leftPer + rightPer / 2, 90), 10);
-    return { midPer };
+  const dur = props.schedule.estimatedDuration;
+  const leftPer = (dur.min / MAX_ADVENTURE_DURATION_MINUTES) * 100;
+  const rightPer = ((dur.max) / MAX_ADVENTURE_DURATION_MINUTES) * 100;
+  const midPer = Math.max(Math.min(leftPer + rightPer / 2, 90), 10);
+  return { midPer };
 });
+
+const getDayOfWeeklabel = (dayOfWeek: number): string => {
+  const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  return days[dayOfWeek] || '';
+};
 
 const durationBarStyle = computed(() => {
-    const dur = props.schedule.estimatedDuration;
-    const left = (dur.min / MAX_MINUTES) * 100;
-    const width = ((dur.max - dur.min) / MAX_MINUTES) * 100;
-    return {
-        left: `${left}%`,
-        width: `${Math.max(width, 0.5)}%`,
-    };
+  const dur = props.schedule.estimatedDuration;
+  const left = (dur.min / MAX_ADVENTURE_DURATION_MINUTES) * 100;
+  const width = ((dur.max - dur.min) / MAX_ADVENTURE_DURATION_MINUTES) * 100;
+  return {
+    left: `${left}%`,
+    width: `${Math.max(width, 0.5)}%`,
+  };
 });
 
+const downloadCalendar = () => {
+  const rfc5545String = scheduleToCalenderFormat(props.schedule);
 
+  const blob = new Blob([rfc5545String], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'adventure-event.ics';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 </script>

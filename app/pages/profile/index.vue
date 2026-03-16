@@ -14,13 +14,13 @@
     <main v-else class="relative">
       <!-- Top action bar -->
       <div class="absolute top-4 inset-x-4 z-20 flex items-center justify-between">
-        <Button variant="default" size="icon" as-child>
+        <Button variant="secondary" size="icon" as-child>
           <NuxtLink :to="{ name: 'index' }">
             <ChevronLeft />
             <span class="sr-only">Zurück</span>
           </NuxtLink>
         </Button>
-        <Button variant="default" size="icon" @click="settingsOpen = true">
+        <Button variant="secondary" size="icon" @click="settingsOpen = true">
           <Settings />
           <span class="sr-only">Einstellungen</span>
         </Button>

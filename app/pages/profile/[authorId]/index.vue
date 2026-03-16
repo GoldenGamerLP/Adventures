@@ -22,7 +22,7 @@
     </template>
     <template v-else>
       <Button
-        variant="default"
+        variant="secondary"
         size="icon"
         class="absolute top-4 left-4 z-50"
         as-child

@@ -115,7 +115,7 @@ export async function getDraftById(
  */
 export async function getDraftWithMeta(
     draftId: string,
-    authorId?: string
+    authorId: string
 ): Promise<AdventureDraftWithPictures | null> {
     const draft = await getDraftById(draftId, authorId);
 

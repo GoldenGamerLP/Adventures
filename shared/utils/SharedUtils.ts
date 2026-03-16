@@ -1,4 +1,5 @@
 import { PICTURE_API_PATH } from "../constants/Constants";
+import type { DurationPreset, DurationRange, EventSchedule } from "../types/EventTypes";
 
 const distanceFormatter = new Intl.NumberFormat('de-DE', {
     style: 'unit',
@@ -45,3 +46,81 @@ export const calculateCompletionPercent = (draft: { pictureIds: string[]; formDa
 
     return Math.round(formProgress + pictureProgress);
 };
+
+
+/**
+ * Helper: Minuten zu lesbarem String formatieren
+ */
+export function formatDuration(minutes: number): string {
+    if (minutes < 60) {
+        return `${minutes} Min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+        return hours === 1 ? '1 Stunde' : `${hours} Stunden`;
+    }
+    return `${hours}h ${remainingMinutes}min`;
+}
+
+export function formatRelativeTime(minutes: number): string {
+    //Minute 0 ab Mitternacht als 24h darstellen
+    if (minutes === 0) {
+        return '00:00';
+    }
+
+    if (minutes < 60) {
+        //00:00 mit nullen auf 2 stellen formatieren
+        return `00:${minutes.toString().padStart(2, '0')}`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+        return hours === 1 ? `01:00` : `${hours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+    }
+
+    return `${hours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Helper: DurationRange zu lesbarem String formatieren
+ */
+export function formatDurationRange(range: DurationRange): string {
+    if (range.min === range.max) {
+        return formatDuration(range.min);
+    }
+    return `${formatDuration(range.min)} - ${formatDuration(range.max)}`;
+}
+
+/**
+ * Helper: Prüft ob Duration ein Preset entspricht
+ */
+export function matchDurationPreset(range: DurationRange): DurationPreset | null {
+    for (const [key, preset] of Object.entries(DURATION_PRESETS)) {
+        if (preset.min === range.min && preset.max === range.max) {
+            return key as DurationPreset;
+        }
+    }
+    return null;
+}
+
+
+/*
+* Basiert auf RFC 5545 / Mimetype text/calendar
+* Siehe: https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+*/
+export function scheduleToCalenderFormat(schedule: EventSchedule): string {
+    const standardTimezone = "Europe/Berlin"; // TODO: tatsächliche Zeitzone des Events verwenden
+
+    if (schedule.type === 'single' && schedule.startDate) {
+        return `DTSTART;TZID=${standardTimezone}:${new Date(schedule.startDate).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
+    }
+
+    if (schedule.type === 'range' && schedule.startDate && schedule.endDate) {
+        return `DTSTART;TZID=${standardTimezone}:${new Date(schedule.startDate).toISOString().replace(/[-:]/g, '').split('.')[0]}Z\nDTEND;TZID=${standardTimezone}:${new Date(schedule.endDate).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
+    }
+
+    // Für flexible Events könnte man eine vCard mit RRULE oder eine Beschreibung zurückgeben, da keine festen Zeiten vorliegen
+    return `DESCRIPTION:Dieses Event hat flexible Zeitangaben. Geschätzte Dauer: ${formatDurationRange(schedule.estimatedDuration)}. Bitte überprüfen Sie die Details für weitere Informationen.`;
+}

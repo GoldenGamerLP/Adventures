@@ -12,7 +12,7 @@ const compressImageAndTransformToWebp = async (file: File) => {
     offscreenCanvas.height = height;
 
     ctx?.drawImage(imageBitmap, 0, 0, width, height);
-    return await offscreenCanvas.convertToBlob({ type: 'image/webp', quality: 0.25 });
+    return await offscreenCanvas.convertToBlob({ type: 'image/webp', quality: 0.2 });
 }
 
 const { workerFn: compressImageWorkerFn, workerTerminate } = useWebWorkerFn(
@@ -22,16 +22,20 @@ const { workerFn: compressImageWorkerFn, workerTerminate } = useWebWorkerFn(
 
 const compressImages = async (files: File[]) => {
     const compressedFiles: Blob[] = [];
-    const promises = files.map(file => compressImageWorkerFn(file));
 
-    try {
-        const results = await Promise.all(promises);
-        compressedFiles.push(...results);
-    } catch (error) {
-        console.error('Error compressing images:', error);
-    } finally {
-        workerTerminate();
+    for (const file of files) {
+        try {
+            const compressed = await compressImageWorkerFn(file);
+            if (compressed) {
+                compressedFiles.push(compressed);
+            }
+        } catch (error) {
+            console.error('Error compressing image:', error);
+        }
     }
+
+    workerTerminate('SUCCESS');
+
     return compressedFiles;
 }
 
@@ -41,10 +45,11 @@ const compressImage = async (file: File) => {
     } catch (error) {
         console.error('Error compressing image:', error);
     } finally {
-        workerTerminate();
+        workerTerminate('SUCCESS');
     }
 }
 
 export {
     compressImage, compressImages
 };
+
