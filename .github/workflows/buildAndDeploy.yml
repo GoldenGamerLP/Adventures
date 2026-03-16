@@ -8,6 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install dependencies
         uses: oven-sh/setup-bun@v2
         run: bun install
@@ -19,3 +21,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: .output
+          if-no-files-found: error
