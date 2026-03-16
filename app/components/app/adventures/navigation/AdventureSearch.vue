@@ -1,8 +1,12 @@
 <template>
   <Popover v-model:open="searchPopoverOpen">
     <PopoverTrigger as-child>
-      <Button variant="secondary" size="icon" class="rounded-full"
-        :class="hasActiveFilters && 'ring-2 ring-primary ring-offset-1'">
+      <Button
+        variant="secondary"
+        size="icon"
+        class="rounded-full"
+        :class="hasActiveFilters && 'ring-2 ring-primary ring-offset-1'"
+      >
         <SlidersHorizontalIcon />
         <span class="sr-only">Abenteuer filtern</span>
       </Button>
@@ -27,8 +31,12 @@
         <div class="px-2 py-1.5">
           <div class="relative">
             <SearchIcon class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input v-model.lazy="searchMask.query" placeholder="Stichwort suchen..."
-              class="pl-8 h-8 text-sm bg-muted/50 border-0 focus-visible:ring-1" @keydown.enter="applyAndClose" />
+            <Input
+              v-model.lazy="searchMask.query"
+              placeholder="Stichwort suchen..."
+              class="pl-8 h-8 text-sm bg-muted/50 border-0 focus-visible:ring-1"
+              @keydown.enter="applyAndClose"
+            />
           </div>
         </div>
 
@@ -39,10 +47,15 @@
           Schwierigkeit
         </p>
         <div class="flex items-center gap-1 px-2 pb-1">
-          <Button v-for="opt in difficultyOptions" :key="opt.value" variant="outline" size="sm"
+          <Button
+            v-for="opt in difficultyOptions"
+            :key="opt.value"
+            variant="outline"
+            size="sm"
             class="flex-1 h-7 text-xs gap-1.5"
             :class="mask.difficulty === opt.value && 'border-primary bg-primary/10 text-primary'"
-            @click="toggleDifficulty(opt.value)">
+            @click="toggleDifficulty(opt.value)"
+          >
             <component :is="opt.icon" class="size-3" />
             {{ opt.label }}
           </Button>
@@ -54,11 +67,17 @@
         <p class="px-2 pt-1 text-xs font-medium text-muted-foreground">
           Sortierung
         </p>
-        <button v-for="opt in sortOptions" :key="opt.value"
+        <button
+          v-for="opt in sortOptions"
+          :key="opt.value"
           class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors"
-          :class="mask.sort === opt.value && 'bg-accent text-accent-foreground'" @click="toggleSort(opt.value)">
-          <div class="flex items-center justify-center size-6 rounded-md bg-muted shrink-0"
-            :class="mask.sort === opt.value && 'bg-primary/15 text-primary'">
+          :class="mask.sort === opt.value && 'bg-accent text-accent-foreground'"
+          @click="toggleSort(opt.value)"
+        >
+          <div
+            class="flex items-center justify-center size-6 rounded-md bg-muted shrink-0"
+            :class="mask.sort === opt.value && 'bg-primary/15 text-primary'"
+          >
             <component :is="opt.icon" class="size-3.5" />
           </div>
           <div class="flex-1 text-left">
@@ -77,14 +96,25 @@
 
       <!-- Footer: Erweitert + Reset -->
       <div class="p-1.5 flex items-center justify-between">
-        <Button variant="ghost" size="sm" class="h-7 text-xs" :disabled="!hasActiveFilters" @click="resetAllFilters()">
+        <Button
+          variant="ghost"
+          size="sm"
+          class="h-7 text-xs"
+          :disabled="!hasActiveFilters"
+          @click="resetAllFilters()"
+        >
           <X class="size-3 mr-1" />
           Zurücksetzen
         </Button>
 
         <div class="flex items-center gap-1">
           <!-- Erweiterte Filter als Sheet -->
-          <Button variant="outline" size="sm" class="h-7 text-xs" @click="openAdvanced()">
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-7 text-xs"
+            @click="openAdvanced()"
+          >
             <Settings2 class="size-3 mr-1" />
             Erweitert
           </Button>
@@ -113,7 +143,12 @@
             <label class="text-sm font-medium">Suchradius</label>
             <span class="text-xs font-mono text-muted-foreground">{{ mask.radius ?? 50 }} km</span>
           </div>
-          <Slider v-model="radiusModel" :min="5" :max="200" :step="5" />
+          <Slider
+            v-model="radiusModel"
+            :min="5"
+            :max="200"
+            :step="5"
+          />
         </div>
 
         <!-- Dauer -->
@@ -124,7 +159,12 @@
               {{ formatDuration(durationModel[0]) }} – {{ formatDuration(durationModel[1]) }}
             </span>
           </div>
-          <Slider v-model="durationModel" :min="15" :max="1440" :step="15" />
+          <Slider
+            v-model="durationModel"
+            :min="15"
+            :max="1440"
+            :step="15"
+          />
         </div>
 
         <!-- Tags -->

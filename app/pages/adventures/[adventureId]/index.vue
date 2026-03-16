@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-2xl flex flex-col h-screen space-y-4 py-2 px-2 sm:px-0" v-if="pending">
+  <div v-if="pending" class="mx-auto max-w-2xl flex flex-col h-screen space-y-4 py-2 px-2 sm:px-0">
     <Skeleton class="h-16 w-full" />
     <div class="grid grid-cols-6 h-72 gap-2">
       <Skeleton class="col-span-4 h-full" />
@@ -28,7 +28,12 @@
         </NuxtLink>
       </Button>
     </EmptyContent>
-    <Button variant="link" as-child class="text-muted-foreground" size="sm">
+    <Button
+      variant="link"
+      as-child
+      class="text-muted-foreground"
+      size="sm"
+    >
       <a href="#">
         Support Kontaktieren
         <ArrowUpRightIcon />

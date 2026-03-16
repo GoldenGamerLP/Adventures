@@ -1,12 +1,16 @@
 <template>
-    <div class="flex flex-wrap gap-2">
-        <Badge v-for="adventureType in availableAdventureTypes" :key="adventureType.key" class="flex items-center gap-2"
-            :variant="isSelected(adventureType.key) ? 'secondary' : 'outline'"
-            :class="{ 'opacity-50': !isSelected(adventureType.key) }">
-            <component :is="ICON_MAP[adventureType.iconKey]" />
-            <span class="capitalize">{{ adventureType.label }}</span>
-        </Badge>
-    </div>
+  <div class="flex flex-wrap gap-2">
+    <Badge
+      v-for="adventureType in availableAdventureTypes"
+      :key="adventureType.key"
+      class="flex items-center gap-2"
+      :variant="isSelected(adventureType.key) ? 'secondary' : 'outline'"
+      :class="{ 'opacity-50': !isSelected(adventureType.key) }"
+    >
+      <component :is="ICON_MAP[adventureType.iconKey]" />
+      <span class="capitalize">{{ adventureType.label }}</span>
+    </Badge>
+  </div>
 </template>
 
 <script lang="ts" setup>
