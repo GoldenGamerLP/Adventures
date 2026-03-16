@@ -19,8 +19,13 @@ jobs:
       - name: Build project
         run: bun run build
 
+      - name: Verify build output
+        run: ls -la .output
+
       - name: Upload Output Artifact
         uses: actions/upload-artifact@v4
         with:
-          path: output
+          name: nuxt-output
+          path: .output
+          include-hidden-files: true
           if-no-files-found: error
