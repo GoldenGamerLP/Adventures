@@ -139,9 +139,10 @@ const computedIcon = computed(() => {
 });
 
 //TODO: SSR oder nicht ssr sodass die initale website schneller lädt und die adventures erst nachträglich geladen werden?
-const { data: adventures, pending, error, refresh } = await useFetch<AdventureWithMeta[]>('/api/v1/app/adventures/', {
+const { data: adventures, pending, error, refresh } = useFetch<AdventureWithMeta[]>('/api/v1/app/adventures/', {
   key: FETCH_KEY_FOR_YOU_PAGE,
   query: refDebounced(mask, 1500),
+  watch: false,
 });
 
 const refreshAndReload = () => {

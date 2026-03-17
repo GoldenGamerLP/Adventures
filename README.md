@@ -1,6 +1,8 @@
-# Nuxt Minimal Starter
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+[![Build and Upload Artifacts](https://github.com/GoldenGamerLP/Adventures/actions/workflows/buildAndDeploy.yml/badge.svg)](https://github.com/GoldenGamerLP/Adventures/actions/workflows/buildAndDeploy.yml)
+
+# Adventures
+Adventures is a platform for sharing and discovering outdoor and indoor activities. Users can create and share their own adventures, as well as explore and join adventures created by others. The platform includes features such as user profiles, adventure categories, search and filtering options, and a recommendation system.
 
 
 ## TODO
@@ -45,6 +47,11 @@ IPINFO_TOKEN=...
 TURNSTILE_SITE_KEY=...
 TURNSTILE_SECRET_KEY=...
 ```
+
+
+## Nuxt Minimal Starter
+
+Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
 ## Setup
 
