@@ -13,6 +13,7 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     'nuxt-capo',
     'nuxt-actions',
+    '@nuxt/scripts',
   ],
   turnstile: {
     siteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '',

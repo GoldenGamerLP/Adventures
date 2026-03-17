@@ -7,20 +7,13 @@
     <CardContent>
       <form class="space-y-4" @submit="onSubmit">
         <!-- Captcha by Cloudflare -->
-        <FormField v-slot="{ componentField }" name="token">
-          <NuxtTurnstile v-model="componentField.modelValue" />
-        </FormField>
+        <NuxtTurnstile v-model="token" />
 
         <FormField v-slot="{ componentField }" name="email">
           <FormItem>
             <FormLabel>E-Mail</FormLabel>
             <FormControl>
-              <Input
-                type="email"
-                placeholder="deine@email.de"
-                v-bind="componentField"
-                :disabled="isLoading"
-              />
+              <Input type="email" placeholder="deine@email.de" v-bind="componentField" :disabled="isLoading" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -30,22 +23,15 @@
           <FormItem>
             <FormLabel>Passwort</FormLabel>
             <FormControl>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                v-bind="componentField"
-                :disabled="isLoading"
-              />
+              <Input type="password" placeholder="••••••••" v-bind="componentField" :disabled="isLoading" />
             </FormControl>
             <FormMessage />
           </FormItem>
         </FormField>
 
         <!-- Error Alert -->
-        <div
-          v-if="errorMessage"
-          class="p-3 text-sm bg-destructive/10 border border-destructive/20 text-destructive rounded-lg flex items-start gap-2"
-        >
+        <div v-if="errorMessage"
+          class="p-3 text-sm bg-destructive/10 border border-destructive/20 text-destructive rounded-lg flex items-start gap-2">
           <AlertCircle class="h-4 w-4 mt-0.5 shrink-0" />
           <span>{{ errorMessage }}</span>
         </div>
@@ -68,6 +54,7 @@ import { LoginSchema } from '~~/shared/schema/AuthenticationSchema';
 const isLoading = ref(false);
 const errorMessage = ref('');
 const injectAuthDrawerOpen = inject<Ref<boolean>>('auth-credentials-drawer-open', ref(false));
+const token = ref('');
 
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(LoginSchema),
@@ -91,7 +78,7 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     await $fetch('/api/v1/auth/actions/login', {
       method: 'POST',
-      body: values,
+      body: { ...values, token: token.value },
     });
 
     // Erfolgreiche Anmeldung - reload page um Session zu aktivieren
