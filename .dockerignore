@@ -25,6 +25,3 @@ Thumbs.db
 # Env files (keep out of image context)
 .env
 .env.*
-
-# Data files from project
-.data

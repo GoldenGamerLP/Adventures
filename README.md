@@ -53,7 +53,7 @@ TURNSTILE_SECRET_KEY=...
 ```yaml
 services:
     app:
-        image: ghcr.io/adventures-dev/adventures:latest
+        image:  ghcr.io/goldengamerlp/adventures:latest
         ports:
         - "3000:3000"
         environment:
