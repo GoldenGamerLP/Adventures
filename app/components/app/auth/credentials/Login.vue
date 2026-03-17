@@ -7,8 +7,8 @@
     <CardContent>
       <form class="space-y-4" @submit="onSubmit">
         <!-- Captcha by Cloudflare -->
-        <FormField v-slot="{ setValue }" name="token">
-          <NuxtTurnstile @update:model-value="setValue" />
+        <FormField v-slot="{ componentField }" name="token">
+          <NuxtTurnstile v-model="componentField.modelValue" />
         </FormField>
 
         <FormField v-slot="{ componentField }" name="email">
