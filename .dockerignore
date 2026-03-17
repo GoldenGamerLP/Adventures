@@ -1,0 +1,30 @@
+# VCS and editor
+.git
+.github
+.vscode
+
+# Node/Bun artifacts
+node_modules
+.bun
+
+# Nuxt build output
+.output
+.nuxt
+
+# Logs and temp
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env files (keep out of image context)
+.env
+.env.*
+
+# Data files from project
+.data

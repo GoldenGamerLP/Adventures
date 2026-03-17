@@ -48,6 +48,23 @@ TURNSTILE_SITE_KEY=...
 TURNSTILE_SECRET_KEY=...
 ```
 
+## Example docker compose file
+
+```yaml
+services:
+    app:
+        image: ghcr.io/adventures-dev/adventures:latest
+        ports:
+        - "3000:3000"
+        environment:
+        - MONGODB_URI=mongodb+srv://...
+        - MONGODB_DATABASE=adventures
+        - IPINFO_TOKEN=...
+        - TURNSTILE_SITE_KEY=...
+        - TURNSTILE_SECRET_KEY=...
+```
+
+
 
 ## Nuxt Minimal Starter
 

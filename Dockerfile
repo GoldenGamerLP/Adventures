@@ -1,12 +1,12 @@
 # use the official Bun image
 # see all versions at https://hub.docker.com/r/oven/bun/tags
-FROM oven/bun:latest AS build
+FROM --platform=$BUILDPLATFORM oven/bun:1.2.22 AS build
 WORKDIR /app
 
 COPY package.json bun.lock* ./
 
 # use ignore-scripts to avoid building node modules like better-sqlite3
-RUN bun install
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
 
 # Copy the entire project
 COPY . .
@@ -14,7 +14,7 @@ COPY . .
 RUN bun --bun run build
 
 # copy production dependencies and source code into final image
-FROM oven/bun:latest AS production
+FROM --platform=$TARGETPLATFORM oven/bun:1.2.22 AS production
 WORKDIR /app
 
 # Only `.output` folder is needed from the build stage
