@@ -4,6 +4,7 @@ import type {
     PublishedPicture,
 } from "#shared/types/PictureTypes";
 import { ObjectId } from "mongodb";
+import { DRAFT_CONFIG } from "~~/shared/constants/Constants";
 import database from "../database/DBUtils";
 import { deleteFile, getFileStream, uploadFileFromWeb } from "../database/FileUtils";
 
@@ -21,6 +22,9 @@ export async function ensurePictureIndexes(): Promise<void> {
 
     // Index für User-Abfragen
     await pictureDatabase.createIndex({ uploadedBy: 1 });
+
+    // TTL-Index nicht erstellen um cronjob-basierten Cleanup zu ermöglichen da gridfs delete operationen nicht mit TTL-Index kompatibel sind
+    // TODO: In Zukunft
 
     console.log('[PictureUtils] Picture indexes created');
 }
@@ -63,6 +67,7 @@ const uploadDraftPictures = async (
                 lastModified: new Date(file.lastModified).toISOString(),
                 size: file.size,
             },
+            ttl: new Date(Date.now() + DRAFT_CONFIG.TTL_MS), // Ablaufzeitpunkt für automatische Löschung
         };
 
         await pictureDatabase.insertOne(picture);

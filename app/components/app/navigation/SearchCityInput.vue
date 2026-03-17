@@ -52,16 +52,16 @@ import { Check, MapPin, SearchIcon, X } from 'lucide-vue-next';
 import { ComboboxAnchor, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxRoot, ComboboxTrigger, ComboboxViewport } from 'reka-ui';
 
 const props = defineProps<{
-    selectedCity: GeoEntry | undefined;
+    selectedCity: GeoDBEntry | undefined;
 }>();
 
 const emits = defineEmits<{
-    'update:selectedCity': [value: GeoEntry | undefined];
+    'update:selectedCity': [value: GeoDBEntry | undefined];
 }>();
 
 const selectedCity = ref(props.selectedCity);
 const search = ref('');
-const results = ref<GeoEntry[]>([]);
+const results = ref<GeoDBEntry[]>([]);
 const debouncedSearch = refDebounced(search, 500);
 
 watch(debouncedSearch, async (newValue) => {

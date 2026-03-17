@@ -25,6 +25,7 @@ interface PictureBase {
 
     /** Status des Bildes */
     status: PictureStatus;
+
 }
 
 /**
@@ -46,6 +47,8 @@ export interface DraftPicture extends PictureBase {
 
     /** Referenz zum AdventureDraft */
     draftId: string;
+
+    ttl: Date; // Zeit in Sekunden bis das Bild automatisch gelöscht wird (für TTL-Index)
 }
 
 export interface UserSourcePicture extends PictureBase {

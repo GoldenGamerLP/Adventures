@@ -8,9 +8,9 @@ export const GeoZipcodeSchema = z.object({
     zipcode: z.string().min(3).max(20),
 });
 
-export const resolveLatLongSchema = z.object({
-    lat: z.coerce.number().min(-90).max(90),
-    lon: z.coerce.number().min(-180).max(180),
+export const ResolveLatLongSchema = z.object({
+    latitude: z.coerce.number().min(-90).max(90),
+    longitude: z.coerce.number().min(-180).max(180),
 });
 
 export const GeoLocationSchema = z.object({

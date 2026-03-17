@@ -1,7 +1,6 @@
 import { GeoIpDbName, open as geoOpen } from 'geolite2-redist';
 import maxmind, { type CityResponse, type Reader } from 'maxmind';
-import { DEFAULT_GEOIP } from '~~/shared/constants/Constants';
-import type { FrontEndGeoState } from '~~/shared/types/GeoTypes';
+import type { ResolvedGeoIP } from '~~/shared/types/GeoTypes';
 
 // Globale Variable, um die Datenbank-Instanz zwischenzuspeichern
 let lookupPromise: Promise<Reader<CityResponse>> | null = null;
@@ -14,7 +13,7 @@ export const getGeoDb = async () => {
     return lookupPromise;
 };
 
-export const resolveGeoIP = async (ip: string): Promise<FrontEndGeoState | null> => {
+export const resolveGeoIP = async (ip: string): Promise<ResolvedGeoIP | null> => {
     try {
         const lookup = await getGeoDb();
         const lookupResponse = lookup.get(ip) as CityResponse | null;
@@ -23,29 +22,28 @@ export const resolveGeoIP = async (ip: string): Promise<FrontEndGeoState | null>
             return null;
         }
 
-        const state = lookupResponse.subdivisions?.[0]?.names?.en || 'Unknown';
-        const city = lookupResponse.city?.names?.en || 'Unknown';
-        const country = lookupResponse.country?.names?.en || 'Unknown';
-        const postalCode = lookupResponse.postal?.code || 'Unknown';
-
-        return {
-            location: {
-                latitude: lookupResponse.location.latitude,
-                longitude: lookupResponse.location.longitude
-            },
-            city,
-            state,
-            country,
-            postalCode
-        };
-
+        return lookupResponse.subdivisions.length ? lookupResponse.subdivisions[0].names.en : null
     } catch (error) {
         console.warn('[GeoIP] Resolution failed:', error);
         return null;
     }
 };
 
-export const resolveGeoIPWithFallback = async (ip: string): Promise<FrontEndGeoState> => {
+export const DEFAULT_GEOIP: ResolvedGeoIP = {
+    coordinates: [51.1657, 10.4515], // Deutschland-Mitte
+    latitude: 51.1657,
+    longitude: 10.4515,
+    city: 'Germany',
+    country: 'Germany',
+};
+
+export const resolveGeoIPWithFallback = async (ip: string): Promise<ResolvedGeoIP> => {
     const geo = await resolveGeoIP(ip);
     return geo || DEFAULT_GEOIP;
 };
+
+resolveGeoIPWithFallback('87.154.117.35').then((result) => {
+    console.log('Resolved GeoIP:', result);
+}).catch((error) => {
+    console.error('Error resolving GeoIP:', error);
+});

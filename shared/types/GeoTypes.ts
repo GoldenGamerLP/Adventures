@@ -1,4 +1,4 @@
-export interface GeoEntry {
+export interface GeoDBEntry {
     _id: string;
     country_code: string;
     zipcode: string;
@@ -39,17 +39,30 @@ export interface NominatimLocation {
 }
 
 export interface ResolvedGeoIP {
-    _id?: string;
-    coordinates: [number, number]; // [lat, lng]
+    coordinates: [number, number]; // [latitude, longitude]
+    latitude: number;
+    longitude: number;
     city?: string;
     region?: string;
-    country: string;
-    resolvedAt: string;            // ISO — für TTL
+    country?: string;
 }
 
-export interface GeoIPLocation {
-    coordinates: [number, number]; // [lat, lng]
-    city?: string;
-    region?: string;
+export interface FrontEndGeoState {
+    //Can be user location (manuell gesetzt) oder IP-basierte Location (automatisch ermittelt)
+    location: {
+        latitude: number;
+        longitude: number;
+    };
+
+    //z.B Recklinghausen
+    city: string;
+
+    //z.B Nordrhein-Westfalen
+    state: string;
+
+    //z.B Germany
     country: string;
+
+    //Optional: Postleitzahl, falls verfügbar
+    postalCode: string;
 }

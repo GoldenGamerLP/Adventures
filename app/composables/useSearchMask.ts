@@ -2,7 +2,7 @@ import { FETCH_KEY_FOR_YOU_PAGE } from '~~/shared/constants/Constants';
 import type { AdventuresQueryFilterType } from '~~/shared/schema/AdventuresSchema';
 
 export const useSearchMask = () => {
-    const { coordinates } = useGeoLocation();
+    const { geolocation } = useGeoLocation();
 
     const state = useState('searchMask', () => reactive({
         searchPopoverOpen: false,
@@ -10,16 +10,16 @@ export const useSearchMask = () => {
         mask: {} as Partial<AdventuresQueryFilterType>,
     }));
 
-    watch(coordinates, (newCoords) => {
+    watch(geolocation, (newCoords) => {
         if (newCoords) {
-            state.value.mask.location = newCoords;
+            state.value.mask.location = [newCoords.location.latitude, newCoords.location.longitude];
         }
     }, { immediate: true, deep: true });
 
     /** Geo-Daten in die Suchmaske übernehmen */
     const applyGeoFilter = () => {
-        if (!coordinates.value) return;
-        state.value.mask.location = coordinates.value;
+        if (!geolocation.value) return;
+        state.value.mask.location = [geolocation.value.location.latitude, geolocation.value.location.longitude];
     };
 
     const resetFilters = () => {

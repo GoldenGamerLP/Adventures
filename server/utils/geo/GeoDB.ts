@@ -1,11 +1,11 @@
-import type { GeoEntry } from "#shared/types/GeoTypes";
+import type { GeoDBEntry } from "#shared/types/GeoTypes";
 import { readFileSync } from "node:fs";
 import database from "../database/DBUtils";
 
 //Collection for geographic data from https://github.com/zauberware/postal-codes-json-xml-csv/blob/master/data/DE.zip
 //Index on: zipcode, place (full text) and search index on place
 const zipcodeJsonFile = "./data/DE_zipcodes.json";
-const GeoDB = database.collection<GeoEntry>("zipcodes");
+const GeoDB = database.collection<GeoDBEntry>("zipcodes");
 
 const ensureGeoIndexes = async () => {
     initializeGeoDB(); // Ensure DB is initialized before creating indexes
@@ -15,21 +15,21 @@ const ensureGeoIndexes = async () => {
     await GeoDB.createIndex({ location: "2dsphere" });
 }
 
-const searchCityFullText = async (query: string, limit = 10): Promise<GeoEntry[]> => {
+const searchCityFullText = async (query: string, limit = 10): Promise<GeoDBEntry[]> => {
     const response = GeoDB.aggregate([
         { $search: { autocomplete: { query, path: "place", tokenOrder: "sequential" } } },
         { $limit: limit }
     ]);
 
-    return (await response.toArray()) as GeoEntry[];
+    return (await response.toArray()) as GeoDBEntry[];
 };
 
-const getCityByZipcode = async (zipcode: string): Promise<GeoEntry | null> => {
+const getCityByZipcode = async (zipcode: string): Promise<GeoDBEntry | null> => {
     const response = await GeoDB.findOne({ zipcode });
     return response;
 };
 
-const findNearestCity = async (latitude: number, longitude: number): Promise<GeoEntry | null> => {
+const findNearestCity = async (latitude: number, longitude: number): Promise<GeoDBEntry | null> => {
     const response = await GeoDB.findOne({
         location: {
             $near: {

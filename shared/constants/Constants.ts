@@ -46,3 +46,14 @@ export const FETCH_KEY_FOR_YOU_PAGE = 'adventures-for-you-page';
 export const MAX_ADVENTURE_DURATION_MINUTES = 24 * 60; // 24 Stunden in Minuten
 
 export const MAX_SELECTORS_SELECTED = 2; 
+
+export const DEFAULT_GEOIP = {
+    location: {
+        latitude: 51.1657,
+        longitude: 10.4515,
+    },
+    city: 'Germany',
+    state: 'Germany',
+    country: 'Germany',
+    postalCode: 'Unknown',
+} as const;

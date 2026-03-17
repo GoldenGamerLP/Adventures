@@ -10,14 +10,24 @@
         <!-- Action Buttons -->
         <div class="flex items-center gap-1">
           <!-- Create Adventure Button -->
-          <Button v-if="user" variant="ghost" size="icon" as-child>
+          <Button
+            v-if="user"
+            variant="ghost"
+            size="icon"
+            as-child
+          >
             <NuxtLink :to="{ name: 'adventures-drafts' }">
               <BookMarkedIcon />
               <span class="sr-only">Entwürfe ansehen</span>
             </NuxtLink>
           </Button>
 
-          <Button v-if="user" variant="ghost" size="icon" as-child>
+          <Button
+            v-if="user"
+            variant="ghost"
+            size="icon"
+            as-child
+          >
             <NuxtLink :to="{ name: 'profile' }">
               <UserCog />
               <span class="sr-only">Profil Einstellungen</span>
@@ -57,7 +67,12 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" size="sm" :disabled="pending" @click="refreshAndReload">
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="pending"
+            @click="refreshAndReload"
+          >
             Erneut laden
           </Button>
         </EmptyContent>
@@ -75,7 +90,12 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" size="sm" :disabled="pending" @click="refreshAndReload()">
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="pending"
+            @click="refreshAndReload()"
+          >
             Filter zurücksetzen
           </Button>
         </EmptyContent>
@@ -83,9 +103,12 @@
 
       <!-- Adventures List -->
       <ol v-else class="mt-6 flex flex-col gap-4 mx-1 sm:mx-0">
-        <li v-for="(adventure, index) in adventures" :key="adventure._id"
+        <li
+          v-for="(adventure, index) in adventures"
+          :key="adventure._id"
           :style="{ 'animation-delay': `${index * 100}ms`, 'animation-fill-mode': 'both' }"
-          class="animate-in fade-in slide-in-from-bottom-8 duration-300">
+          class="animate-in fade-in slide-in-from-bottom-8 duration-300"
+        >
           <LazyAppAdventuresNavigationAdventureDisplay :adventure="adventure" />
         </li>
       </ol>
