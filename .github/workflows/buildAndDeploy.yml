@@ -27,6 +27,6 @@ jobs:
           context: .
           platforms: linux/arm64
           push: true
-          tags: ghcr.io/adventures-dev/adventures:latest
+          tags: ghcr.io/GoldenGamerLP/adventures:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
