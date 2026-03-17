@@ -15,11 +15,11 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { "cf-turnstile-response": turnstileResponse } = data;
+  const { token } = data;
 
   // In Produktion: Turnstile-Validierung
   if (process.env.NODE_ENV === 'production') {
-    if (!turnstileResponse) {
+    if (!token) {
       throw createError({
         status: 400,
         statusText: "TURNSTILE_MISSING",
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const isTurnstileValid = await verifyTurnstileToken(turnstileResponse);
+    const isTurnstileValid = await verifyTurnstileToken(token);
     if (!isTurnstileValid) {
       throw createError({
         status: 400,
