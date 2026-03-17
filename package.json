@@ -7,7 +7,9 @@
     "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "preload": "node -e \"import('geolite2-redist').then(geolite => geolite.downloadDbs())\""
+
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
@@ -25,7 +27,9 @@
     "crypto": "^1.0.1",
     "embla-carousel-vue": "^8.6.0",
     "fluid-dnd": "^2.6.3",
+    "geolite2-redist": "^3.1.2",
     "lucide-vue-next": "^0.563.0",
+    "maxmind": "^5.0.5",
     "mongodb": "^7.0.0",
     "nuxt": "^4.3.1",
     "nuxt-actions": "^1.0.3",

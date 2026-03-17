@@ -4,8 +4,6 @@ import { getAdventuresByFilterAndUser } from '~~/server/utils/adventures/Adventu
 export default defineEventHandler(async (event) => {
     const user = event.context.user;
     
-    console.log(await getQuery(event));
-
     const { data, error } = await getValidatedQuery(event, AdventuresQueryFilterSchema.safeParseAsync);
 
     if (error) {

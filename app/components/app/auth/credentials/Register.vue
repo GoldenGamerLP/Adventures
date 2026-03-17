@@ -7,18 +7,15 @@
     <CardContent>
       <form class="space-y-4" @submit="onSubmit">
         <!-- Captcha by Cloudflare -->
-        <NuxtTurnstile />
+        <FormField v-slot="{ setValue }" name="token">
+          <NuxtTurnstile @update:model-value="setValue" />
+        </FormField>
 
         <FormField v-slot="{ componentField }" name="name">
           <FormItem>
             <FormLabel>Name</FormLabel>
             <FormControl>
-              <Input
-                type="text"
-                placeholder="Max Mustermann"
-                v-bind="componentField"
-                :disabled="isLoading"
-              />
+              <Input type="text" placeholder="Max Mustermann" v-bind="componentField" :disabled="isLoading" />
             </FormControl>
             <FormDescription>Mindestens 4 Zeichen</FormDescription>
             <FormMessage />
@@ -29,12 +26,7 @@
           <FormItem>
             <FormLabel>E-Mail</FormLabel>
             <FormControl>
-              <Input
-                type="email"
-                placeholder="deine@email.de"
-                v-bind="componentField"
-                :disabled="isLoading"
-              />
+              <Input type="email" placeholder="deine@email.de" v-bind="componentField" :disabled="isLoading" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -44,12 +36,7 @@
           <FormItem>
             <FormLabel>Passwort</FormLabel>
             <FormControl>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                v-bind="componentField"
-                :disabled="isLoading"
-              />
+              <Input type="password" placeholder="••••••••" v-bind="componentField" :disabled="isLoading" />
             </FormControl>
             <FormDescription>Mindestens 8 Zeichen</FormDescription>
             <FormMessage />
@@ -60,31 +47,22 @@
           <FormItem>
             <FormLabel>Passwort bestätigen</FormLabel>
             <FormControl>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                v-bind="componentField"
-                :disabled="isLoading"
-              />
+              <Input type="password" placeholder="••••••••" v-bind="componentField" :disabled="isLoading" />
             </FormControl>
             <FormMessage />
           </FormItem>
         </FormField>
 
         <!-- Error Alert -->
-        <div
-          v-if="errorMessage"
-          class="p-3 text-sm bg-destructive/10 border border-destructive/20 text-destructive rounded-lg flex items-start gap-2"
-        >
+        <div v-if="errorMessage"
+          class="p-3 text-sm bg-destructive/10 border border-destructive/20 text-destructive rounded-lg flex items-start gap-2">
           <AlertCircle class="h-4 w-4 mt-0.5 shrink-0" />
           <span>{{ errorMessage }}</span>
         </div>
 
         <!-- Success Alert -->
-        <div
-          v-if="successMessage"
-          class="p-3 text-sm bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 rounded-lg flex items-start gap-2"
-        >
+        <div v-if="successMessage"
+          class="p-3 text-sm bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 rounded-lg flex items-start gap-2">
           <CheckCircle2 class="h-4 w-4 mt-0.5 shrink-0" />
           <span>{{ successMessage }}</span>
         </div>
@@ -107,7 +85,6 @@ import { RegisterSchema } from '~~/shared/schema/AuthenticationSchema';
 const isLoading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
-
 const injectAuthDrawerOpen = inject<Ref<boolean>>('auth-credentials-drawer-open', ref(false));
 
 const { handleSubmit } = useForm({

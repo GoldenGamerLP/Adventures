@@ -11,6 +11,7 @@ RUN --mount=type=cache,target=/root/.bun/install/cache bun install
 # Copy the entire project
 COPY . .
 
+RUN bun --bun run preload
 RUN bun --bun run build
 
 # copy production dependencies and source code into final image

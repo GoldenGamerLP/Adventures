@@ -4,7 +4,7 @@ import { ObjectIdSchema, SafeStringSchema } from "../validation/utils";
 export const LoginSchema = z.object({
     email: z.string().email(),
     password: z.string().min(8),
-    "cf-turnstile-response": z.string().optional(), // Optional: Wird nur bei Login mit Turnstile verwendet
+    token: z.string().optional(), // Optional: Wird nur bei Login mit Turnstile verwendet
 });
 
 export const RegisterSchema = z.object({
@@ -12,7 +12,7 @@ export const RegisterSchema = z.object({
     email: z.string().email(),
     password: z.string().min(8),
     confirmPassword: z.string().min(8),
-    "cf-turnstile-response": z.string().optional(), // Optional: Wird nur bei Registrierung mit Turnstile verwendet
+    token: z.string().optional(), // Optional: Wird nur bei Registrierung mit Turnstile verwendet
 }).refine((data) => data.password === data.confirmPassword, {
     message: "app_invalid_password_match", path: ["confirmPassword"],
 });

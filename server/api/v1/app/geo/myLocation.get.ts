@@ -2,7 +2,7 @@ import { resolveGeoIP } from '~~/server/utils/geoip/GeoIpUtils';
 
 export default defineEventHandler(async (event) => {
     const ip = getRequestIP(event, { xForwardedFor: true }) ?? '127.0.0.1';
-    
+
     // Localhost / Dev-Fallback
     if (ip === '127.0.0.1' || ip === '::1') {
         return {
@@ -20,10 +20,5 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    return {
-        coordinates: geo.coordinates,
-        city: geo.city,
-        region: geo.region,
-        country: geo.country,
-    };
+    return geo;
 });

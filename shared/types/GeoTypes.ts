@@ -40,7 +40,6 @@ export interface NominatimLocation {
 
 export interface ResolvedGeoIP {
     _id?: string;
-    ip: string;                    // Gehashte IP (Privacy!)
     coordinates: [number, number]; // [lat, lng]
     city?: string;
     region?: string;

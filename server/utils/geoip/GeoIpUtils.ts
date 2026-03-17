@@ -1,76 +1,39 @@
-import { createHash } from 'crypto';
-import type { ResolvedGeoIP } from '~~/shared/types/GeoTypes';
-import database from '../database/DBUtils';
+import { GeoIpDbName, open as geoOpen } from 'geolite2-redist';
+import maxmind, { type CityResponse } from 'maxmind';
 
-const geoIPCache = database.collection<ResolvedGeoIP>('geo_ip_cache');
+// Globale Variable, um die Datenbank-Instanz zwischenzuspeichern
+let lookupPromise: Promise<any> | null = null;
 
-const GEOIP_TTL_DAYS = 7;
-
-export const ensureGeoIPIndexes = async (): Promise<void> => {
-    // TTL-Index: automatisch nach 7 Tagen löschen
-    await geoIPCache.createIndex(
-        { resolvedAt: 1 },
-        { expireAfterSeconds: GEOIP_TTL_DAYS * 24 * 60 * 60 }
-    );
-    await geoIPCache.createIndex({ ip: 1 }, { unique: true });
-
-    console.log('[GeoIP] Indexes created');
+export const getGeoDb = async () => {
+    if (!lookupPromise) {
+        // Öffnet die City-Datenbank und gibt den Reader zurück
+        lookupPromise = geoOpen(GeoIpDbName.City, (path) => maxmind.open(path));
+    }
+    return lookupPromise;
 };
 
-/**
- * Hasht die IP für Privacy — wir speichern nie Klartext-IPs
- */
-const hashIP = (ip: string): string => {
-    return createHash('sha256').update(ip).digest('hex');
-};
-
-/**
- * Löst eine IP zu Koordinaten auf — mit Cache
- */
 export const resolveGeoIP = async (ip: string): Promise<ResolvedGeoIP | null> => {
-    const hashedIP = hashIP(ip);
-
-    // 1. Cache prüfen
-    const cached = await geoIPCache.findOne({ ip: hashedIP });
-    if (cached) return cached;
-
-    // 2. ipinfo.io anfragen
     try {
-        const response = await $fetch<{
-            ip: string;
-            city: string;
-            region: string;
-            country: string;
-            loc: string; // "lat,lng"
-        }>(`https://ipinfo.io/${ip}/lite`, {
-            headers: {
-                Authorization: `Bearer ${process.env.IPINFO_TOKEN}`,
-            },
-            timeout: 3000,
-        });
+        const lookup = await getGeoDb();
+        const lookupResponse = lookup.get(ip) as CityResponse | null;
 
-        if (!response.loc) return null;
+        // Prüfen, ob wir überhaupt ein valides Ergebnis UND Koordinaten haben
+        if (!lookupResponse || !lookupResponse.location || !lookupResponse.location.longitude || !lookupResponse.location.latitude) {
+            return null;
+        }
 
-        const [lat, lng] = response.loc.split(',').map(Number);
-        if (!lat || !lng) return null;
-
-        const entry: ResolvedGeoIP = {
-            ip: hashedIP,
-            coordinates: [lat, lng],
-            city: response.city,
-            region: response.region,
-            country: response.country,
+        return {
+            // Die IP brauchst du im Return-Objekt gar nicht mitschleppen, 
+            // wenn du sie eh nur anonym nutzen willst.
+            coordinates: [
+                lookupResponse.location.longitude, // WICHTIG: Longitude zuerst!
+                lookupResponse.location.latitude   // Latitude als zweites!
+            ],
+            city: lookupResponse.city?.names?.de || lookupResponse.city?.names?.en,
+            region: lookupResponse.subdivisions?.[0]?.names?.en,
+            country: lookupResponse.country?.names?.de || lookupResponse.country?.names?.en || 'Unknown',
             resolvedAt: new Date().toISOString(),
         };
-
-        // 3. Cache speichern (upsert falls Race Condition)
-        await geoIPCache.updateOne(
-            { ip: hashedIP },
-            { $set: entry },
-            { upsert: true }
-        );
-
-        return entry;
     } catch (error) {
         console.warn('[GeoIP] Resolution failed:', error);
         return null;

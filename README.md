@@ -50,6 +50,17 @@ TURNSTILE_SECRET_KEY=...
 
 ## Example docker compose file
 
+You need to login to `ghcr.io` to pull the image.
+
+1. Create a [personal access token](https://github.com/settings/tokens/new?scopes=write:packages)
+2. Use the token to login to `ghcr.io` with your GitHub username.
+
+You can do this with the following command:
+
+```bash
+docker login ghcr.io -u USERNAME -p TOKEN
+```
+
 ```yaml
 services:
     app:

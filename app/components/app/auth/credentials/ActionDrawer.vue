@@ -13,14 +13,14 @@
         <span class="sr-only">Anmelden / Registrieren</span>
       </Button>
     </DrawerTrigger>
-    <DrawerContent class="max-w-2xl mx-auto w-full overflow-y-auto">
+    <DrawerContent class="max-w-2xl mx-auto w-full">
       <DrawerHeader>
         <DrawerTitle>Willkommen bei Adventures</DrawerTitle>
         <DrawerDescription>
           Melde dich an oder erstelle ein neues Konto, um alle Funktionen zu nutzen.
         </DrawerDescription>
       </DrawerHeader>
-      <div class="px-4 py-6">
+      <div class="px-4 py-6 overflow-auto mb-4">
         <Tabs default-value="login" class="w-full">
           <TabsList class="w-full">
             <TabsTrigger value="login">
