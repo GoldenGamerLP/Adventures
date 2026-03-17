@@ -13,33 +13,6 @@ export const useGeoLocation = () => {
         error: false,
     }));
 
-    const resolve = async () => {
-        if (geoState.value.location || geoState.value.pending) return;
-
-        geoState.value.pending = true;
-        geoState.value.error = false;
-
-        try {
-            // 1. IP → Koordinaten
-            const data = await $fetch<GeoIPLocation>('/api/v1/app/geo/myLocation');
-            geoState.value.location = data;
-
-            // 2. Koordinaten → GeoEntry (näheste Stadt)
-            const entry = await $fetch<GeoEntry>('/api/v1/app/geo/resolveLatLon', {
-                query: {
-                    lat: data.coordinates[0],
-                    lon: data.coordinates[1],
-                },
-            });
-            geoState.value.entry = entry;
-        } catch (error) {
-            geoState.value.error = true;
-            console.warn('[GeoIP] Could not resolve location', error);
-        } finally {
-            geoState.value.pending = false;
-        }
-    };
-
     /**
      * Manuell eine andere Stadt setzen (z.B. via SearchCityInput).
      * Überschreibt den GeoEntry und aktualisiert die Koordinaten.
@@ -71,9 +44,6 @@ export const useGeoLocation = () => {
         /** Fehler-Status */
         error: computed(() => geoState.value.error),
 
-        /** Einmalig auflösen (Plugin) */
-        resolve,
-
         /** Manuell Stadt ändern */
         setCity,
 
@@ -84,4 +54,39 @@ export const useGeoLocation = () => {
             geoState.value.error = false;
         },
     };
+};
+
+export const hydrateGeoLocation = async () => {
+    const { setCity } = useGeoLocation();
+
+    try {
+        // Ip zu Koordinaten
+        // Mit requestFetch, damit die Anfrage serverseitig ausgeführt wird und die IP korrekt ermittelt werden kann (nicht clientseitig, wo sie durch CORS-Policies blockiert werden könnte)
+        const locationData = await useRequestFetch()('/api/v1/app/geo/myLocation');
+
+        if (!locationData) {
+            throw new Error('No location data returned from API');
+        }
+
+        // 2. Koordinaten → GeoEntry (näheste Stadt)
+        const entryData = await $fetch('/api/v1/app/geo/resolveLatLon', {
+            query: {
+                lat: locationData.coordinates[0],
+                lon: locationData.coordinates[1],
+            },
+        });
+
+        if (!entryData) {
+            throw new Error('No GeoEntry data returned from API');
+        }
+
+        setCity({
+            ...entryData,
+            //Override, da die API nur eine generische "location" zurückgibt, wir aber explizit lat/lon wollen
+            latitude: locationData.coordinates[0],
+            longitude: locationData.coordinates[1],
+        });
+    } catch (error) {
+        console.warn('[GeoIP] Could not resolve location', error);
+    }
 };
