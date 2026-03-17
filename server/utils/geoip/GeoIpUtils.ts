@@ -23,11 +23,9 @@ export const resolveGeoIP = async (ip: string): Promise<ResolvedGeoIP | null> =>
         }
 
         return {
-            // Die IP brauchst du im Return-Objekt gar nicht mitschleppen, 
-            // wenn du sie eh nur anonym nutzen willst.
             coordinates: [
-                lookupResponse.location.longitude, // WICHTIG: Longitude zuerst!
-                lookupResponse.location.latitude   // Latitude als zweites!
+                lookupResponse.location.latitude,
+                lookupResponse.location.longitude,
             ],
             city: lookupResponse.city?.names?.de || lookupResponse.city?.names?.en,
             region: lookupResponse.subdivisions?.[0]?.names?.en,
