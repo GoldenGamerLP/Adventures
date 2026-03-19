@@ -27,22 +27,28 @@
       </div>
 
       <!-- Background image -->
-      <div class="w-full h-48 sm:h-72 flex justify-center items-center sticky top-0">
-        <template v-if="userData.backgroundPictureId">
-          <img
-            :src="toPicturePath(userData.backgroundPictureId)"
-            alt="Hintergrundbild"
-            class="w-full h-full object-cover"
-          />
+      <div class="sticky top-0">
+        <div class="w-full h-48 sm:h-72 flex justify-center items-center ">
+          <template v-if="userData.backgroundPictureId">
+            <img :src="toPicturePath(userData.backgroundPictureId)" alt="Hintergrundbild"
+              class="w-full h-full object-cover" />
+          </template>
+          <template v-else>
+            <div
+              class="w-full h-full bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg border-2 border-dashed border-muted flex flex-col items-center justify-center gap-2">
+              <ImageOffIcon class="size-6 text-muted-foreground" />
+              <span class="text-sm text-muted-foreground">Kein Hintergrundbild</span>
+            </div>
+          </template>
           <AppProfileChangeBackgroundImage v-model="userData">
             <Button size="sm" class="absolute bottom-8 right-4 z-20">
               <EditIcon />
               Hintergrund ändern
             </Button>
           </AppProfileChangeBackgroundImage>
-        </template>
+        </div>
+        <div class="absolute bg-linear-to-t from-background pointer-events-none inset-x-0 top-36 sm:top-56 h-16"></div>
       </div>
-      <div class="absolute bg-linear-to-t from-background pointer-events-none inset-x-0 top-36 sm:top-56 h-16"></div>
 
       <!-- Content card -->
       <div class="rounded-lg p-4 bg-background -mt-6 z-10 relative shadow-[0_-4px_20px_rgba(0,0,0,0.08)] border">
@@ -64,29 +70,21 @@
         <RekaTabsRoot default-value="about" class="flex flex-col">
           <RekaTabsList
             class="relative shrink-0 flex mb-4 bg-accent p-1.5 rounded-lg text-sm overflow-x-auto overflow-y-hidden"
-            aria-label="Profil-Tabs"
-          >
+            aria-label="Profil-Tabs">
             <RekaTabsIndicator
-              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300"
-            >
+              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300">
               <div class="bg-primary w-full h-full"></div>
             </RekaTabsIndicator>
-            <RekaTabsTrigger
-              value="about"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
-            >
+            <RekaTabsTrigger value="about"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
               Über
             </RekaTabsTrigger>
-            <RekaTabsTrigger
-              value="adventures"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
-            >
+            <RekaTabsTrigger value="adventures"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
               Abenteuer
             </RekaTabsTrigger>
-            <RekaTabsTrigger
-              value="history"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
-            >
+            <RekaTabsTrigger value="history"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
               Verlauf
             </RekaTabsTrigger>
           </RekaTabsList>
@@ -120,11 +118,8 @@
                   <AvatarFallback>
                     <ImageOffIcon class="size-5" />
                   </AvatarFallback>
-                  <AvatarImage
-                    v-if="userData.profilePictureId"
-                    :src="toPicturePath(userData.profilePictureId)"
-                    alt="Profilbild"
-                  />
+                  <AvatarImage v-if="userData.profilePictureId" :src="toPicturePath(userData.profilePictureId)"
+                    alt="Profilbild" />
                 </Avatar>
                 <div class="flex flex-col min-w-0 flex-1">
                   <span class="text-sm font-semibold">Profilbild</span>

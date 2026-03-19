@@ -5,7 +5,7 @@ import { INTEREST_KEY_SET, MAX_INTERESTS } from '../types/UserProfileTypes';
  * Validierung für die Biografie (längerer Text)
  */
 export const UpdateBiographySchema = z.object({
-    biography: z.string().trim().min(2, 'Mindestens 2 Zeichen').max(500, 'Maximal 500 Zeichen'),
+    biography: z.string().trim().min(2, 'Mindestens 2 Zeichen').max(500, 'Maximal 500 Zeichen').trim(),
 });
 
 /**

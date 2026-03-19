@@ -20,12 +20,7 @@
         </NuxtLink>
       </Button>
     </EmptyContent>
-    <Button
-      variant="link"
-      as-child
-      class="text-muted-foreground"
-      size="sm"
-    >
+    <Button variant="link" as-child class="text-muted-foreground" size="sm">
       <a href="#">
         Support kontaktieren
         <ArrowUpRightIcon />
@@ -42,14 +37,16 @@ const draftId = useRoute().params.draftId as string;
 // Fetch draft data
 const {
   data: draftData,
-  pending,
-  error,
-  refresh
 } = await useFetch<AdventureDraftWithPictures>(`/api/v1/app/adventures/drafts/${draftId}`,
   {
     key: 'adventure-draft-' + draftId,
   }
 );
+
+useHead({
+  titleTemplate: (titleChunk) => titleChunk ? `${titleChunk} - Adventure bearbeiten` : 'Adventure bearbeiten',
+  title: draftData.value ? draftData.value.formData.title : 'Adventure bearbeiten',
+});
 
 
 </script>

@@ -96,12 +96,8 @@
               <FormItem>
                 <FormLabel>Beschreibung </FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Beschreibe dein Abenteuer..."
-                    v-bind="componentField"
-                    rows="4"
-                    class="resize-none"
-                  />
+                  <Textarea placeholder="Beschreibe dein Abenteuer..." v-bind="componentField" rows="4"
+                    class="resize-none" />
                 </FormControl>
                 <FormDescription>
                   {{ (values.description?.length || 0) }}/1000 Zeichen
@@ -114,11 +110,8 @@
               <FormItem>
                 <FormLabel>Tags</FormLabel>
                 <FormControl>
-                  <TagsSelector
-                    :max="MAX_SELECTORS_SELECTED"
-                    :model-value="field.value"
-                    @update:model-value="handleChange"
-                  />
+                  <TagsSelector :max="MAX_SELECTORS_SELECTED" :model-value="field.value"
+                    @update:model-value="handleChange" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -140,12 +133,8 @@
                 <FormItem>
                   <FormLabel>Schwierigkeit </FormLabel>
                   <FormControl>
-                    <ToggleGroup
-                      variant="outline"
-                      type="single"
-                      class="grid grid-cols-3 w-full"
-                      v-bind="componentField"
-                    >
+                    <ToggleGroup variant="outline" type="single" class="grid grid-cols-3 w-full"
+                      v-bind="componentField">
                       <ToggleGroupItem value="easy" class="data-[state=on]:bg-green-500/20">
                         Leicht
                       </ToggleGroupItem>
@@ -165,12 +154,8 @@
                 <FormItem>
                   <FormLabel>Kategorie</FormLabel>
                   <FormControl>
-                    <ToggleGroup
-                      variant="outline"
-                      type="single"
-                      class="grid grid-cols-2 w-full"
-                      v-bind="componentField"
-                    >
+                    <ToggleGroup variant="outline" type="single" class="grid grid-cols-2 w-full"
+                      v-bind="componentField">
                       <ToggleGroupItem value="outdoor">
                         <Sun class="h-4 w-4 mr-1" />
                         Outdoor
@@ -207,11 +192,9 @@
 
                       <ol class="mt-2 flex flex-wrap gap-4">
                         <li v-for="location in foundLocations" :key="location.name">
-                          <Badge
-                            variant="secondary"
+                          <Badge variant="secondary"
                             :class="cn('cursor-pointer', isGeoLocationSame(location, value) ? 'border-primary bg-primary/10' : '')"
-                            @click="setValue(location)"
-                          >
+                            @click="setValue(location)">
                             <component :is="isGeoLocationSame(location, value) ? MapPinCheck : MapPin" />
                             <span class="max-w-32 line-clamp-1">
                               {{ location.displayname }}
@@ -232,13 +215,8 @@
                     <!-- Map Preview -->
                     <div class="h-48 sm:h-64 w-full rounded-lg overflow-hidden border bg-muted mt-4">
                       <template v-if="field.value?.coordinates">
-                        <LMap
-                          :zoom="13"
-                          :center="field.value.coordinates"
-                          class="h-full w-full z-0"
-                          :use-global-leaflet="false"
-                          @ready="setMap"
-                        >
+                        <LMap :zoom="13" :center="field.value.coordinates" class="h-full w-full z-0"
+                          :use-global-leaflet="false" @ready="setMap">
                           <LTileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                           <LMarker :lat-lng="field.value.coordinates" />
                         </LMap>
@@ -303,12 +281,8 @@
                   </p>
                 </div>
                 <FormControl>
-                  <ToggleGroup
-                    type="single"
-                    variant="outline"
-                    v-bind="componentField"
-                    class="flex flex-nowrap overflow-x-hidden"
-                  >
+                  <ToggleGroup type="single" variant="outline" v-bind="componentField"
+                    class="flex flex-nowrap overflow-x-hidden">
                     <ToggleGroupItem value="private">
                       <EyeOffIcon />
                       Privat
@@ -333,22 +307,12 @@
     <!-- Mobile Footer -->
     <footer class="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t p-4 sm:hidden z-10">
       <div class="max-w-4xl mx-auto flex gap-2">
-        <Button
-          type="submit"
-          class="flex-1"
-          :disabled="isPublishing"
-          @click="onSubmit"
-        >
+        <Button type="submit" class="flex-1" :disabled="isPublishing" @click="onSubmit">
           <Loader2 v-if="isPublishing" class="h-4 w-4 mr-2 animate-spin" />
           <Send v-else class="h-4 w-4 mr-2" />
           Veröffentlichen
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          :disabled="isSaving"
-          @click="saveNow"
-        >
+        <Button type="button" variant="outline" :disabled="isSaving" @click="saveNow">
           <Loader2 v-if="isSaving" class="h-4 w-4 animate-spin" />
           <Save v-else class="h-4 w-4" />
         </Button>
@@ -365,12 +329,7 @@
           </NuxtLink>
         </Button>
         <div class="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            :disabled="isSaving"
-            @click="saveNow"
-          >
+          <Button type="button" variant="outline" :disabled="isSaving" @click="saveNow">
             <Loader2 v-if="isSaving" class="h-4 w-4 mr-2 animate-spin" />
             <Save v-else class="h-4 w-4 mr-2" />
             Speichern
@@ -389,7 +348,7 @@
 <script lang="ts" setup>
 import { toTypedSchema } from '@vee-validate/zod';
 import { refDebounced, useDebounceFn } from '@vueuse/core';
-import type { Map } from 'leaflet';
+import type { LeafletMouseEvent, Map } from 'leaflet';
 import {
   BookKeyIcon,
   CheckCircle, Circle, Clock,
@@ -542,12 +501,22 @@ const isGeoLocationSame = (first: GeoLocation, second: GeoLocation) => {
 // Map click handler
 const setMap = (map: Map) => {
   currentMap.value = map;
-  map.on('click', (e) => {
-    setFieldValue('location', {
+  map.on('click', async (e: LeafletMouseEvent) => {
+    const { lat, lng } = e.latlng;
 
-      name: 'Benutzerdefinierter Standort',
-      displayname: 'Benutzerdefinierter Standort',
-      coordinates: [e.latlng.lat, e.latlng.lng],
+    const response = await $fetch('/api/v1/app/geo/resolveLatLon', {
+      method: 'GET',
+      query: {
+        latitude: lat,
+        longitude: lng,
+      }
+    });
+
+    setFieldValue('location', {
+      displayname: response.city,
+      coordinates: [lat, lng],
+      name: response.state,
+      type: 'Point',
     });
   });
 };

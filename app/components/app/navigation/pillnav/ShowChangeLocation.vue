@@ -17,22 +17,13 @@
         </p>
       </div>
       <div class="w-full aspect-video rounded-lg overflow-hidden my-2" @touchmove.stop @dragstart.stop>
-        <LMap
-          :zoom="13"
-          :center="[geolocation.location.latitude, geolocation.location.longitude]"
-          class="w-full h-full"
-          :use-global-leaflet="false"
-        >
+        <LMap :zoom="13" :center="[geolocation.location.latitude, geolocation.location.longitude]" class="w-full h-full"
+          :use-global-leaflet="false">
           <LTileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <LMarker :lat-lng="[geolocation.location.latitude, geolocation.location.longitude]" />
         </LMap>
       </div>
-      <Button
-        variant="outline"
-        class="w-full"
-        :disabled="isRequesting"
-        @click="requestGeolocation"
-      >
+      <Button variant="outline" class="w-full" :disabled="isRequesting" @click="requestGeolocation">
         <component :is="isRequesting ? Spinner : MapPin" class="size-3" />
         Geräte-Standort verwenden
       </Button>
@@ -61,6 +52,7 @@
 import { AlertCircleIcon, LightbulbIcon, MapPin } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import Spinner from '~/components/ui/spinner/Spinner.vue';
+import { FETCH_KEY_FOR_YOU_PAGE } from '~~/shared/constants/Constants';
 
 const { getGeolocation, lookupPermissionState } = useDeviceGeoLocation();
 const { geolocation, setCity } = useGeoLocation();
@@ -82,12 +74,14 @@ const requestGeolocation = async () => {
     const position = await getGeolocation();
 
     const response = await $fetch('/api/v1/app/geo/resolveLatLon', {
-      body: {
+      query: {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       },
     });
     setCity(response);
+
+    await refreshNuxtData(FETCH_KEY_FOR_YOU_PAGE);
   } catch (error) {
     toast.error('Fehler beim Abrufen der Geolocation. Bitte versuche es erneut.');
     console.error('Geolocation-Fehler:', error);

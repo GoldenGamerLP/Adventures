@@ -7,27 +7,13 @@ Adventures is a platform for sharing and discovering outdoor and indoor activiti
 
 ## TODO
 
-- mehr Informationen zu den Einträgen anzeigen (z.B. Entfernung, Dauer, etc.)
-- Bei Standort aktualisierung direkt Seite refreshen
-- WEbsite Meta daten anpassen
 - Crop Editor für Bilder
-- Mehr farbe/primäre Farbe anpassen
 - Kommentare/Bewertungssystem
-- Auf Profil verlauf schöneres layout von informationen
 - Auf Profil Seite die Abenteuer in Kartenansicht anzeigen
-
-- Auf Profil seite adventures richtig sortieren
-- For you page algorithmus verbessern
-
-- For you page: Popover für karte bei Entfernung anzeigen - Bei Zeitpunkt auch popover mit zeitraum oder termin anzeigen?
-
-- Über all titel festlegen
 
 - Markdown in der Beschreibung erlauben
 
 - DSGVO konformität prüfen
-
-- Deployment Pipeline aufsetzen
 
 
 ## How to contribute

@@ -55,7 +55,7 @@ watchDebounced(values, async (newValues) => {
     if (!isFieldValid('biography')) return;
 
     try {
-        await $fetch('/api/v1/app/profile/change/biography', {
+        await $fetch('/api/v1/app/profile/biography/update', {
             method: 'PATCH',
             body: newValues,
         });

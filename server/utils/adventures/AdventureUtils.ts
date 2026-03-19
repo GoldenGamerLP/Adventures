@@ -215,7 +215,6 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
     }
 
     if (filter.sort) {
-        console.log('Sorting by', filter.sort);
         //Sortierung: "popular"
         //Wichtung auf Basis von:
         //1. Anzahl Views

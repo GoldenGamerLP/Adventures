@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div>
     <h2 class="text-lg font-semibold">
       Event Zeitplan
     </h2>
@@ -60,39 +60,29 @@
     </template>
 
     <template v-if="schedule.slots">
-      <div class="space-y-2">
+      <div class="space-y-2 mt-4">
         <h3 class="text-sm font-medium">
           Wöchentliche Öffnungszeiten
         </h3>
-        <div class="flex flex-col gap-1">
-          <Item v-for="slot in schedule.slots" :key="slot.dayOfWeek" variant="outline">
-            <ItemMedia variant="icon">
-              <CalendarIcon />
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle>
-                {{ getDayOfWeeklabel(slot.dayOfWeek) }}
-              </ItemTitle>
-              <ItemDescription>
-                Von {{ formatRelativeTime(slot.from) }} bis {{ formatRelativeTime(slot.to) }}
-              </ItemDescription>
-            </ItemContent>
-          </Item>
+        <div class="grid grid-cols-7 gap-2">
+          <div v-for="day in 7" :key="day" class="flex flex-col items-center text-xs text-muted-foreground"
+            :class="{ 'text-primary font-semibold': hasSlot(day - 1) }">
+            <span>{{ getDayOfWeeklabel(day - 1) }}</span>
+            <span class="text-center">{{ getFormattedSlotTime(day - 1) }}</span>
+          </div>
         </div>
       </div>
     </template>
 
     <!-- Wie lange? -->
-    <div class="space-y-2">
+    <div class="space-y-2 mt-4">
       <h3 class="text-sm font-medium">
         Geschätzte Dauer
       </h3>
       <div class="relative w-full pt-6 pb-2">
         <!-- Min/Max position labels -->
-        <div
-          class="absolute top-2 text-xs font-medium text-primary -translate-x-1/2 whitespace-nowrap"
-          :style="{ left: durationBarPercent.midPer + '%' }"
-        >
+        <div class="absolute top-2 text-xs font-medium text-primary -translate-x-1/2 whitespace-nowrap"
+          :style="{ left: durationBarPercent.midPer + '%' }">
           {{ minLabel }} - {{ maxLabel }}
         </div>
 
@@ -118,7 +108,7 @@
       </div>
     </div>
 
-    <ItemGroup class="border rounded-lg">
+    <ItemGroup class="border rounded-lg mt-4">
       <Item v-if="schedule.isApproximate">
         <ItemMedia variant="icon">
           <BadgeAlert />
@@ -158,7 +148,7 @@ import {
   InfinityIcon
 } from 'lucide-vue-next';
 import { MAX_ADVENTURE_DURATION_MINUTES } from '~~/shared/constants/Constants';
-import { formatDuration, formatRelativeTime, scheduleToCalenderFormat } from '~~/shared/utils/SharedUtils';
+import { formatDuration, scheduleToCalenderFormat } from '~~/shared/utils/SharedUtils';
 
 // 24h — matching form slider max
 const props = defineProps<{
@@ -180,6 +170,16 @@ const getDayOfWeeklabel = (dayOfWeek: number): string => {
   const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
   return days[dayOfWeek] || '';
 };
+
+const getFormattedSlotTime = (dayOfWeek: number) => {
+  const slot = props.schedule.slots?.find(s => s.dayOfWeek === dayOfWeek);
+  if (!slot) return 'Geschlossen';
+  return `${formatRelativeTime(slot.from)} - ${formatRelativeTime(slot.to)}`;
+}
+
+const hasSlot = (dayOfWeek: number) => {
+  return props.schedule.slots?.some(s => s.dayOfWeek === dayOfWeek);
+}
 
 const durationBarStyle = computed(() => {
   const dur = props.schedule.estimatedDuration;

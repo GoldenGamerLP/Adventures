@@ -20,33 +20,24 @@
     </div>
 
     <div v-if="eventScheduleModel.type === 'single'">
-      <CalendarRoot
-        v-slot="{ weekDays, grid }"
-        :min-value="today(getLocalTimeZone())"
-        :week-starts-on="1"
+      <CalendarRoot v-slot="{ weekDays, grid }" :min-value="today(getLocalTimeZone())" :week-starts-on="1"
         :model-value="computedDateRange.start"
-        @update:model-value="(date?: DateValue) => computedDateRange = { start: date, end: date }"
-      >
+        @update:model-value="(date?: DateValue) => computedDateRange = { start: date, end: undefined }">
         <CalendarHeader class="flex items-center justify-between">
           <CalendarPrev
-            class="inline-flex items-center cursor-pointer text-foreground justify-center rounded-md bg-transparent w-7 h-7 hover:bg-muted active:scale-98 active:transition-all focus:shadow-[0_0_0_2px] focus:shadow-foreground"
-          >
+            class="inline-flex items-center cursor-pointer text-foreground justify-center rounded-md bg-transparent w-7 h-7 hover:bg-muted active:scale-98 active:transition-all focus:shadow-[0_0_0_2px] focus:shadow-foreground">
             <ChevronLeftIcon />
           </CalendarPrev>
           <CalendarHeading class="text-sm text-foreground font-medium" />
 
           <CalendarNext
-            class="inline-flex items-center cursor-pointer text-foreground justify-center rounded-md bg-transparent w-7 h-7 hover:bg-muted active:scale-98 active:transition-all focus:shadow-[0_0_0_2px] focus:shadow-foreground"
-          >
+            class="inline-flex items-center cursor-pointer text-foreground justify-center rounded-md bg-transparent w-7 h-7 hover:bg-muted active:scale-98 active:transition-all focus:shadow-[0_0_0_2px] focus:shadow-foreground">
             <ChevronRightIcon />
           </CalendarNext>
         </CalendarHeader>
         <div class="flex flex-col space-y-4 pt-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-          <CalendarGrid
-            v-for="month in grid"
-            :key="month.value.toString()"
-            class="w-full border-collapse select-none space-y-1"
-          >
+          <CalendarGrid v-for="month in grid" :key="month.value.toString()"
+            class="w-full border-collapse select-none space-y-1">
             <CalendarGridHead>
               <CalendarGridRow class="mb-1 grid w-full grid-cols-7">
                 <CalendarHeadCell v-for="day in weekDays" :key="day" class="rounded-md text-xs text-green8">
@@ -55,22 +46,12 @@
               </CalendarGridRow>
             </CalendarGridHead>
             <CalendarGridBody class="grid">
-              <CalendarGridRow
-                v-for="(weekDates, index) in month.rows"
-                :key="`weekDate-${index}`"
-                class="grid grid-cols-7"
-              >
-                <CalendarCell
-                  v-for="weekDate in weekDates"
-                  :key="weekDate.toString()"
-                  :date="weekDate"
-                  class="relative text-center text-sm"
-                >
-                  <CalendarCellTrigger
-                    :day="weekDate"
-                    :month="month.value"
-                    class="relative flex items-center justify-center rounded-full whitespace-nowrap text-sm font-normal text-foreground w-8 h-8 outline-none focus:shadow-[0_0_0_2px] focus:shadow-muted-foreground data-[outside-view]:text-foreground/30 data-[selected]:!bg-muted data-[selected]:text-primary hover:bg-accent data-[highlighted]:bg-muted data-[unavailable]:pointer-events-none data-[unavailable]:text-primary/30 data-[unavailable]:line-through before:absolute before:top-[2px] before:hidden before:rounded-full before:w-1 before:h-1 before:bg-foreground data-[today]:before:block data-[today]:before:bg-primary data-[today]:bg-muted "
-                  />
+              <CalendarGridRow v-for="(weekDates, index) in month.rows" :key="`weekDate-${index}`"
+                class="grid grid-cols-7">
+                <CalendarCell v-for="weekDate in weekDates" :key="weekDate.toString()" :date="weekDate"
+                  class="relative text-center text-sm">
+                  <CalendarCellTrigger :day="weekDate" :month="month.value"
+                    class="relative flex items-center justify-center rounded-full whitespace-nowrap text-sm font-normal text-foreground w-8 h-8 outline-none focus:shadow-[0_0_0_2px] focus:shadow-muted-foreground data-[outside-view]:text-foreground/30 data-[selected]:!bg-muted data-[selected]:text-primary hover:bg-accent data-[highlighted]:bg-muted data-[unavailable]:pointer-events-none data-[unavailable]:text-primary/30 data-[unavailable]:line-through before:absolute before:top-[2px] before:hidden before:rounded-full before:w-1 before:h-1 before:bg-foreground data-[today]:before:block data-[today]:before:bg-primary data-[today]:bg-muted " />
                 </CalendarCell>
               </CalendarGridRow>
             </CalendarGridBody>
@@ -81,56 +62,37 @@
 
     <!-- Date Selection (only for range) -->
     <div v-if="eventScheduleModel.type === 'range'" class="space-y-4">
-      <RangeCalendarRoot
-        v-slot="{ weekDays, grid }"
-        fixed-weeks
-        :week-starts-on="1"
-        :min-value="today(getLocalTimeZone())"
-        :model-value="computedDateRange"
-        @update:valid-model-value="(range: DateRange) => computedDateRange = range"
-      >
+      <RangeCalendarRoot v-slot="{ weekDays, grid }" fixed-weeks :week-starts-on="1"
+        :min-value="today(getLocalTimeZone())" :model-value="computedDateRange"
+        @update:valid-model-value="(range: DateRange) => computedDateRange = range">
         <RangeCalendarHeader class="flex items-center justify-between">
           <RangeCalendarPrev
-            class="inline-flex items-center cursor-pointer text-foreground justify-center rounded-md bg-transparent w-7 h-7 hover:bg-muted active:scale-98 active:transition-all focus:shadow-[0_0_0_2px] focus:shadow-foreground"
-          >
+            class="inline-flex items-center cursor-pointer text-foreground justify-center rounded-md bg-transparent w-7 h-7 hover:bg-muted active:scale-98 active:transition-all focus:shadow-[0_0_0_2px] focus:shadow-foreground">
             <ChevronLeftIcon />
           </RangeCalendarPrev>
           <RangeCalendarHeading class="text-sm text-foreground font-medium" />
           <RangeCalendarNext
-            class="inline-flex items-center cursor-pointer text-foreground justify-center rounded-md bg-transparent w-7 h-7 hover:bg-muted active:scale-98 active:transition-all focus:shadow-[0_0_0_2px] focus:shadow-foreground"
-          >
+            class="inline-flex items-center cursor-pointer text-foreground justify-center rounded-md bg-transparent w-7 h-7 hover:bg-muted active:scale-98 active:transition-all focus:shadow-[0_0_0_2px] focus:shadow-foreground">
             <ChevronRightIcon />
           </RangeCalendarNext>
         </RangeCalendarHeader>
         <div class="flex flex-col space-y-4 pt-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-          <RangeCalendarGrid
-            v-for="month in grid"
-            :key="month.value.toString()"
-            class="w-full border-collapse select-none space-y-1"
-          >
+          <RangeCalendarGrid v-for="month in grid" :key="month.value.toString()"
+            class="w-full border-collapse select-none space-y-1">
             <RangeCalendarGridHead>
               <RangeCalendarGridRow class="mb-1 grid w-full grid-cols-7">
-                <RangeCalendarHeadCell
-                  v-for="day in weekDays"
-                  :key="day"
-                  class="rounded-md text-xs text-muted-foreground"
-                >
+                <RangeCalendarHeadCell v-for="day in weekDays" :key="day"
+                  class="rounded-md text-xs text-muted-foreground">
                   {{ day }}
                 </RangeCalendarHeadCell>
               </RangeCalendarGridRow>
             </RangeCalendarGridHead>
             <RangeCalendarGridBody class="grid">
-              <RangeCalendarGridRow
-                v-for="(weekDates, index) in month.rows"
-                :key="`weekDate-${index}`"
-                class="grid grid-cols-7"
-              >
+              <RangeCalendarGridRow v-for="(weekDates, index) in month.rows" :key="`weekDate-${index}`"
+                class="grid grid-cols-7">
                 <RangeCalendarCell v-for="weekDate in weekDates" :key="weekDate.toString()" :date="weekDate">
-                  <RangeCalendarCellTrigger
-                    :day="weekDate"
-                    :month="month.value"
-                    class="relative flex items-center justify-center rounded-full whitespace-nowrap text-sm font-normal text-foreground w-8 h-8 outline-none focus:shadow-[0_0_0_2px] focus:shadow-muted-foreground data-[outside-view]:text-foreground/30 data-[selected]:!bg-muted data-[selected]:text-primary hover:bg-accent data-[highlighted]:bg-muted data-[unavailable]:pointer-events-none data-[unavailable]:text-primary/30 data-[unavailable]:line-through before:absolute before:top-[2px] before:hidden before:rounded-full before:w-1 before:h-1 before:bg-foreground data-[today]:before:block data-[today]:before:bg-primary data-[today]:bg-muted "
-                  />
+                  <RangeCalendarCellTrigger :day="weekDate" :month="month.value"
+                    class="relative flex items-center justify-center rounded-full whitespace-nowrap text-sm font-normal text-foreground w-8 h-8 outline-none focus:shadow-[0_0_0_2px] focus:shadow-muted-foreground data-[outside-view]:text-foreground/30 data-[selected]:!bg-muted data-[selected]:text-primary hover:bg-accent data-[highlighted]:bg-muted data-[unavailable]:pointer-events-none data-[unavailable]:text-primary/30 data-[unavailable]:line-through before:absolute before:top-[2px] before:hidden before:rounded-full before:w-1 before:h-1 before:bg-foreground data-[today]:before:block data-[today]:before:bg-primary data-[today]:bg-muted " />
                 </RangeCalendarCell>
               </RangeCalendarGridRow>
             </RangeCalendarGridBody>
@@ -159,14 +121,9 @@
                 </ItemDescription>
               </ItemContent>
               <ItemActions class="flex flex-wrap gap-2">
-                <Button
-                  v-for="(preset, key) in OPENING_HOURS_PRESETS"
-                  :key="key"
-                  type="button"
-                  :variant="isOpeningHoursActive(currentDay.value, preset.hours) ? 'default' : 'outline'"
-                  size="sm"
-                  @click="toggleOpeningHoursForDay(currentDay.value, preset.hours)"
-                >
+                <Button v-for="(preset, key) in OPENING_HOURS_PRESETS" :key="key" type="button"
+                  :variant="isOpeningHoursActive(currentDay.value, preset.hours) ? 'default' : 'outline'" size="sm"
+                  @click="toggleOpeningHoursForDay(currentDay.value, preset.hours)">
                   {{ preset.label }}
                 </Button>
               </ItemActions>
@@ -197,14 +154,8 @@
 
       <!-- Duration Presets -->
       <div class="flex flex-wrap gap-2">
-        <Button
-          v-for="(preset, key) in DURATION_PRESETS"
-          :key="key"
-          type="button"
-          :variant="isDurationPresetActive(key) ? 'default' : 'outline'"
-          size="sm"
-          @click="applyPreset(key)"
-        >
+        <Button v-for="(preset, key) in DURATION_PRESETS" :key="key" type="button"
+          :variant="isDurationPresetActive(key) ? 'default' : 'outline'" size="sm" @click="applyPreset(key)">
           {{ preset.label }}
         </Button>
       </div>
@@ -216,35 +167,22 @@
             <span>Min: {{ formatDuration(eventScheduleModel.estimatedDuration.min) }}</span>
             <span>Max: {{ formatDuration(eventScheduleModel.estimatedDuration.max) }}</span>
           </div>
-          <Slider
-            v-model="durationSliderValues"
-            :min="15"
-            :max="MAX_ADVENTURE_DURATION_MINUTES"
-            :step="15"
-            class="w-full"
-            @update:model-value="onDurationChange"
-          />
+          <Slider v-model="durationSliderValues" :min="15" :max="MAX_ADVENTURE_DURATION_MINUTES" :step="15"
+            class="w-full" @update:model-value="onDurationChange" />
         </div>
 
         <!-- Quick Adjust Buttons -->
         <div class="flex items-center justify-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            :disabled="eventScheduleModel.estimatedDuration.min <= 15"
-            @click="adjustDuration(-15, 'min')"
-          >
+          <Button variant="ghost" size="icon" :disabled="eventScheduleModel.estimatedDuration.min <= 15"
+            @click="adjustDuration(-15, 'min')">
             <Minus class="h-4 w-4" />
           </Button>
           <span class="text-sm font-medium min-w-24 text-center">
             {{ formattedDuration }}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
+          <Button variant="ghost" size="icon"
             :disabled="eventScheduleModel.estimatedDuration.max >= MAX_ADVENTURE_DURATION_MINUTES"
-            @click="adjustDuration(15, 'max')"
-          >
+            @click="adjustDuration(15, 'max')">
             <Plus class="h-4 w-4" />
           </Button>
         </div>
@@ -295,7 +233,7 @@ import {
   Plus
 } from 'lucide-vue-next';
 import type { DateRange, DateValue } from 'reka-ui';
-import { CalendarCell, CalendarCellTrigger, CalendarGrid, CalendarGridBody, CalendarGridHead, CalendarGridRow, CalendarHeadCell, CalendarHeader, CalendarHeading, CalendarNext, CalendarPrev, CalendarRoot, RangeCalendarCell, RangeCalendarCellTrigger, RangeCalendarGrid, RangeCalendarGridBody, RangeCalendarGridHead, RangeCalendarGridRow, RangeCalendarHeadCell, RangeCalendarHeader, RangeCalendarHeading, RangeCalendarNext, RangeCalendarPrev, RangeCalendarRoot, useDateFormatter, useLocale } from 'reka-ui';
+import { CalendarCell, CalendarCellTrigger, CalendarGrid, CalendarGridBody, CalendarGridHead, CalendarGridRow, CalendarHeadCell, CalendarHeader, CalendarHeading, CalendarNext, CalendarPrev, CalendarRoot, RangeCalendarCell, RangeCalendarCellTrigger, RangeCalendarGrid, RangeCalendarGridBody, RangeCalendarGridHead, RangeCalendarGridRow, RangeCalendarHeadCell, RangeCalendarHeader, RangeCalendarHeading, RangeCalendarNext, RangeCalendarPrev, RangeCalendarRoot, useLocale } from 'reka-ui';
 import { getDaysBetween } from 'reka-ui/date';
 import { MAX_ADVENTURE_DURATION_MINUTES } from '~~/shared/constants/Constants';
 import {
@@ -311,8 +249,6 @@ const eventScheduleModel = defineModel({
   required: true,
 });
 const currentLocale = useLocale();
-const dateFormatter = useDateFormatter(useLocale().value);
-const currentTimezone = getLocalTimeZone();
 
 const toggleOpeningHoursForDay = (day: number, hours: { from: number; to: number }) => {
   if (!eventScheduleModel.value.slots) {

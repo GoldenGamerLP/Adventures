@@ -21,9 +21,6 @@
             <Badge variant="secondary" size="sm">
               {{ adventure.viewCount.totalViews }} Views
             </Badge>
-            <Badge variant="secondary" size="sm">
-              {{ adventure.likesCount }} Likes
-            </Badge>
           </div>
         </ItemContent>
         <ItemActions class="gap-1 sm:w-auto w-full justify-end">
@@ -32,7 +29,8 @@
               Ansehen
             </NuxtLink>
           </Button>
-          <AppAdventuresLikeButton :is-liked="adventure.isLikedByUser" :adventure-id="adventure._id" :likes-count="adventure.likesCount" />
+          <AppAdventuresLikeButton :is-liked="adventure.isLikedByUser" :adventure-id="adventure._id"
+            :likes-count="adventure.likesCount" />
           <AppAdventuresEditButton :adventure="adventure" />
         </ItemActions>
       </Item>
