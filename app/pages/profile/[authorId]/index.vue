@@ -21,12 +21,7 @@
       </Empty>
     </template>
     <template v-else>
-      <Button
-        variant="secondary"
-        size="icon"
-        class="absolute top-4 left-4 z-50"
-        as-child
-      >
+      <Button variant="secondary" size="icon" class="absolute top-4 left-4 z-50" as-child>
         <NuxtLink :to="{ name: 'index' }">
           <ChevronLeft />
           <span class="sr-only">Zurück zum Profil</span>
@@ -36,12 +31,8 @@
 
 
       <div class="w-full h-72 flex justify-center items-center">
-        <img
-          v-if="userData.backgroundPictureId"
-          :src="toPicturePath(userData.backgroundPictureId)"
-          alt="Hintergrundbild"
-          class="w-full h-full object-cover"
-        />
+        <img v-if="userData.backgroundPictureId" :src="toPicturePath(userData.backgroundPictureId)"
+          alt="Hintergrundbild" class="w-full h-full object-cover" />
         <ImageOffIcon v-else class="text-muted-foreground" />
       </div>
 
@@ -51,11 +42,8 @@
             <AvatarFallback>
               <ImageOff />
             </AvatarFallback>
-            <AvatarImage
-              v-if="userData.profilePictureId"
-              :src="toPicturePath(userData.profilePictureId)"
-              alt="Profilbild"
-            />
+            <AvatarImage v-if="userData.profilePictureId" :src="toPicturePath(userData.profilePictureId)"
+              alt="Profilbild" />
           </Avatar>
           <div class="min-w-0 flex-1">
             <h1 class="text-lg font-bold truncate">
@@ -67,23 +55,18 @@
             </p>
           </div>
         </header>
-        <RekaTabsRoot default-value="about" class="flex flex-col">
+        <RekaTabsRoot :default-value="useRoute().hash.slice(1) || 'about'" class="flex flex-col">
           <RekaTabsList class="relative shrink-0 flex mb-4 bg-accent p-2 rounded-lg" aria-label="Profile Tabs">
             <RekaTabsIndicator
-              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300"
-            >
+              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300">
               <div class="bg-primary w-full h-full"></div>
             </RekaTabsIndicator>
-            <RekaTabsTrigger
-              value="about"
-              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
-            >
+            <RekaTabsTrigger value="about"
+              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium">
               Über
             </RekaTabsTrigger>
-            <RekaTabsTrigger
-              value="adventures"
-              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
-            >
+            <RekaTabsTrigger value="adventures"
+              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium">
               Abenteuer
             </RekaTabsTrigger>
           </RekaTabsList>
@@ -103,7 +86,8 @@
                   {{ userData.biography }}
                 </p>
               </div>
-              <Empty v-if="!userData.biography && (!userData.interests || userData.interests.length === 0)" class="pt-6">
+              <Empty v-if="!userData.biography && (!userData.interests || userData.interests.length === 0)"
+                class="pt-6">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
                     <ImageOffIcon />

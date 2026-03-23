@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { AdventureListWithMeta, VirtualList } from "~~/shared/types/AdventureListsTypes";
 import database from "../database/DBUtils";
 
 const likeDatabase = database.collection<Like>("adventure_likes");
@@ -45,6 +46,47 @@ const getLikedAdventuresForUser = async (userId: string): Promise<string[]> => {
     return likes.map(like => like.adventureId);
 }
 
+const getLikedAdventuresByUserId = async (userId: string, skip: number, limit: number): Promise<AdventureListEntry[]> => {
+    const result = await likeDatabase.aggregate([
+        {
+            '$match': {
+                'userId': userId,
+            }
+        }, {
+            '$sort': {
+                'createdAt': -1
+            }
+        }, {
+            '$skip': skip
+        }, {
+            '$limit': limit
+        }, {
+            '$lookup': {
+                'from': 'adventures',
+                'localField': 'adventureId',
+                'foreignField': '_id',
+                'as': 'populatedAdventure'
+            }
+        }, {
+            '$unwind': {
+                'path': '$populatedAdventure',
+            }
+        }
+    ]).toArray();
+
+    return result.map(item => {
+        return {
+            _id: item._id,
+            adventureListId: "",
+            adventureId: item.adventureId,
+            order: 0,
+            createdAt: item.createdAt,
+            updatedAt: item.createdAt,
+            populatedAdventure: item.populatedAdventure,
+        };
+    })
+}
+
 
 interface Like {
     _id: string;
@@ -53,8 +95,51 @@ interface Like {
     createdAt: Date;
 }
 
+const hydrateLikedAdevnturesList = async (list: VirtualList): Promise<AdventureListWithMeta> => {
+    const userId = list.ownerId;
+
+    const likedAdventureCount = await likeDatabase.countDocuments({ userId });
+    const result = await likeDatabase.aggregate([
+        {
+            '$match': {
+                'userId': userId,
+            }
+        }, {
+            '$sort': {
+                'createdAt': -1
+            }
+        }, {
+            '$limit': 4
+        }, {
+            '$lookup': {
+                'from': 'adventures',
+                'localField': 'adventureId',
+                'foreignField': '_id',
+                'as': 'adventureDetails'
+            }
+        }, {
+            '$unwind': {
+                'path': '$adventureDetails'
+            }
+        }, {
+            '$group': {
+                '_id': null,
+                'images': {
+                    '$addToSet': {
+                        '$first': '$adventureDetails.pictureIds'
+                    }
+                }
+            }
+        }
+    ]).toArray();
+
+    const ownerObject = await getUserById(userId);
+
+    return { ...list, entryCount: likedAdventureCount, previewImages: result ? result[0]!.images : [], owner: ownerObject! };
+}
+
 export {
-    addLike, ensureLikeIndexes, getLikedAdventuresForUser, removeLike,
+    addLike, ensureLikeIndexes, getLikedAdventuresByUserId, getLikedAdventuresForUser, hydrateLikedAdevnturesList, removeLike,
     toggleLike
 };
 

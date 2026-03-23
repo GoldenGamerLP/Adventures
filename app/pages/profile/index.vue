@@ -67,7 +67,7 @@
         </header>
 
         <!-- Tabs -->
-        <RekaTabsRoot default-value="about" class="flex flex-col">
+        <RekaTabsRoot :default-value="useRoute().hash.slice(1) || 'about'" class="flex flex-col">
           <RekaTabsList
             class="relative shrink-0 flex mb-4 bg-accent p-1.5 rounded-lg text-sm overflow-x-auto overflow-y-hidden"
             aria-label="Profil-Tabs">
@@ -81,7 +81,11 @@
             </RekaTabsTrigger>
             <RekaTabsTrigger value="adventures"
               class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
-              Abenteuer
+              Deine Abenteuer
+            </RekaTabsTrigger>
+            <RekaTabsTrigger value="playlists"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
+              Deine Playlists
             </RekaTabsTrigger>
             <RekaTabsTrigger value="history"
               class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
@@ -138,6 +142,11 @@
           <!-- Abenteuer -->
           <RekaTabsContent value="adventures">
             <LazyAppProfileAdventuresList :author-id="userData._id" />
+          </RekaTabsContent>
+
+          <!-- Playlists -->
+          <RekaTabsContent value="playlists">
+            <AppPlaylistsShowPlaylists :for="'own'" />
           </RekaTabsContent>
 
           <!-- Verlauf -->

@@ -106,6 +106,7 @@ export async function getUserById(
         _id: 1,
         email: 1,
         name: 1,
+        profilePictureId: 1,
       },
     }
   ) as Promise<UserSummary | null>;

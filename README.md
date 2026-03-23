@@ -13,6 +13,12 @@ Adventures is a platform for sharing and discovering outdoor and indoor activiti
 
 - Markdown in der Beschreibung erlauben
 
+- Playlists
+- Erstellen
+- Quick add
+- Löschen
+- Bearbeiten
+
 - DSGVO konformität prüfen
 
 
@@ -29,7 +35,6 @@ before commiting to ensure code quality and consistency.
 MONGODB_URI=mongodb+srv://...
 MONGODB_DATABASE=adventures
 //Für Produktion
-IPINFO_TOKEN=...
 TURNSTILE_SITE_KEY=...
 TURNSTILE_SECRET_KEY=...
 ```
