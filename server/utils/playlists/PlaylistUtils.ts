@@ -1,5 +1,6 @@
 import { AdventureListEntry, AdventureListWithMeta } from "~~/shared/types/AdventureListsTypes";
 import { getLikedAdventuresByUserId, hydrateLikedAdevnturesList } from "../adventures/LikeUtils";
+import { getHistoryEntries, hydrateHistoryAdventuresList } from "../adventures/ViewsUtils";
 import database from "../database/DBUtils";
 
 
@@ -9,6 +10,15 @@ export const DEFAULT_LIKED_LIST = (userId: string): VirtualList => ({
     description: "A collection of adventures you've liked.",
     listType: "virtual",
     systemKey: "liked",
+    ownerId: userId,
+});
+
+export const DEFAULT_HISTORY_LIST = (userId: string): VirtualList => ({
+    _id: `sys:history:${userId}`,
+    name: "History",
+    description: "A collection of adventures you've viewed.",
+    listType: "virtual",
+    systemKey: "history",
     ownerId: userId,
 });
 
@@ -29,6 +39,7 @@ export const getPlaylistByUserId = async (userId: string, visibility: "private" 
     const playlistsWithMeta = result.map(hydratePlaylistWithMeta);
     if (visibility === "private") {
         playlistsWithMeta.unshift(hydrateLikedAdevnturesList(DEFAULT_LIKED_LIST(userId)));
+        playlistsWithMeta.unshift(hydrateHistoryAdventuresList(DEFAULT_HISTORY_LIST(userId)));
     }
 
     return await Promise.all(playlistsWithMeta);
@@ -71,6 +82,9 @@ export const getPlaylistInfo = async (playlistId: string): Promise<AdventureList
         if (type === "liked") {
             return hydrateLikedAdevnturesList(DEFAULT_LIKED_LIST(userId!));
         }
+        if (type === "history") {
+            return hydrateHistoryAdventuresList(DEFAULT_HISTORY_LIST(userId!));
+        }
 
         throw new Error("Unknown system playlist type");
     }
@@ -94,6 +108,10 @@ export const getPlaylistEntries = async (playlistId: string, ownerId: string | u
 
         if (playlistKey === "liked") {
             return await getLikedAdventuresByUserId(ownerId, skip, limit);
+        }
+
+        if (playlistKey === "history") {
+            return await getHistoryEntries(ownerId, skip, limit);
         }
 
         throw new Error("Unknown virtual playlist type");
@@ -129,7 +147,7 @@ export const getPlaylistEntries = async (playlistId: string, ownerId: string | u
 export const hasAccessToPlaylist = async (playlist: string, userId?: string) => {
     if (playlist.startsWith("sys:")) {
         const [_, type, ownerId] = playlist.split(":");
-        if (type === "liked") {
+        if (type === "liked" || type === "history") {
             return userId === ownerId; // nur Besitzer hat Zugriff auf die Liked-Playlist
         }
 

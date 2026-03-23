@@ -7,6 +7,11 @@
         <ItemContent>
             <ItemTitle>{{ entry.populatedAdventure!.title }}</ItemTitle>
             <ItemDescription>{{ entry.populatedAdventure!.description }}</ItemDescription>
+            <div>
+                <Badge variant="secondary">Hinzugefügt
+                    <NuxtTime :datetime="entry.createdAt" relative />
+                </Badge>
+            </div>
         </ItemContent>
 
         <ItemActions>

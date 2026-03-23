@@ -143,6 +143,67 @@ export const getRecentlyViewed = async (
         .toArray();
 };
 
+export const hydrateHistoryAdventuresList = async (list: VirtualList): Promise<AdventureListWithMeta> => {
+    const userId = list.ownerId;
+
+    const entryCount = await viewRecords.countDocuments({ userId });
+    const result = await viewRecords.aggregate([
+        { $match: { userId } },
+        { $sort: { lastViewedAt: -1 } },
+        { $limit: 4 },
+        {
+            $lookup: {
+                from: "adventures",
+                localField: "adventureId",
+                foreignField: "_id",
+                as: "adventureDetails"
+            }
+        },
+        { $unwind: "$adventureDetails" },
+        {
+            $group: {
+                _id: null,
+                images: { $addToSet: { $first: "$adventureDetails.pictureIds" } }
+            }
+        }
+    ]).toArray();
+
+    const previewImages = result.length > 0 ? result[0]!.images : [];
+    const owner = await getUserById(userId);
+
+    return { ...list, entryCount, previewImages, owner: owner! };
+};
+
+export const getHistoryEntries = async (userId: string, skip: number, limit: number): Promise<AdventureListEntry[]> => {
+    const records = await viewRecords.aggregate([
+        { $match: { userId } },
+        { $sort: { lastViewedAt: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+            $lookup: {
+                from: "adventures",
+                localField: "adventureId",
+                foreignField: "_id",
+                as: "adventureDetails"
+            }
+        },
+        { $unwind: "$adventureDetails" },
+    ]).toArray();
+
+    return records.map(entry => ({
+        _id: entry._id,
+        adventureListId: entry.adventureListId,
+        adventureId: entry.adventureId,
+        order: entry.order,
+        createdAt: entry.lastViewedAt,
+        updatedAt: entry.firstViewedAt,
+        populatedAdventure: entry.adventureDetails,
+    }));
+};
+
+
+
 export const getEnrichedRecentlyViewed = async (
     userId: string,
     limit = 20

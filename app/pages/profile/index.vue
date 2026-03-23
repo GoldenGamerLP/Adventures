@@ -51,7 +51,7 @@
       </div>
 
       <!-- Content card -->
-      <div class="rounded-lg p-4 bg-background -mt-6 z-10 relative shadow-[0_-4px_20px_rgba(0,0,0,0.08)] border">
+      <div class="p-4 bg-background -mt-6 z-10 relative shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         <!-- Profile header -->
         <header class="flex items-center gap-4 mb-2">
           <AppProfileImage v-model="userData" />
@@ -86,10 +86,6 @@
             <RekaTabsTrigger value="playlists"
               class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
               Deine Playlists
-            </RekaTabsTrigger>
-            <RekaTabsTrigger value="history"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
-              Verlauf
             </RekaTabsTrigger>
           </RekaTabsList>
 
@@ -147,11 +143,6 @@
           <!-- Playlists -->
           <RekaTabsContent value="playlists">
             <AppPlaylistsShowPlaylists :for="'own'" />
-          </RekaTabsContent>
-
-          <!-- Verlauf -->
-          <RekaTabsContent value="history">
-            <LazyAppProfileAdventureVisitHistory />
           </RekaTabsContent>
         </RekaTabsRoot>
       </div>

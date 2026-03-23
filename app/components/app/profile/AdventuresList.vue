@@ -1,14 +1,9 @@
 <template>
-  <ItemGroup v-if="adventures?.length" class="border rounded-lg">
+  <ItemGroup v-if="adventures?.length">
     <template v-for="(adventure, index) in adventures" :key="adventure._id">
       <Item>
-        <ItemMedia>
-          <Avatar>
-            <AvatarImage :src="toPicturePath(adventure.pictureIds[0])" alt="Adventure Image" />
-            <AvatarFallback>
-              {{ adventure.title.charAt(0) }}
-            </AvatarFallback>
-          </Avatar>
+        <ItemMedia variant="image">
+          <img :src="toPicturePath(adventure.pictureIds[0])" alt="Adventure Image" />
         </ItemMedia>
         <ItemContent>
           <ItemTitle>{{ adventure.title }}</ItemTitle>

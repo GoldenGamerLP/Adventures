@@ -31,9 +31,9 @@
                 </nav>
                 <div class="sticky top-0">
                     <div
-                        class="grid h-64 w-full rounded-lg grid-cols-2 grid-rows-2 auto-rows-fr overflow-hidden bg-card p-1 blur -my-8 -z-10 shadow-inner relative">
+                        class="grid h-64 w-full rounded-lg grid-cols-2 grid-rows-2 auto-rows-fr overflow-hidden bg-card p-1 blur -my-16 -z-10 shadow-inner relative">
                         <img v-for="(image, index) in playlistInfo.previewImages" :key="index"
-                            :src="toPicturePath(image)" alt="Vorschaubild" class="object-cover w-full h-full" />
+                            :src="toPicturePath(image)" alt="Vorschaubild" class="object-cover aspect-square" />
                     </div>
                 </div>
                 <main class="sticky top-0">

@@ -7,7 +7,7 @@
                         <div
                             class="grid size-22 rounded-lg grid-cols-2 grid-rows-2 auto-rows-fr overflow-hidden bg-card">
                             <img v-for="image in playlist.previewImages" :key="image" :src="toPicturePath(image)"
-                                class="object-cover" />
+                                class="object-cover aspect-square" />
                         </div>
                     </ItemMedia>
                     <ItemContent>

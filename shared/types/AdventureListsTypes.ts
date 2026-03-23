@@ -30,7 +30,7 @@ export interface UserList extends BaseList {
  */
 export interface VirtualList extends BaseList {
     listType: "virtual";
-    systemKey: "liked"; // später erweiterbar: "recentlyViewed" | ...
+    systemKey: "liked" | "history"; // später erweiterbar: "recentlyViewed" | ...
 }
 
 type ListMeta = {

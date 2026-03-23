@@ -19,6 +19,9 @@ Adventures is a platform for sharing and discovering outdoor and indoor activiti
 - Löschen
 - Bearbeiten
 
+
+- Wöchentliche Öffnungszeiten auf mobile ansicht besser anzeigen
+
 - DSGVO konformität prüfen
 
 
