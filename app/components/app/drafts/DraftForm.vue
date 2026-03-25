@@ -5,21 +5,21 @@
       <div class="flex items-center justify-between p-4">
         <div>
           <h1 class="text-xl sm:text-2xl font-semibold line-clamp-1">
-            {{ values.title || 'Neues Adventure' }}
+            {{ values.title || t('component_drafts_form_new_title') }}
           </h1>
           <p class="text-sm text-muted-foreground mt-1 flex items-center gap-2">
             <!-- Save Status Indicator -->
             <span v-if="isSaving" class="flex items-center gap-1">
               <Loader2 class="h-3 w-3 animate-spin" />
-              Speichern...
+              {{ t('component_drafts_form_status_saving') }}
             </span>
             <span v-else-if="lastSaved" class="flex items-center gap-1 text-primary">
               <CheckCircle class="h-3 w-3" />
-              Gespeichert
+              {{ t('component_drafts_form_status_saved') }}
             </span>
             <span v-else class="flex items-center gap-1">
               <Circle class="h-3 w-3" />
-              Nicht gespeichert
+              {{ t('component_drafts_form_status_not_saved') }}
             </span>
           </p>
         </div>
@@ -29,20 +29,20 @@
             <AlertDialogTrigger as-child>
               <Button variant="ghost" size="icon">
                 <Trash2 class="h-4 w-4 text-destructive" />
-                <span class="sr-only">Entwurf löschen</span>
+                <span class="sr-only">{{ t('component_drafts_form_delete_sr') }}</span>
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Entwurf löschen?</AlertDialogTitle>
+                <AlertDialogTitle>{{ t('component_drafts_form_delete_title') }}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Dieser Entwurf und alle hochgeladenen Bilder werden unwiderruflich gelöscht.
+                  {{ t('component_drafts_form_delete_description') }}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                <AlertDialogCancel>{{ t('common_actions_cancel') }}</AlertDialogCancel>
                 <AlertDialogAction class="bg-destructive" @click="deleteDraft">
-                  Löschen
+                  {{ t('common_actions_delete') }}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -51,7 +51,7 @@
           <Button variant="ghost" size="icon" as-child>
             <NuxtLink to="/adventures/drafts">
               <X class="h-5 w-5" />
-              <span class="sr-only">Schließen</span>
+              <span class="sr-only">{{ t('component_drafts_form_close_sr') }}</span>
             </NuxtLink>
           </Button>
         </div>
@@ -78,15 +78,15 @@
           <CardHeader>
             <CardTitle class="flex items-center gap-2">
               <FileText class="h-5 w-5" />
-              Informationen
+              {{ t('component_drafts_form_info_title') }}
             </CardTitle>
           </CardHeader>
           <CardContent class="space-y-4">
             <FormField v-slot="{ componentField }" name="title">
               <FormItem>
-                <FormLabel>Titel </FormLabel>
+                <FormLabel>{{ t('component_drafts_form_title_label') }}</FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="z.B. Wanderung zum Sonnenaufgang" v-bind="componentField" />
+                  <Input type="text" :placeholder="t('component_drafts_form_title_placeholder')" v-bind="componentField" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -94,17 +94,17 @@
 
             <FormField v-slot="{ componentField }" name="description">
               <FormItem>
-                <FormLabel>Beschreibung </FormLabel>
+                <FormLabel>{{ t('component_drafts_form_description_label') }}</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Beschreibe dein Abenteuer..."
+                    :placeholder="t('component_drafts_form_description_placeholder')"
                     v-bind="componentField"
                     rows="4"
                     class="resize-none"
                   />
                 </FormControl>
                 <FormDescription>
-                  {{ (values.description?.length || 0) }}/1000 Zeichen
+                  {{ (values.description?.length || 0) }}/1000 {{ t('component_drafts_form_characters') }}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -112,7 +112,7 @@
 
             <FormField v-slot="{ field, handleChange, }" name="tags">
               <FormItem>
-                <FormLabel>Tags</FormLabel>
+                <FormLabel>{{ t('component_drafts_form_tags_label') }}</FormLabel>
                 <FormControl>
                   <TagsSelector
                     :max="MAX_SELECTORS_SELECTED"
@@ -131,14 +131,14 @@
           <CardHeader>
             <CardTitle class="flex items-center gap-2">
               <Settings class="h-5 w-5" />
-              Details
+              {{ t('component_drafts_form_details_title') }}
             </CardTitle>
           </CardHeader>
           <CardContent class="space-y-6">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField v-slot="{ componentField }" name="difficulty">
                 <FormItem>
-                  <FormLabel>Schwierigkeit </FormLabel>
+                  <FormLabel>{{ t('component_search_filter_difficulty') }}</FormLabel>
                   <FormControl>
                     <ToggleGroup
                       variant="outline"
@@ -147,13 +147,13 @@
                       v-bind="componentField"
                     >
                       <ToggleGroupItem value="easy" class="data-[state=on]:bg-green-500/20">
-                        Leicht
+                        {{ t('component_search_filter_difficulty_easy') }}
                       </ToggleGroupItem>
                       <ToggleGroupItem value="medium" class="data-[state=on]:bg-yellow-500/20">
-                        Mittel
+                        {{ t('component_search_filter_difficulty_medium') }}
                       </ToggleGroupItem>
                       <ToggleGroupItem value="hard" class="data-[state=on]:bg-red-500/20">
-                        Schwer
+                        {{ t('component_search_filter_difficulty_hard') }}
                       </ToggleGroupItem>
                     </ToggleGroup>
                   </FormControl>
@@ -163,7 +163,7 @@
 
               <FormField v-slot="{ componentField }" name="category">
                 <FormItem>
-                  <FormLabel>Kategorie</FormLabel>
+                  <FormLabel>{{ t('component_drafts_form_category_label') }}</FormLabel>
                   <FormControl>
                     <ToggleGroup
                       variant="outline"
@@ -173,11 +173,11 @@
                     >
                       <ToggleGroupItem value="outdoor">
                         <Sun class="h-4 w-4 mr-1" />
-                        Outdoor
+                        {{ t('component_adventures_category_outdoor') }}
                       </ToggleGroupItem>
                       <ToggleGroupItem value="indoor">
                         <Home class="h-4 w-4 mr-1" />
-                        Indoor
+                        {{ t('component_adventures_category_indoor') }}
                       </ToggleGroupItem>
                     </ToggleGroup>
                   </FormControl>
@@ -191,14 +191,14 @@
             <!-- Location (unchanged but with better UX) -->
             <FormField v-slot="{ field, setValue, value }" name="location">
               <FormItem>
-                <FormLabel>Standort </FormLabel>
+                <FormLabel>{{ t('component_adventures_location_title') }}</FormLabel>
                 <FormControl>
                   <div class="space-y-3">
                     <!-- Location Search -->
 
                     <div>
                       <div class="relative">
-                        <Input v-model="searchQuery" placeholder="Ort suchen..." />
+                        <Input v-model="searchQuery" :placeholder="t('component_search_filter_search_placeholder')" />
                         <div class="absolute right-3 top-1/2 -translate-y-1/2">
                           <Loader2 v-if="searchIsLoading" class="h-4 w-4 animate-spin" />
                           <MapPin v-else class="h-4 w-4 text-muted-foreground" />
@@ -247,7 +247,7 @@
                         <div class="h-full flex flex-col items-center justify-center text-muted-foreground">
                           <MapPin class="h-8 w-8 mb-2" />
                           <p class="text-sm">
-                            Suche einen Ort oder klicke auf die Karte
+                            {{ t('component_drafts_form_location_hint') }}
                           </p>
                         </div>
                       </template>
@@ -265,10 +265,10 @@
           <CardHeader>
             <CardTitle class="flex items-center gap-2">
               <Clock class="h-5 w-5" />
-              Zeitplanung
+              {{ t('component_drafts_form_schedule_title') }}
             </CardTitle>
             <CardDescription>
-              Wann findet das Adventure statt und wie lange dauert es?
+              {{ t('component_drafts_form_schedule_description') }}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -288,7 +288,7 @@
           <CardHeader>
             <CardTitle class="flex items-center gap-2">
               <Cog class="h-5 w-5" />
-              Weitere Einstellungen
+              {{ t('component_drafts_form_more_settings_title') }}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -296,10 +296,10 @@
               <FormItem class="flex items-center justify-between rounded-lg border p-4 flex-wrap">
                 <div class="space-y-0.5">
                   <FormLabel class="font-medium">
-                    Sichtbarkeit
+                    {{ t('component_drafts_form_visibility_label') }}
                   </FormLabel>
                   <p class="text-xs text-muted-foreground">
-                    Andere können dieses Adventure entdecken
+                    {{ t('component_drafts_form_visibility_description') }}
                   </p>
                 </div>
                 <FormControl>
@@ -311,15 +311,15 @@
                   >
                     <ToggleGroupItem value="private">
                       <EyeOffIcon />
-                      Privat
+                      {{ t('component_drafts_form_visibility_private') }}
                     </ToggleGroupItem>
                     <ToggleGroupItem value="public">
                       <EyeIcon />
-                      Öffentlich
+                      {{ t('component_drafts_form_visibility_public') }}
                     </ToggleGroupItem>
                     <ToggleGroupItem value="unlisted">
                       <BookKeyIcon />
-                      Nicht gelistet
+                      {{ t('component_drafts_form_visibility_unlisted') }}
                     </ToggleGroupItem>
                   </ToggleGroup>
                 </FormControl>
@@ -341,7 +341,7 @@
         >
           <Loader2 v-if="isPublishing" class="h-4 w-4 mr-2 animate-spin" />
           <Send v-else class="h-4 w-4 mr-2" />
-          Veröffentlichen
+          {{ t('component_drafts_form_publish') }}
         </Button>
         <Button
           type="button"
@@ -361,7 +361,7 @@
       <div class="flex items-center justify-between">
         <Button type="button" variant="ghost" as-child>
           <NuxtLink to="/adventures/drafts">
-            Abbrechen
+            {{ t('common_actions_cancel') }}
           </NuxtLink>
         </Button>
         <div class="flex gap-2">
@@ -373,12 +373,12 @@
           >
             <Loader2 v-if="isSaving" class="h-4 w-4 mr-2 animate-spin" />
             <Save v-else class="h-4 w-4 mr-2" />
-            Speichern
+            {{ t('common_actions_save') }}
           </Button>
           <Button type="submit" :disabled="isPublishing || !lastSaved" @click="onSubmit">
             <Loader2 v-if="isPublishing" class="h-4 w-4 mr-2 animate-spin" />
             <Send v-else class="h-4 w-4 mr-2" />
-            Veröffentlichen
+            {{ t('component_drafts_form_publish') }}
           </Button>
         </div>
       </div>
@@ -419,6 +419,8 @@ const props = defineProps<{
   draftId: string
   draftData: AdventureDraftWithPictures
 }>();
+
+const { t } = useI18n();
 
 const { handleSubmit, setValues, values, setFieldValue, meta, errors } = useForm({
   validationSchema: toTypedSchema(DraftFormSchema),
@@ -510,7 +512,7 @@ const onSubmit = handleSubmit(async () => {
 // Delete draft
 const deleteDraft = async () => {
   try {
-    await $fetch(`/api/v1/app/adventures/drafts/${props.draftId}`, { method: 'DELETE' });
+    await $fetch(`/api/v1/app/adventures/drafts/${props.draftId}`, { method: 'DELETE' as any });
     await navigateTo('/adventures/drafts');
   } catch (err) {
     console.error('Löschen fehlgeschlagen:', err);

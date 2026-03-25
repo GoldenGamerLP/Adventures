@@ -8,11 +8,11 @@
   >
     <template v-if="isLoading">
       <Spinner class="mr-2" />
-      Neues Adventure wird erstellt...
+      {{ t('component_drafts_create_loading') }}
     </template>
     <template v-else>
       <Plus class="size-4" />
-      Neues Adventure erstellen
+      {{ t('component_drafts_create_cta') }}
     </template>
   </Button>
 </template>
@@ -23,6 +23,8 @@ import { Plus } from 'lucide-vue-next';
 const props = defineProps<{
     isAtLimit: boolean;
 }>();
+
+const { t } = useI18n();
 
 const isLoading = ref(false);
 

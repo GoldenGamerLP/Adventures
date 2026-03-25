@@ -8,7 +8,7 @@ export const AdventuresQueryFilterSchema = z.object({
     [AdventureSearchQueryKeys.DIFFICULTY]: z.enum(['easy', 'medium', 'hard']).optional(),
     //Duration in format "min,max" e.g. "2,5"
     [AdventureSearchQueryKeys.DURATION]: z.tuple([z.coerce.number().min(15).max(1440), z.coerce.number().min(15).max(1440)]).refine(data => data[0] <= data[1], {
-        message: 'Minimale Dauer muss kleiner oder gleich der maximalen Dauer sein',
+        message: 'VALIDATION_DURATION_MIN_MAX_ORDER',
     }).optional(),
     [AdventureSearchQueryKeys.LOCATION]: z.tuple([z.coerce.number().min(-180).max(180), z.coerce.number().min(-90).max(90)]),
     [AdventureSearchQueryKeys.RADIUS]: z.coerce.number().min(0).optional(),

@@ -1,8 +1,8 @@
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Account erstellen</CardTitle>
-      <CardDescription>Registriere dich für ein neues Konto</CardDescription>
+      <CardTitle>{{ $t('auth_register_title') }}</CardTitle>
+      <CardDescription>{{ $t('auth_register_description') }}</CardDescription>
     </CardHeader>
     <CardContent>
       <form class="space-y-4" @submit="onSubmit">
@@ -12,27 +12,27 @@
 
         <FormField v-slot="{ componentField }" name="name">
           <FormItem>
-            <FormLabel>Name</FormLabel>
+            <FormLabel>{{ $t('auth_labels_name') }}</FormLabel>
             <FormControl>
               <Input
                 type="text"
-                placeholder="Max Mustermann"
+                :placeholder="$t('auth_placeholders_name') as string"
                 v-bind="componentField"
                 :disabled="isLoading"
               />
             </FormControl>
-            <FormDescription>Mindestens 4 Zeichen</FormDescription>
+            <FormDescription>{{ $t('auth_validation_name_min') }}</FormDescription>
             <FormMessage />
           </FormItem>
         </FormField>
 
         <FormField v-slot="{ componentField }" name="email">
           <FormItem>
-            <FormLabel>E-Mail</FormLabel>
+            <FormLabel>{{ $t('auth_labels_email') }}</FormLabel>
             <FormControl>
               <Input
                 type="email"
-                placeholder="deine@email.de"
+                :placeholder="$t('auth_placeholders_email') as string"
                 v-bind="componentField"
                 :disabled="isLoading"
               />
@@ -43,27 +43,27 @@
 
         <FormField v-slot="{ componentField }" name="password">
           <FormItem>
-            <FormLabel>Passwort</FormLabel>
+            <FormLabel>{{ $t('auth_labels_password') }}</FormLabel>
             <FormControl>
               <Input
                 type="password"
-                placeholder="••••••••"
+                :placeholder="$t('auth_placeholders_password') as string"
                 v-bind="componentField"
                 :disabled="isLoading"
               />
             </FormControl>
-            <FormDescription>Mindestens 8 Zeichen</FormDescription>
+            <FormDescription>{{ $t('auth_validation_password_min') }}</FormDescription>
             <FormMessage />
           </FormItem>
         </FormField>
 
         <FormField v-slot="{ componentField }" name="confirmPassword">
           <FormItem>
-            <FormLabel>Passwort bestätigen</FormLabel>
+            <FormLabel>{{ $t('auth_labels_confirm_password') }}</FormLabel>
             <FormControl>
               <Input
                 type="password"
-                placeholder="••••••••"
+                :placeholder="$t('auth_placeholders_password') as string"
                 v-bind="componentField"
                 :disabled="isLoading"
               />
@@ -92,7 +92,7 @@
 
         <Button type="submit" class="w-full" :disabled="isLoading">
           <Spinner v-if="isLoading" class="mr-2" />
-          {{ isLoading ? 'Registrierung läuft...' : 'Registrieren' }}
+          {{ isLoading ? $t('auth_submit_register_loading') : $t('auth_submit_register') }}
         </Button>
       </form>
     </CardContent>
@@ -105,6 +105,8 @@ import { AlertCircle, CheckCircle2 } from 'lucide-vue-next';
 import { useForm } from 'vee-validate';
 import { RegisterSchema } from '~~/shared/schema/AuthenticationSchema';
 
+const { $t } = useI18n();
+
 const isLoading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
@@ -116,14 +118,12 @@ const { handleSubmit } = useForm({
 });
 
 const getErrorMessage = (code: string): string => {
-  const messages: Record<string, string> = {
-    'EMAIL_IN_USE': 'Diese E-Mail-Adresse wird bereits verwendet.',
-    'PASSWORDS_DO_NOT_MATCH': 'Die Passwörter stimmen nicht überein.',
-    'VALIDATION_ERROR': 'Bitte überprüfe deine Eingaben.',
-    'USER_CREATE_FAILED': 'Account konnte nicht erstellt werden.',
-    'NETWORK_ERROR': 'Netzwerkfehler. Bitte versuche es erneut.',
-  };
-  return messages[code] || 'Ein unerwarteter Fehler ist aufgetreten.';
+  const translated = $t(`error_${code}`) as string;
+  if (translated === `error_${code}`) {
+    return $t('common_unknown_error') as string;
+  }
+
+  return translated;
 };
 
 const onSubmit = handleSubmit(async (values) => {
@@ -139,7 +139,7 @@ const onSubmit = handleSubmit(async (values) => {
       body: { ...values, token: token.value },
     });
 
-    successMessage.value = 'Registrierung erfolgreich! Du wirst weitergeleitet...';
+    successMessage.value = $t('auth_register_success') as string;
 
     // Warte kurz und leite dann weiter
     await hydrateUser();

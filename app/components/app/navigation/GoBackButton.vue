@@ -9,6 +9,8 @@ const props = withDefaults(defineProps<Props>(), {
     defaultHref: "/"
 })
 
+const { t } = useI18n();
+
 const router = useRouter();
 
 interface Props extends PrimitiveProps {
@@ -33,7 +35,7 @@ const goBack = () => {
     :class="props.class"
     :variant="props.variant"
     :size="props.size"
-    :aria-label="'Go back'"
+    :aria-label="t('common_actions_back_to_overview')"
     @click="goBack"
   >
     <slot>

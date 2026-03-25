@@ -4,7 +4,7 @@
       <img
         v-if="entry.populatedAdventure!.pictureIds.length > 0"
         :src="toPicturePath(entry.populatedAdventure!.pictureIds[0])"
-        alt="Abenteuerbild"
+        :alt="$t('component_playlists_entry_image_alt') as string"
       />
     </ItemMedia>
     <ItemContent>
@@ -12,8 +12,7 @@
       <ItemDescription>{{ entry.populatedAdventure!.description }}</ItemDescription>
       <div>
         <Badge variant="secondary">
-          Hinzugefügt
-          <NuxtTime :datetime="entry.createdAt" relative />
+          {{ $t('component_playlists_entry_added', { date: td(entry.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) }) }}
         </Badge>
       </div>
     </ItemContent>
@@ -21,7 +20,7 @@
     <ItemActions>
       <Button variant="link" as-child>
         <NuxtLink :to="`/adventures/${entry.adventureId}`">
-          Ansehen!
+          {{ $t('common_view') }}
         </NuxtLink>
       </Button>
     </ItemActions>
@@ -29,10 +28,12 @@
 </template>
 
 <script setup lang="ts">
-
-
 const props = defineProps<{
     entry: AdventureListEntry;
 }>();
+
+
+const { $t, td } = useI18n();
+
 
 </script>

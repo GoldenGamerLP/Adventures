@@ -1,7 +1,6 @@
 <template>
   <div class="space-y-3">
-    <!-- Interest Grid -->
-    <div role="group" aria-label="Interessen auswählen" class="flex flex-wrap gap-2">
+    <div role="group" :aria-label="String(t('component_profile_interests_group_aria'))" class="flex flex-wrap gap-2">
       <Button
         v-for="interest in availableInterests"
         :key="interest.key"
@@ -14,16 +13,15 @@
         @keydown.enter.prevent="toggle(interest.key)"
       >
         <component :is="ICON_MAP[interest.iconKey]" aria-hidden="true" />
-        {{ interest.label }}
+        {{ t(`interest_${interest.key}`) }}
       </Button>
     </div>
 
-    <!-- Counter -->
     <p v-if="max" class="text-xs text-muted-foreground" aria-live="polite">
       <span :class="selectedInterests.length >= max && 'text-primary font-medium'">
         {{ selectedInterests.length }}
       </span>
-      / {{ max }} ausgewählt
+      / {{ max }} {{ t('component_profile_interests_selected') }}
     </p>
   </div>
 </template>
@@ -45,6 +43,8 @@ const props = withDefaults(defineProps<{
 }>(), {
     interests: () => [],
 });
+
+const { t } = useI18n();
 
 const selectedInterests = toRef(props.interests);
 
@@ -78,9 +78,9 @@ watchDebounced(selectedInterests, async (newVal) => {
             method: 'PATCH',
             body: { interests: newVal },
         });
-        toast.success('Interessen aktualisiert');
+        toast.success(String(t('component_profile_interests_updated')));
     } catch (error) {
-        toast.error('Fehler beim Aktualisieren der Interessen');
+        toast.error(String(t('component_profile_interests_update_failed')));
     }
 }, { debounce: 1500 });
 </script>

@@ -23,10 +23,10 @@ export const resolveGeoIP = async (ip: string): Promise<FrontEndGeoState | null>
             return null;
         }
 
-        const state = lookupResponse.subdivisions?.[0]?.names?.en || 'Unknown';
-        const city = lookupResponse.city?.names?.en || 'Unknown';
-        const country = lookupResponse.country?.names?.en || 'Unknown';
-        const postalCode = lookupResponse.postal?.code || 'Unknown';
+        const state = lookupResponse.subdivisions?.[0]?.names?.en || 'geo_unknown_state';
+        const city = lookupResponse.city?.names?.en || 'geo_unknown_city';
+        const country = lookupResponse.country?.names?.en || 'geo_unknown_country';
+        const postalCode = lookupResponse.postal?.code || 'geo_unknown_postal_code';
 
         return {
             location: {

@@ -12,19 +12,18 @@
       <EmptyMedia variant="icon">
         <SearchAlertIcon />
       </EmptyMedia>
-      <EmptyTitle>Adventure nicht gefunden</EmptyTitle>
+      <EmptyTitle>{{ $t('error_title') }}</EmptyTitle>
       <EmptyDescription>
-        Das Adventure wurde nicht gefunden weil es entweder nicht <span class="text-accent-foreground">exestiert</span>
-        oder <span class="text-accent-foreground">Privat</span> ist.
+        {{ $t('error_body') }}
         <div>
-          {{ error ?? 'Unerwarteter Fehler' }}
+          {{ error ?? $t('error_fallback') }}
         </div>
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
       <Button as-child>
         <NuxtLink>
-          Zurück zu den Adventures
+          {{ $t('actions_back') }}
         </NuxtLink>
       </Button>
     </EmptyContent>
@@ -35,7 +34,7 @@
       size="sm"
     >
       <a href="#">
-        Support Kontaktieren
+        {{ $t('actions_support') }}
         <ArrowUpRightIcon />
       </a>
     </Button>
@@ -45,6 +44,8 @@
 
 <script lang="ts" setup>
 import { ArrowUpRightIcon, SearchAlertIcon } from 'lucide-vue-next';
+
+const { $t } = useI18n();
 
 const route = useRoute();
 const adventureId = route.params.adventureId as string;
@@ -60,21 +61,22 @@ const { data: adventure, error, pending } = await useFetch<AdventureWithMeta>(
 
 useHead({
   titleTemplate: (titleChunk) => {
-    return titleChunk ? `${titleChunk} | Abenteuer entdecken` : 'Abenteuer entdecken';
+    const suffix = $t('title_template_suffix') as string;
+    return titleChunk ? `${titleChunk} | ${suffix}` : suffix;
   },
-  title: () => adventure.value ? adventure.value.title : 'Adventure nicht gefunden',
+  title: () => adventure.value ? adventure.value.title : $t('title_not_found') as string,
   meta: [
     {
       name: 'description',
-      content: adventure.value ? adventure.value.description : 'Das angeforderte Abenteuer konnte nicht gefunden werden.',
+      content: adventure.value ? adventure.value.description : $t('description_not_found') as string,
     },
     {
       property: 'og:title',
-      content: adventure.value ? adventure.value.title : 'Adventure nicht gefunden',
+      content: adventure.value ? adventure.value.title : $t('title_not_found') as string,
     },
     {
       property: 'og:description',
-      content: adventure.value ? adventure.value.description : 'Das angeforderte Abenteuer konnte nicht gefunden werden.',
+      content: adventure.value ? adventure.value.description : $t('description_not_found') as string,
     },
     {
       property: 'og:image',

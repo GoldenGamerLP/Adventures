@@ -4,7 +4,7 @@
       <Item>
         <ItemMedia>
           <Avatar>
-            <AvatarImage :src="toPicturePath(adventure.pictureIds[0])" alt="Adventure Image" />
+            <AvatarImage :src="toPicturePath(adventure.pictureIds[0])" :alt="t('component_adventures_image_alt')" />
             <AvatarFallback>
               {{ adventure.title.charAt(0) }}
             </AvatarFallback>
@@ -21,7 +21,7 @@
         <ItemActions>
           <NuxtLink :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id } }">
             <Button variant="outline" size="sm">
-              Ansehen
+              {{ t('common_view') }}
             </Button>
           </NuxtLink>
           <Separator orientation="vertical" />
@@ -37,9 +37,9 @@
       <EmptyMedia variant="icon">
         <SearchAlert />
       </EmptyMedia>
-      <EmptyTitle>Keine Adventures gefunden</EmptyTitle>
+      <EmptyTitle>{{ t('component_adventures_list_empty_title') }}</EmptyTitle>
       <EmptyDescription>
-        Dieser Autor hat noch keine Adventures erstellt.
+        {{ t('component_adventures_list_empty_description') }}
       </EmptyDescription>
     </EmptyHeader>
   </Empty>
@@ -52,6 +52,8 @@ import { SearchAlert } from 'lucide-vue-next';
 const props = defineProps<{
   authorId: string;
 }>();
+
+const { t } = useI18n();
 
 const { data: adventures } = await useFetch('/api/v1/app/adventures/getByAuthor', {
   key: 'adventures-by-author',

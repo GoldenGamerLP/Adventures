@@ -34,7 +34,7 @@ export const EventScheduleSchema = z.object({
         min: z.number().min(15).max(MAX_ADVENTURE_DURATION_MINUTES),
         max: z.number().min(15).max(MAX_ADVENTURE_DURATION_MINUTES),
     }).refine(data => data.min <= data.max, {
-        message: 'Minimale Dauer muss kleiner oder gleich der maximalen Dauer sein',
+        message: 'VALIDATION_DURATION_MIN_MAX_ORDER',
     }),
     isApproximate: z.coerce.boolean().default(false),
     repeatsAnnually: z.coerce.boolean().default(false),
@@ -49,14 +49,14 @@ export const EventScheduleSchema = z.object({
     }
     return true;
 }, {
-    message: 'Ungültige Kombination von Zeitplan-Typ und Zeitangaben',
+    message: 'VALIDATION_SCHEDULE_TYPE_DATES',
 }).refine(data => {
     if (data.type === 'range') {
         return !!data.startDate && !!data.endDate;
     }
     return true;
 }, {
-    message: 'Ungültige Kombination von Zeitplan-Typ und Zeitangaben',
+    message: 'VALIDATION_SCHEDULE_TYPE_DATES',
 });
 
 export type EventScheduleInput = z.infer<typeof EventScheduleSchema>;

@@ -1,1 +1,19 @@
-{}
+{
+	"empty_title": "Dein Profil",
+	"empty_description": "Es konnte kein Profil gefunden werden. Bitte logge dich ein, um dein Profil zu sehen.",
+	"sr_settings": "Einstellungen",
+	"tabs_about": "Über",
+	"tabs_adventures": "Deine Abenteuer",
+	"tabs_playlists": "Deine Playlists",
+	"interests_title": "Deine Interessen",
+	"interests_description": "Wähle bis zu {max} Interessen aus.",
+	"profile_picture_description": "Ändere dein Profilbild, um deinen Account zu personalisieren.",
+	"settings_title": "Einstellungen",
+	"settings_description": "App-Einstellungen und Account-Verwaltung.",
+	"settings_theme_title": "Design",
+	"settings_theme_description": "Wechsle zwischen Hell und Dunkel.",
+	"settings_language_title": "Sprache",
+	"settings_language_description": "Ändere die Anzeigesprache.",
+	"settings_logout_description": "Von deinem Account abmelden.",
+	"background_change": "Hintergrund ändern"
+}

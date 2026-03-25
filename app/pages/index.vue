@@ -2,9 +2,9 @@
   <div class="max-w-2xl mx-auto w-full">
     <nav class="sticky top-0 mt-1 bg-background z-10 flex flex-col gap-2 pt-2 pb-1 border-b border-b-muted">
       <div class="flex items-center mx-2 sm:mx-0">
-        <h1 class="font-semibold font-serif font-[Montserrat Bold] inline-flex items-center gap-1 mr-auto">
+        <h1 class="font-semibold inline-flex items-center gap-1 mr-auto tracking-widest">
           <img :src="computedIcon" class="size-8" alt="" />
-          <span>Adventures</span>
+          <span>{{ $t('common_app_name') }}</span>
         </h1>
 
         <!-- Action Buttons -->
@@ -18,7 +18,7 @@
           >
             <NuxtLink :to="{ name: 'adventures-drafts' }">
               <BookMarkedIcon />
-              <span class="sr-only">Entwürfe ansehen</span>
+              <span class="sr-only">{{ $t('sr_open_drafts') }}</span>
             </NuxtLink>
           </Button>
 
@@ -30,7 +30,7 @@
           >
             <NuxtLink :to="{ name: 'profile' }">
               <UserCog />
-              <span class="sr-only">Profil Einstellungen</span>
+              <span class="sr-only">{{ $t('sr_open_profile_settings') }}</span>
             </NuxtLink>
           </Button>
 
@@ -61,7 +61,7 @@
           <EmptyMedia variant="icon">
             <SearchAlert />
           </EmptyMedia>
-          <EmptyTitle>Fehler beim Laden der Adventures</EmptyTitle>
+          <EmptyTitle>{{ $t('error_load_adventures') }}</EmptyTitle>
           <EmptyDescription class="text-xs">
             {{ error }}
           </EmptyDescription>
@@ -73,7 +73,7 @@
             :disabled="pending"
             @click="refreshAndReload"
           >
-            Erneut laden
+            {{ $t('common_actions_retry') }}
           </Button>
         </EmptyContent>
       </Empty>
@@ -84,9 +84,9 @@
           <EmptyMedia variant="icon">
             <SearchAlert />
           </EmptyMedia>
-          <EmptyTitle>Keine Adventures gefunden</EmptyTitle>
+          <EmptyTitle>{{ $t('empty_no_adventures_title') }}</EmptyTitle>
           <EmptyDescription>
-            Versuche, deine Filter anzupassen, um mehr Ergebnisse zu erhalten.
+            {{ $t('empty_no_adventures_description') }}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
@@ -96,7 +96,7 @@
             :disabled="pending"
             @click="refreshAndReload()"
           >
-            Filter zurücksetzen
+            {{ $t('common_actions_reset_filters') }}
           </Button>
         </EmptyContent>
       </Empty>
@@ -122,27 +122,29 @@ import { BookMarkedIcon, SearchAlert, UserCog } from 'lucide-vue-next';
 import { FETCH_KEY_FOR_YOU_PAGE } from '~~/shared/constants/Constants';
 import type { AdventureWithMeta } from '~~/shared/types/AdventureTypes';
 
+const { $t } = useI18n();
+
 definePageMeta({
   layout: 'navigation-bar'
 });
 
 useHead({
-  title: 'Adventures - Entdecke spannende Erlebnisse in deiner Nähe',
+  title: () => $t('title') as string,
   meta: [
     {
       name: 'description',
-      content: 'Finde und teile Abenteuer in deiner Umgebung. Entdecke neue Aktivitäten, verbinde dich mit Gleichgesinnten und erlebe unvergessliche Momente.',
+      content: $t('meta_description') as string,
     },
     {
       name: 'keywords',
-      content: 'Adventures, Erlebnisse, Aktivitäten, Abenteuer in der Nähe, Abenteuer teilen, Abenteuer entdecken, Abenteuer Community',
+      content: $t('meta_keywords') as string,
     },
   ],
 });
 
 useSeoMeta({
-  ogTitle: 'Adventures - Entdecke spannende Erlebnisse in deiner Nähe',
-  ogDescription: 'Finde und teile Abenteuer in deiner Umgebung. Entdecke neue Aktivitäten, verbinde dich mit Gleichgesinnten und erlebe unvergessliche Momente.',
+  ogTitle: () => $t('title') as string,
+  ogDescription: () => $t('meta_description') as string,
   ogImage: '/white_adventures_logo.webp',
 });
 

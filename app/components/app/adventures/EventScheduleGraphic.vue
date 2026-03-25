@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2 class="text-lg font-semibold">
-      Event Zeitplan
+      {{ $t('component_schedule_title') }}
     </h2>
 
     <!-- Wann? -->
@@ -11,8 +11,8 @@
           <InfinityIcon />
         </ItemMedia>
         <ItemContent>
-          <ItemTitle>Jederzeit</ItemTitle>
-          <ItemDescription>Keine Datum/Uhrzeit nötig</ItemDescription>
+          <ItemTitle>{{ $t('component_schedule_anytime_title') }}</ItemTitle>
+          <ItemDescription>{{ $t('component_schedule_anytime_description') }}</ItemDescription>
         </ItemContent>
       </Item>
     </template>
@@ -23,15 +23,15 @@
         </ItemMedia>
         <ItemContent>
           <ItemTitle>
-            <NuxtTime :datetime="schedule.startDate!" format="long" />
+            {{ td(schedule.startDate!, { dateStyle: 'full', timeStyle: 'short' }) }}
           </ItemTitle>
           <ItemDescription>
-            <NuxtTime :datetime="schedule.startDate!" format="short" relative />
+            {{ td(schedule.startDate!, { dateStyle: 'medium', timeStyle: 'short' }) }}
           </ItemDescription>
         </ItemContent>
         <Badge variant="secondary" @click="downloadCalendar">
           <CalendarPlusIcon />
-          Zum Kalender hinzufügen
+          {{ $t('component_schedule_add_to_calendar') }}
         </Badge>
       </Item>
     </template>
@@ -42,19 +42,19 @@
         </ItemMedia>
         <ItemContent>
           <ItemTitle>
-            <NuxtTime :datetime="schedule.startDate!" format="long" />
+            {{ td(schedule.startDate!, { dateStyle: 'full', timeStyle: 'short' }) }}
             &ndash;
-            <NuxtTime :datetime="schedule.endDate!" format="long" />
+            {{ td(schedule.endDate!, { dateStyle: 'full', timeStyle: 'short' }) }}
           </ItemTitle>
           <ItemDescription>
-            <NuxtTime :datetime="schedule.startDate!" format="short" relative />
-            bis
-            <NuxtTime :datetime="schedule.endDate!" format="short" relative />
+            {{ td(schedule.startDate!, { dateStyle: 'medium', timeStyle: 'short' }) }}
+            {{ $t('component_schedule_until') }}
+            {{ td(schedule.endDate!, { dateStyle: 'medium', timeStyle: 'short' }) }}
           </ItemDescription>
         </ItemContent>
         <Badge variant="secondary" @click="downloadCalendar">
           <CalendarPlusIcon />
-          Zum Kalender hinzufügen
+          {{ $t('component_schedule_add_to_calendar') }}
         </Badge>
       </Item>
     </template>
@@ -62,7 +62,7 @@
     <template v-if="schedule.slots">
       <div class="space-y-2 mt-4">
         <h3 class="text-sm font-medium">
-          Wöchentliche Öffnungszeiten
+          {{ $t('component_schedule_opening_hours') }}
         </h3>
         <div class="grid grid-cols-7 gap-2">
           <div
@@ -81,7 +81,7 @@
     <!-- Wie lange? -->
     <div class="space-y-2 mt-4">
       <h3 class="text-sm font-medium">
-        Geschätzte Dauer
+        {{ $t('component_schedule_estimated_duration') }}
       </h3>
       <div class="relative w-full pt-6 pb-2">
         <!-- Min/Max position labels -->
@@ -120,9 +120,9 @@
           <BadgeAlert />
         </ItemMedia>
         <ItemContent>
-          <ItemTitle>Ungefähre Angaben</ItemTitle>
+          <ItemTitle>{{ $t('component_schedule_approximate_title') }}</ItemTitle>
           <ItemDescription>
-            Die angegebenen Daten sind ungefähre Angaben und können variieren.
+            {{ $t('component_schedule_approximate_description') }}
           </ItemDescription>
         </ItemContent>
       </Item>
@@ -132,9 +132,9 @@
           <CalendarClockIcon />
         </ItemMedia>
         <ItemContent>
-          <ItemTitle>Jährliche Wiederholung</ItemTitle>
+          <ItemTitle>{{ $t('component_schedule_repeats_title') }}</ItemTitle>
           <ItemDescription>
-            Dieses Event findet jedes Jahr am selben Datum statt.
+            {{ $t('component_schedule_repeats_description') }}
           </ItemDescription>
         </ItemContent>
       </Item>
@@ -161,6 +161,8 @@ const props = defineProps<{
   schedule: EventSchedule;
 }>();
 
+const { $t, td } = useI18n();
+
 const minLabel = computed(() => formatDuration(props.schedule.estimatedDuration.min));
 const maxLabel = computed(() => formatDuration(props.schedule.estimatedDuration.max));
 
@@ -179,7 +181,7 @@ const getDayOfWeeklabel = (dayOfWeek: number): string => {
 
 const getFormattedSlotTime = (dayOfWeek: number) => {
   const slot = props.schedule.slots?.find(s => s.dayOfWeek === dayOfWeek);
-  if (!slot) return 'Geschlossen';
+  if (!slot) return $t('component_schedule_closed') as string;
   return `${formatRelativeTime(slot.from)} - ${formatRelativeTime(slot.to)}`;
 }
 

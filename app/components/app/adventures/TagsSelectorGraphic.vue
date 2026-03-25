@@ -8,7 +8,7 @@
       :class="{ 'opacity-50': !isSelected(adventureType.key) }"
     >
       <component :is="ICON_MAP[adventureType.iconKey]" />
-      <span class="capitalize">{{ adventureType.label }}</span>
+      <span class="capitalize">{{ $t(`adventure_type_${adventureType.key}`) }}</span>
     </Badge>
   </div>
 </template>
@@ -22,7 +22,6 @@ import {
     PartyPopper, Sailboat, Swords, Tent, Ticket, Tv, Users, Waves,
 } from 'lucide-vue-next';
 
-
 const props = withDefaults(defineProps<{
     selectedTags?: AdventureTypeKey[];
     showAll?: boolean;
@@ -30,6 +29,10 @@ const props = withDefaults(defineProps<{
     selectedTags: () => [],
     showAll: false,
 });
+
+
+const { t } = useI18n();
+
 
 const ICON_MAP: Record<SelectorIconKey, any> = {
     // Outdoor

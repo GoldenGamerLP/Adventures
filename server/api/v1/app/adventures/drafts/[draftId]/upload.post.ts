@@ -1,27 +1,25 @@
-import { DRAFT_CONFIG, MAX_BUNDLE_SIZE_BYTES, MAX_FILE_SIZE_BYTES } from '#shared/constants/Constants';
+import { APP_ERROR_CODES, DRAFT_CONFIG, MAX_BUNDLE_SIZE_BYTES, MAX_FILE_SIZE_BYTES } from '#shared/constants/Constants';
 import { addPictureToDraft, validateDraftOwnership } from '~~/server/utils/adventures/DraftUtils';
+import { createKeyedError } from '~~/server/utils/errors/ApiErrorUtils';
 import { uploadDraftPictures } from '~~/server/utils/pictures/PictureUtils';
 
 export default defineEventHandler(async (event) => {
     const user = event.context.user;
 
     if (!user) {
-        throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+        throw createKeyedError(401, APP_ERROR_CODES.UNAUTHORIZED);
     }
 
     const draftId = getRouterParam(event, 'draftId');
 
     if (!draftId) {
-        throw createError({ statusCode: 400, statusMessage: 'Draft-ID fehlt' });
+        throw createKeyedError(400, APP_ERROR_CODES.DRAFT_ID_REQUIRED);
     }
 
     // Prüfe Draft-Ownership
     const isOwner = await validateDraftOwnership(draftId, user._id);
     if (!isOwner) {
-        throw createError({
-            statusCode: 404,
-            statusMessage: 'Draft nicht gefunden oder keine Berechtigung'
-        });
+        throw createKeyedError(404, APP_ERROR_CODES.DRAFT_NOT_FOUND);
     }
 
     const formData = await readMultipartFormData(event);
@@ -42,30 +40,32 @@ export default defineEventHandler(async (event) => {
     }
 
     if (!images || images.length === 0) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Keine Bilder zum Hochladen'
-        });
+        throw createKeyedError(400, APP_ERROR_CODES.NO_PICTURES_TO_UPLOAD);
     }
 
     if (images.length > DRAFT_CONFIG.MAX_PICTURES_PER_DRAFT) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Maximal ${DRAFT_CONFIG.MAX_PICTURES_PER_DRAFT} Bilder erlaubt`
+        throw createKeyedError(400, APP_ERROR_CODES.DRAFT_PICTURE_LIMIT_EXCEEDED, {
+            params: {
+                maxPictures: DRAFT_CONFIG.MAX_PICTURES_PER_DRAFT,
+            },
         });
     }
 
     if (images.some(img => img.size > MAX_FILE_SIZE_BYTES)) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Einige Bilder überschreiten die maximale Größe von ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB`
+        throw createKeyedError(400, APP_ERROR_CODES.DRAFT_PICTURE_FILE_SIZE_EXCEEDED, {
+            params: {
+                maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
+                maxFileSizeMb: MAX_FILE_SIZE_BYTES / (1024 * 1024),
+            },
         });
     }
 
     if (images.reduce((acc, img) => acc + img.size, 0) > MAX_BUNDLE_SIZE_BYTES) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Die Gesamtgröße der Bilder überschreitet das Maximum von ${MAX_BUNDLE_SIZE_BYTES / (1024 * 1024)} MB`
+        throw createKeyedError(400, APP_ERROR_CODES.DRAFT_PICTURE_BUNDLE_SIZE_EXCEEDED, {
+            params: {
+                maxBundleSizeBytes: MAX_BUNDLE_SIZE_BYTES,
+                maxBundleSizeMb: MAX_BUNDLE_SIZE_BYTES / (1024 * 1024),
+            },
         });
     }
 
@@ -89,8 +89,12 @@ export default defineEventHandler(async (event) => {
 
         throw createError({
             statusCode: 500,
-            statusMessage: 'Fehler beim Hochladen der Bilder',
-            data: error,
+            statusText: APP_ERROR_CODES.DRAFT_PICTURE_UPLOAD_FAILED,
+            statusMessage: APP_ERROR_CODES.DRAFT_PICTURE_UPLOAD_FAILED,
+            data: {
+                code: APP_ERROR_CODES.DRAFT_PICTURE_UPLOAD_FAILED,
+                cause: error,
+            },
         });
     }
 });

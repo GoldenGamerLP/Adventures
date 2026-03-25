@@ -4,10 +4,10 @@
       <AppNavigationGoBackButton :variant="'ghost'" :size="'icon'" :force-href="true" />
       <div class="grid">
         <h1 class="text-xl sm:text-2xl font-semibold">
-          Entwürfe
+          {{ $t('title') }}
         </h1>
         <p class="text-sm text-muted-foreground">
-          {{ drafts?.length || 0 }} von {{ DRAFT_CONFIG.MAX_DRAFTS_PER_USER }} Entwürfen
+          {{ $t('count', { count: drafts?.length || 0, max: DRAFT_CONFIG.MAX_DRAFTS_PER_USER }) }}
         </p>
       </div>
     </header>
@@ -16,9 +16,9 @@
       <!-- Limit Warning -->
       <Alert v-if="isAtLimit" variant="destructive">
         <AlertCircle class="h-4 w-4" />
-        <AlertTitle>Limit erreicht</AlertTitle>
+        <AlertTitle>{{ $t('limit_title') }}</AlertTitle>
         <AlertDescription>
-          Lösche oder veröffentliche Entwürfe, um neue zu erstellen.
+          {{ $t('limit_description') }}
         </AlertDescription>
       </Alert>
 
@@ -27,9 +27,9 @@
           <EmptyMedia variant="icon">
             <FileText class="h-12 w-12 text-muted-foreground" />
           </EmptyMedia>
-          <EmptyTitle>Keine Entwürfe</EmptyTitle>
+          <EmptyTitle>{{ $t('empty_title') }}</EmptyTitle>
           <EmptyDescription>
-            Erstelle deinen ersten Entwurf für ein Abenteuer.
+            {{ $t('empty_description') }}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
@@ -47,27 +47,27 @@
                   <img
                     v-if="draft.pictureIds.length"
                     :src="toPicturePath(draft.pictureIds[0])"
-                    alt="Entwurf"
+                    :alt="$t('draft_image_alt') as string"
                     class="w-full h-full object-cover rounded"
                   />
                   <ImageOff v-else class="h-6 w-6 text-muted-foreground" />
                 </ItemMedia>
                 <ItemContent>
                   <ItemTitle>
-                    {{ draft.formData.title || 'Unbenannt' }}
+                    {{ draft.formData.title || $t('common_untitled') }}
                   </ItemTitle>
                   <ItemDescription>
-                    {{ draft.formData.description || 'Keine Beschreibung' }}
+                    {{ draft.formData.description || $t('common_no_description') }}
                   </ItemDescription>
                   <div class="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                     <span class="flex items-center gap-1">
                       <Clock class="h-3 w-3" />
-                      <NuxtTime :datetime="draft.updatedAt" relative />
+                      {{ td(draft.updatedAt, { dateStyle: 'medium', timeStyle: 'short' }) }}
                     </span>
                     <span :class="getExpiryClass(draft)" class="flex items-center gap-1">
                       <Timer class="h-3 w-3" />
-                      Läuft ab
-                      <NuxtTime :datetime="draft.expiresAt" relative />
+                      {{ $t('common_expires') }}
+                      {{ td(draft.expiresAt, { dateStyle: 'medium', timeStyle: 'short' }) }}
                     </span>
                   </div>
                 </ItemContent>
@@ -94,6 +94,8 @@ import {
 } from 'lucide-vue-next';
 import { DRAFT_CONFIG } from '~~/shared/constants/Constants';
 import type { AdventureDraft } from '~~/shared/types/DraftTypes';
+
+const { $t, td } = useI18n();
 
 definePageMeta({
   layout: 'navigation-bar',

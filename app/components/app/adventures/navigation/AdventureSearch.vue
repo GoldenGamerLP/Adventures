@@ -8,7 +8,7 @@
         :class="hasActiveFilters && 'ring-2 ring-primary ring-offset-1'"
       >
         <SlidersHorizontalIcon />
-        <span class="sr-only">Abenteuer filtern</span>
+        <span class="sr-only">{{ $t('component_search_filter_sr_open') }}</span>
       </Button>
     </PopoverTrigger>
 
@@ -16,10 +16,10 @@
       <!-- Header -->
       <div class="px-3 pt-3 pb-2">
         <h2 class="text-sm font-semibold">
-          Filter
+          {{ $t('component_search_filter_title') }}
         </h2>
         <p class="text-xs text-muted-foreground">
-          Passe die Suche an deine Vorstellungen an.
+          {{ $t('component_search_filter_subtitle') }}
         </p>
       </div>
 
@@ -33,7 +33,7 @@
             <SearchIcon class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
             <Input
               v-model.lazy="searchMask.query"
-              placeholder="Stichwort suchen..."
+              :placeholder="$t('component_search_filter_search_placeholder') as string"
               class="pl-8 h-8 text-sm bg-muted/50 border-0 focus-visible:ring-1"
               @keydown.enter="applyAndClose"
             />
@@ -44,7 +44,7 @@
 
         <!-- Schwierigkeit -->
         <p class="px-2 pt-1 text-xs font-medium text-muted-foreground">
-          Schwierigkeit
+          {{ $t('component_search_filter_difficulty') }}
         </p>
         <div class="flex items-center gap-1 px-2 pb-1">
           <Button
@@ -65,7 +65,7 @@
 
         <!-- Schnell-Optionen als Items -->
         <p class="px-2 pt-1 text-xs font-medium text-muted-foreground">
-          Sortierung
+          {{ $t('component_search_filter_sort') }}
         </p>
         <button
           v-for="opt in sortOptions"
@@ -104,7 +104,7 @@
           @click="resetAllFilters()"
         >
           <X class="size-3 mr-1" />
-          Zurücksetzen
+          {{ $t('component_search_filter_reset') }}
         </Button>
 
         <div class="flex items-center gap-1">
@@ -116,10 +116,10 @@
             @click="openAdvanced()"
           >
             <Settings2 class="size-3 mr-1" />
-            Erweitert
+            {{ $t('component_search_filter_advanced') }}
           </Button>
           <Button size="sm" class="h-7 text-xs" @click="applyAndClose()">
-            Suchen
+            {{ $t('component_search_filter_search') }}
           </Button>
         </div>
       </div>
@@ -130,9 +130,9 @@
   <Sheet v-model:open="extendedSearchOpen">
     <SheetContent side="bottom" class="max-w-2xl mx-auto rounded-t-2xl px-4 pb-8">
       <SheetHeader class="text-left pb-4">
-        <SheetTitle>Erweiterte Filter</SheetTitle>
+        <SheetTitle>{{ $t('component_search_filter_sheet_title') }}</SheetTitle>
         <SheetDescription>
-          Verfeinere deine Suche mit weiteren Kriterien.
+          {{ $t('component_search_filter_sheet_description') }}
         </SheetDescription>
       </SheetHeader>
 
@@ -140,7 +140,7 @@
         <!-- Radius -->
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <label class="text-sm font-medium">Suchradius</label>
+            <label class="text-sm font-medium">{{ $t('component_search_filter_radius') }}</label>
             <span class="text-xs font-mono text-muted-foreground">{{ mask.radius ?? 50 }} km</span>
           </div>
           <Slider
@@ -154,9 +154,9 @@
         <!-- Dauer -->
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <label class="text-sm font-medium">Dauer</label>
+            <label class="text-sm font-medium">{{ $t('component_search_filter_duration') }}</label>
             <span class="text-xs font-mono text-muted-foreground">
-              {{ formatDuration(durationModel[0]) }} – {{ formatDuration(durationModel[1]) }}
+              {{ formatDuration(durationModel[0]!) }} – {{ formatDuration(durationModel[1]!) }}
             </span>
           </div>
           <Slider
@@ -169,17 +169,17 @@
 
         <!-- Tags -->
         <div class="space-y-2">
-          <label class="text-sm font-medium">Tags</label>
+          <label class="text-sm font-medium">{{ $t('component_search_filter_tags') }}</label>
           <LazyAppDraftsTagsSelector v-model="tagsModel" :max="5" />
         </div>
       </div>
 
       <SheetFooter class="mt-6 flex-row gap-2">
         <Button variant="outline" class="flex-1" @click="extendedSearchOpen = false">
-          Abbrechen
+          {{ $t('component_search_filter_cancel') }}
         </Button>
         <Button class="flex-1" @click="applyAdvancedAndClose">
-          Übernehmen
+          {{ $t('component_search_filter_apply') }}
         </Button>
       </SheetFooter>
     </SheetContent>
@@ -202,17 +202,19 @@ import {
   Zap
 } from 'lucide-vue-next';
 
+const { $t } = useI18n();
+
 const { mask, resetFilters, searchPopoverOpen: _sPO, extendedSearchOpen: _eSO, refreshSearch } = useSearchMask();
 const extendedSearchOpen = toRef(_eSO);
 const searchPopoverOpen = toRef(_sPO);
 const searchMask = mask;
 
 //Difficulty
-const difficultyOptions = [
-  { value: 'easy', label: 'Leicht', icon: Zap },
-  { value: 'medium', label: 'Mittel', icon: Mountain },
-  { value: 'hard', label: 'Schwer', icon: Dumbbell },
-] as const;
+const difficultyOptions = computed(() => [
+  { value: 'easy', label: $t('component_search_filter_difficulty_easy') as string, icon: Zap },
+  { value: 'medium', label: $t('component_search_filter_difficulty_medium') as string, icon: Mountain },
+  { value: 'hard', label: $t('component_search_filter_difficulty_hard') as string, icon: Dumbbell },
+] as const);
 
 const toggleDifficulty = (val: 'easy' | 'medium' | 'hard') => {
   if (searchMask.value.difficulty === val) {
@@ -223,32 +225,32 @@ const toggleDifficulty = (val: 'easy' | 'medium' | 'hard') => {
 };
 
 //Sortierung
-const sortOptions = [
+const sortOptions = computed(() => [
   {
     value: 'near_me',
-    label: 'In meiner Nähe',
-    description: 'Sortiert nach Entfernung zu deinem Standort',
+    label: $t('component_search_filter_sort_near_me_label') as string,
+    description: $t('component_search_filter_sort_near_me_description') as string,
     icon: MapPin,
   },
   {
     value: 'recommended',
-    label: 'Trends',
-    description: 'Beliebt in den letzten 7 Tagen',
+    label: $t('component_search_filter_sort_recommended_label') as string,
+    description: $t('component_search_filter_sort_recommended_description') as string,
     icon: Flame,
   },
   {
     value: 'new',
-    label: 'Neueste',
-    description: 'Zuletzt hinzugefügte Adventures',
+    label: $t('component_search_filter_sort_new_label') as string,
+    description: $t('component_search_filter_sort_new_description') as string,
     icon: Clock,
   },
   {
     value: 'popular',
-    label: 'Beliebteste',
-    description: 'Nach Aufrufen sortiert',
+    label: $t('component_search_filter_sort_popular_label') as string,
+    description: $t('component_search_filter_sort_popular_description') as string,
     icon: TrendingUp,
   },
-] as const;
+] as const);
 
 const toggleSort = (val: "popular" | "new" | "recommended" | "near_me" | undefined) => {
   if (searchMask.value.sort === val) {

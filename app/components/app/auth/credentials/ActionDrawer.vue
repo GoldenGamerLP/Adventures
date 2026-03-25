@@ -10,24 +10,24 @@
         <template v-else>
           <User2Icon />
         </template>
-        <span class="sr-only">Anmelden / Registrieren</span>
+        <span class="sr-only">{{ $t('auth_drawer_sr_trigger') }}</span>
       </Button>
     </DrawerTrigger>
     <DrawerContent class="max-w-2xl mx-auto w-full">
       <DrawerHeader>
-        <DrawerTitle>Willkommen bei Adventures</DrawerTitle>
+        <DrawerTitle>{{ $t('auth_drawer_title') }}</DrawerTitle>
         <DrawerDescription>
-          Melde dich an oder erstelle ein neues Konto, um alle Funktionen zu nutzen.
+          {{ $t('auth_drawer_description') }}
         </DrawerDescription>
       </DrawerHeader>
       <div class="px-4 py-6 overflow-auto mb-4">
         <Tabs default-value="login" class="w-full">
           <TabsList class="w-full">
             <TabsTrigger value="login">
-              Anmelden
+              {{ $t('common_actions_login') }}
             </TabsTrigger>
             <TabsTrigger value="register">
-              Registrieren
+              {{ $t('common_actions_register') }}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="login" class="mt-4">
@@ -44,6 +44,8 @@
 
 <script lang="ts" setup>
 import { User2Icon } from 'lucide-vue-next';
+
+const { $t } = useI18n();
 
 const user = useUser();
 const isOpen = ref(false);

@@ -1,1 +1,7 @@
-{}
+{
+	"title": "Only for signed-in users",
+	"description": "Please sign in to access this page.",
+	"logo_alt": "Adventures logo",
+	"tab_login": "Sign in",
+	"tab_register": "Register"
+}

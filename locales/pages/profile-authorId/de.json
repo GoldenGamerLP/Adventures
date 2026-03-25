@@ -1,1 +1,11 @@
-{}
+{
+	"not_found_title": "Benutzer nicht gefunden",
+	"not_found_description": "Der angeforderte Benutzer existiert nicht oder wurde gelöscht.",
+	"tabs_about": "Über",
+	"tabs_adventures": "Abenteuer",
+	"about_interests": "Interessen",
+	"about_biography": "Biografie",
+	"empty_info_title": "Keine Informationen",
+	"empty_info_description": "Dieser Benutzer hat noch keine Informationen in seinem Profil hinzugefügt.",
+	"tabs_aria": "Profile Tabs"
+}

@@ -1,1 +1,7 @@
-{}
+{
+	"title_edit": "Adventure bearbeiten",
+	"error_title": "Fehler",
+	"error_description": "Der Entwurf konnte nicht geladen werden. Bitte versuche es später erneut oder kontaktiere den Support, wenn das Problem weiterhin besteht.",
+	"actions_back": "Zurück zur Übersicht",
+	"actions_support": "Support kontaktieren"
+}

@@ -1,13 +1,15 @@
 <template>
   <Alert>
-    <AlertTitle>Heads up!</AlertTitle>
+    <AlertTitle>{{ $t('redirect_title') }}</AlertTitle>
     <AlertDescription>
-      Einen moment, du wirst weitergeleitet...
+      {{ $t('redirect_description') }}
     </AlertDescription>
   </Alert>
 </template>
 
 <script lang="ts" setup>
+
+const { $t } = useI18n();
 
 onMounted(async () => {
     try {

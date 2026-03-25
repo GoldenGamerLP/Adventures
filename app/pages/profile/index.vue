@@ -5,9 +5,9 @@
         <EmptyMedia variant="icon">
           <SearchAlert />
         </EmptyMedia>
-        <EmptyTitle>Dein Profil</EmptyTitle>
+        <EmptyTitle>{{ $t('empty_title') }}</EmptyTitle>
         <EmptyDescription>
-          Es konnte kein Profil gefunden werden. Bitte logge dich ein, um dein Profil zu sehen.
+          {{ $t('empty_description') }}
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
@@ -17,7 +17,7 @@
         <AppNavigationGoBackButton :variant="'secondary'" />
         <Button variant="secondary" size="icon" @click="settingsOpen = true">
           <Settings />
-          <span class="sr-only">Einstellungen</span>
+          <span class="sr-only">{{ $t('sr_settings') }}</span>
         </Button>
       </div>
 
@@ -33,16 +33,16 @@
           </template>
           <template v-else>
             <div
-              class="w-full h-full bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg border-2 border-dashed border-muted flex flex-col items-center justify-center gap-2"
+              class="w-full h-full bg-linear-to-r from-primary/20 to-secondary/20 rounded-lg border-2 border-dashed border-muted flex flex-col items-center justify-center gap-2"
             >
               <ImageOffIcon class="size-6 text-muted-foreground" />
-              <span class="text-sm text-muted-foreground">Kein Hintergrundbild</span>
+              <span class="text-sm text-muted-foreground">{{ $t('common_no_background_image') }}</span>
             </div>
           </template>
           <AppProfileChangeBackgroundImage v-model="userData">
             <Button size="sm" class="absolute bottom-8 right-4 z-20">
               <EditIcon />
-              Hintergrund ändern
+              {{ $t('background_change') }}
             </Button>
           </AppProfileChangeBackgroundImage>
         </div>
@@ -59,8 +59,8 @@
               {{ userData.name }}
             </h1>
             <p class="text-xs text-muted-foreground">
-              Beigetreten
-              <NuxtTime :datetime="userData.createdAt" relative />
+              {{ $t('common_joined') }}
+              {{ td(userData.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) }}
             </p>
           </div>
         </header>
@@ -80,19 +80,19 @@
               value="about"
               class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
             >
-              Über
+              {{ $t('tabs_about') }}
             </RekaTabsTrigger>
             <RekaTabsTrigger
               value="adventures"
               class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
             >
-              Deine Abenteuer
+              {{ $t('tabs_adventures') }}
             </RekaTabsTrigger>
             <RekaTabsTrigger
               value="playlists"
               class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
             >
-              Deine Playlists
+              {{ $t('tabs_playlists') }}
             </RekaTabsTrigger>
           </RekaTabsList>
 
@@ -102,10 +102,10 @@
               <!-- Interests -->
               <section>
                 <h2 class="text-base font-semibold">
-                  Deine Interessen
+                  {{ $t('interests_title') }}
                 </h2>
                 <p class="text-sm text-muted-foreground mb-3">
-                  Wähle bis zu {{ MAX_INTERESTS }} Interessen aus.
+                  {{ $t('interests_description', { max: MAX_INTERESTS }) }}
                 </p>
                 <AppProfileInterestSelector :max="MAX_INTERESTS" :interests="userData.interests" />
               </section>
@@ -132,13 +132,12 @@
                   />
                 </Avatar>
                 <div class="flex flex-col min-w-0 flex-1">
-                  <span class="text-sm font-semibold">Profilbild</span>
-                  <span class="text-xs text-muted-foreground">Ändere dein Profilbild, um deinen Account zu
-                    personalisieren.</span>
+                  <span class="text-sm font-semibold">{{ $t('common_profile_picture') }}</span>
+                  <span class="text-xs text-muted-foreground">{{ $t('profile_picture_description') }}</span>
                 </div>
                 <AppProfileImage v-model="userData">
                   <Button variant="outline" size="sm" class="shrink-0">
-                    Ändern
+                    {{ $t('common_actions_edit') }}
                   </Button>
                 </AppProfileImage>
               </section>
@@ -161,9 +160,9 @@
       <Sheet v-model:open="settingsOpen">
         <SheetContent side="bottom" class="max-w-2xl mx-auto rounded-t-2xl">
           <SheetHeader>
-            <SheetTitle>Einstellungen</SheetTitle>
+            <SheetTitle>{{ $t('settings_title') }}</SheetTitle>
             <SheetDescription>
-              App-Einstellungen und Account-Verwaltung.
+              {{ $t('settings_description') }}
             </SheetDescription>
           </SheetHeader>
           <div class="space-y-2 py-4">
@@ -172,8 +171,8 @@
                 <Palette />
               </ItemMedia>
               <ItemContent>
-                <ItemTitle>Design</ItemTitle>
-                <ItemDescription>Wechsle zwischen Hell und Dunkel.</ItemDescription>
+                <ItemTitle>{{ $t('settings_theme_title') }}</ItemTitle>
+                <ItemDescription>{{ $t('settings_theme_description') }}</ItemDescription>
               </ItemContent>
               <ItemActions>
                 <AppMiscThemeToggle />
@@ -185,8 +184,8 @@
                 <Languages />
               </ItemMedia>
               <ItemContent>
-                <ItemTitle>Sprache</ItemTitle>
-                <ItemDescription>Ändere die Anzeigesprache.</ItemDescription>
+                <ItemTitle>{{ $t('settings_language_title') }}</ItemTitle>
+                <ItemDescription>{{ $t('settings_language_description') }}</ItemDescription>
               </ItemContent>
               <ItemActions>
                 <AppMiscLanguageSwitcher />
@@ -199,9 +198,9 @@
               </ItemMedia>
               <ItemContent>
                 <ItemTitle class="text-destructive">
-                  Abmelden
+                  {{ $t('common_actions_logout') }}
                 </ItemTitle>
-                <ItemDescription>Von deinem Account abmelden.</ItemDescription>
+                <ItemDescription>{{ $t('settings_logout_description') }}</ItemDescription>
               </ItemContent>
               <ItemActions>
                 <AppAuthLogoutButton />
@@ -226,6 +225,8 @@ import {
 } from 'reka-ui';
 import type { UserProfileWithMeta } from '~~/shared/types/UserProfileTypes';
 import { MAX_INTERESTS } from '~~/shared/types/UserProfileTypes';
+
+const { $t, td } = useI18n();
 
 
 const user = useUser();

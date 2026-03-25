@@ -16,19 +16,18 @@
           <div class="space-x-2">
             <Badge variant="outline">
               <ClockPlusIcon />
-              <NuxtTime :datetime="adventure.view.firstViewedAt" relative />
+              {{ $t('component_visit_history_first_viewed', { date: td(adventure.view.firstViewedAt, { dateStyle: 'medium', timeStyle: 'short' }) }) }}
             </Badge>
             <Badge variant="outline">
               <HistoryIcon />
-              Zuletzt angesehen:
-              <NuxtTime :datetime="adventure.view.lastViewedAt" relative />
+              {{ $t('component_visit_history_last_viewed', { date: td(adventure.view.lastViewedAt, { dateStyle: 'medium', timeStyle: 'short' }) }) }}
             </Badge>
           </div>
         </ItemContent>
         <ItemActions>
           <NuxtLink :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id } }">
             <Button variant="outline" size="sm">
-              Ansehen
+              {{ $t('common_view') }}
             </Button>
           </NuxtLink>
         </ItemActions>
@@ -42,10 +41,9 @@
       <EmptyMedia variant="icon">
         <SearchAlert />
       </EmptyMedia>
-      <EmptyTitle>Keine Adventures gefunden</EmptyTitle>
+      <EmptyTitle>{{ $t('component_visit_history_empty_title') }}</EmptyTitle>
       <EmptyDescription>
-        Du hast noch keine Adventures angesehen. Sobald du ein Adventure ansiehst, wird es hier in deiner
-        Besuchshistorie angezeigt.
+        {{ $t('component_visit_history_empty_description') }}
       </EmptyDescription>
     </EmptyHeader>
   </Empty>
@@ -55,6 +53,8 @@
 import { ClockPlusIcon, HistoryIcon, SearchAlert } from 'lucide-vue-next';
 import type { EnrichedViewRecord } from '~~/shared/types/AdventureTypes';
 import { toPicturePath } from '~~/shared/utils/SharedUtils';
+
+const { $t, td } = useI18n();
 
 const { data: adventureHistory } = await useFetch<EnrichedViewRecord[]>('/api/v1/app/profile/own/adventureHistory');
 </script>

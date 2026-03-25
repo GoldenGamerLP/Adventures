@@ -10,18 +10,17 @@
           <ItemDescription>{{ adventure.description }} | {{ adventure.visibility }}</ItemDescription>
           <div class="mt-2 flex flex-wrap gap-2">
             <Badge variant="secondary" size="sm">
-              Erstellt
-              <NuxtTime :datetime="adventure.createdAt" relative />
+              {{ $t('component_adventures_list_created', { date: td(adventure.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) }) }}
             </Badge>
             <Badge variant="secondary" size="sm">
-              {{ adventure.viewCount.totalViews }} Views
+              {{ adventure.viewCount.totalViews }} {{ $t('common_views') }}
             </Badge>
           </div>
         </ItemContent>
         <ItemActions class="gap-1 sm:w-auto w-full justify-end">
           <Button as-child variant="link">
             <NuxtLink :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id } }">
-              Ansehen
+              {{ $t('common_view') }}
             </NuxtLink>
           </Button>
           <AppAdventuresLikeButton
@@ -41,9 +40,9 @@
       <EmptyMedia variant="icon">
         <SearchAlert />
       </EmptyMedia>
-      <EmptyTitle>Keine Adventures gefunden</EmptyTitle>
+      <EmptyTitle>{{ $t('component_adventures_list_empty_title') }}</EmptyTitle>
       <EmptyDescription>
-        Dieser Autor hat noch keine Adventures erstellt.
+        {{ $t('component_adventures_list_empty_description') }}
       </EmptyDescription>
     </EmptyHeader>
   </Empty>
@@ -56,6 +55,8 @@ import { SearchAlert } from 'lucide-vue-next';
 const props = defineProps<{
   authorId: string;
 }>();
+
+const { $t, td } = useI18n();
 
 const { data: adventures } = await useFetch<AdventureWithMeta[]>('/api/v1/app/profile/own/adventures', {
   key: 'adventures-by-author-' + props.authorId,

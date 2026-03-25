@@ -10,14 +10,25 @@ const props = defineProps<{
 }>()
 
 const { name, formMessageId } = useFormField()
+const { $t } = useI18n()
+
+const translateMessage = (message: string) => {
+  const translated = $t(message) as string
+  return translated === message ? message : translated
+}
 </script>
 
 <template>
   <ErrorMessage
-    :id="formMessageId"
-    data-slot="form-message"
-    as="p"
+    v-slot="{ message }"
     :name="toValue(name)"
-    :class="cn('text-destructive text-sm', props.class)"
-  />
+  >
+    <p
+      :id="formMessageId"
+      data-slot="form-message"
+      :class="cn('text-destructive text-sm', props.class)"
+    >
+      {{ translateMessage(message as string) }}
+    </p>
+  </ErrorMessage>
 </template>

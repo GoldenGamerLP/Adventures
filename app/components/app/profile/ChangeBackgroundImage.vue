@@ -5,24 +5,22 @@
     </DialogTrigger>
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Ändere dein Hintergrundbild</DialogTitle>
+        <DialogTitle>{{ t('component_profile_background_title') }}</DialogTitle>
         <DialogDescription>
           <Avatar>
             <AvatarFallback>
               <ImageOffIcon />
             </AvatarFallback>
-            <AvatarImage :src="toPicturePath(model.backgroundPictureId)" alt="Hintergrundbild ändern" />
-          </Avatar> Wähle ein neues Hintergrundbild aus, um es hochzuladen und zu verwenden. Unterstützte
-          Formate
-          sind JPG,
-          PNG und WEBP mit einer maximalen Größe von 5MB.
+            <AvatarImage :src="toPicturePath(model.backgroundPictureId)" :alt="t('component_profile_background_alt')" />
+          </Avatar>
+          {{ t('component_profile_background_description') }}
         </DialogDescription>
         <DialogFooter>
           <Button variant="outline" :disabled="isLoading" @click="open">
-            Hintergrundbild ändern
+            {{ t('component_profile_background_change') }}
           </Button>
           <Button variant="outline" :disabled="isLoading" @click="deleteBackgroundPicture">
-            Hintergrundbild entfernen
+            {{ t('component_profile_background_remove') }}
           </Button>
         </DialogFooter>
       </DialogHeader>
@@ -38,8 +36,9 @@ import { compressImage } from "~/utils/PictureUtils";
 import { MAX_FILE_SIZE_BYTES, SUPPORTED_FILE_TYPES } from '~~/shared/constants/Constants';
 import type { UserProfile, UserProfileWithMeta } from "~~/shared/types/UserProfileTypes";
 
-
 const model = defineModel<UserProfileWithMeta>({ required: true });
+
+const { t } = useI18n();
 
 const { open, onChange: handleFilesChange } = useFileDialog({
   multiple: false,
@@ -57,7 +56,7 @@ const deleteBackgroundPicture = async () => {
 
     model.value.backgroundPictureId = undefined;
   } catch (error) {
-    alert('Beim Entfernen des Hintergrundbildes ist ein Fehler aufgetreten. Bitte versuche es erneut.');
+    alert(t('component_profile_background_remove_failed'));
     console.error('Error removing background picture:', error);
   } finally {
     isLoading.value = false;
@@ -73,30 +72,34 @@ handleFilesChange(async (event: FileList | null) => {
   isLoading.value = true;
 
   if (!file) {
-    alert('Es wurde keine Datei ausgewählt. Bitte wähle eine Datei aus.');
+    alert(t('component_profile_file_none_selected'));
     isLoading.value = false;
     return;
   }
 
   if (file?.size > MAX_FILE_SIZE_BYTES) {
-    alert('Die ausgewählte Datei ist zu groß. Bitte wähle eine Datei mit maximal 5MB aus.');
+    alert(t('component_profile_file_too_large'));
     isLoading.value = false;
     return;
   }
 
   if (!SUPPORTED_FILE_TYPES.includes(file.name.split('.').pop()?.toLowerCase() || '')) {
-    alert('Der ausgewählte Dateityp wird nicht unterstützt. Bitte wähle eine gültige Bilddatei aus.');
+    alert(t('component_profile_file_invalid_type'));
     isLoading.value = false;
     return;
   }
 
   const image = await compressImage(file);
+  if (!image) {
+    alert(String(t('component_profile_background_upload_failed')));
+    isLoading.value = false;
+    return;
+  }
 
   const formData = new FormData();
   formData.append('image', image, sanitizedFileName(file.name, 0));
 
   try {
-    //Response is the new background picture id
     const response = await $fetch<UserProfile>('/api/v1/app/profile/banner/upload', {
       method: 'POST',
       body: formData,
@@ -104,7 +107,7 @@ handleFilesChange(async (event: FileList | null) => {
 
     model.value.backgroundPictureId = response.backgroundPictureId;
   } catch (error) {
-    alert('Beim Hochladen des Hintergrundbildes ist ein Fehler aufgetreten. Bitte versuche es erneut.');
+    alert(t('component_profile_background_upload_failed'));
     console.error('Error uploading background picture:', error);
   } finally {
     isLoading.value = false;

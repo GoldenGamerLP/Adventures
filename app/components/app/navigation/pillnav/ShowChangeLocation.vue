@@ -4,13 +4,13 @@
       <Button variant="secondary" size="sm" class="px-2 rounded-full">
         <MapPin />
         {{ geolocation.city }}
-        <span class="sr-only">Aktuelle Standortangabe</span>
+        <span class="sr-only">{{ $t('component_location_current_sr') }}</span>
       </Button>
     </PopoverTrigger>
     <PopoverContent align="start" class="space-y-2 w-sm">
       <div>
         <h2 class="font-medium text-xl">
-          Lokale Adventures
+          {{ $t('component_location_title') }}
         </h2>
         <p class="text-sm text-muted-foreground">
           {{ geolocation.city }}, {{ geolocation.state }}
@@ -34,23 +34,20 @@
         @click="requestGeolocation"
       >
         <component :is="isRequesting ? Spinner : MapPin" class="size-3" />
-        Geräte-Standort verwenden
+        {{ $t('component_location_use_device') }}
       </Button>
       <Alert>
         <LightbulbIcon />
-        <AlertTitle>IP Standort</AlertTitle>
+        <AlertTitle>{{ $t('component_location_ip_title') }}</AlertTitle>
         <AlertDescription class="text-xs">
-          Adventures zeigt dir Abenteuer in deiner Nähe basierend auf deinem Standort an. Dein Standort wird anhand
-          deiner IP-Adresse geschätzt und könnte ungenau sein. Für eine genauere Standortbestimmung kannst du die
-          Geräte-Standortfunktion verwenden.
+          {{ $t('component_location_ip_description') }}
         </AlertDescription>
       </Alert>
       <Alert v-if="isError" variant="destructive">
         <AlertCircleIcon />
-        <AlertTitle>Keine Berechtigung</AlertTitle>
+        <AlertTitle>{{ $t('component_location_permission_title') }}</AlertTitle>
         <AlertDescription class="text-xs">
-          Du hast den Zugriff auf deinen Standort verweigert. Bitte erlaube den Zugriff in deinen
-          Browser-Einstellungen und versuche es erneut.
+          {{ $t('component_location_permission_description') }}
         </AlertDescription>
       </Alert>
     </PopoverContent>
@@ -62,6 +59,8 @@ import { AlertCircleIcon, LightbulbIcon, MapPin } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import Spinner from '~/components/ui/spinner/Spinner.vue';
 import { FETCH_KEY_FOR_YOU_PAGE } from '~~/shared/constants/Constants';
+
+const { $t } = useI18n();
 
 const { getGeolocation, lookupPermissionState } = useDeviceGeoLocation();
 const { geolocation, setCity } = useGeoLocation();
@@ -92,7 +91,7 @@ const requestGeolocation = async () => {
 
     await refreshNuxtData(FETCH_KEY_FOR_YOU_PAGE);
   } catch (error) {
-    toast.error('Fehler beim Abrufen der Geolocation. Bitte versuche es erneut.');
+    toast.error($t('component_location_request_error') as string);
     console.error('Geolocation-Fehler:', error);
   } finally {
     isRequesting.value = false;

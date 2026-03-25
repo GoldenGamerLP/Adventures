@@ -1,17 +1,19 @@
 import { deleteDraft } from '~~/server/utils/adventures/DraftUtils';
+import { APP_ERROR_CODES } from '~~/shared/constants/Constants';
+import { createKeyedError } from '~~/server/utils/errors/ApiErrorUtils';
 import { deleteAllDraftPictures } from '~~/server/utils/pictures/PictureUtils';
 
 export default defineEventHandler(async (event) => {
     const user = event.context.user;
 
     if (!user) {
-        throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+        throw createKeyedError(401, APP_ERROR_CODES.UNAUTHORIZED);
     }
 
     const draftId = getRouterParam(event, 'draftId');
     
     if (!draftId) {
-        throw createError({ statusCode: 400, statusMessage: 'Draft-ID fehlt' });
+        throw createKeyedError(400, APP_ERROR_CODES.DRAFT_ID_REQUIRED);
     }
 
     // Lösche zuerst alle Bilder des Drafts
@@ -21,10 +23,7 @@ export default defineEventHandler(async (event) => {
     const deleted = await deleteDraft(draftId, user._id);
     
     if (!deleted) {
-        throw createError({ 
-            statusCode: 404, 
-            statusMessage: 'Draft nicht gefunden oder keine Berechtigung' 
-        });
+        throw createKeyedError(404, APP_ERROR_CODES.DRAFT_NOT_FOUND);
     }
 
     setResponseStatus(event, 204);

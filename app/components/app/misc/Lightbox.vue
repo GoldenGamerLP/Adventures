@@ -70,7 +70,7 @@
         </Transition>
 
         <Badge variant="secondary">
-          Bild {{ currentIndex + 1 }} von {{ images.length }}
+          {{ $t('app_gallery_lightbox_counter', { current: currentIndex + 1, total: images.length }) }}
         </Badge>
       </div>
     </Transition>

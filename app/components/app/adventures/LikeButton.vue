@@ -7,7 +7,7 @@
   >
     <Heart :class="{ 'fill-red-500': changeableLikeStatus }" />
     {{ changeableLikeStatus ? props.likesCount + 1 : props.likesCount }}
-    <span class="sr-only">{{ changeableLikeStatus ? 'Abenteuer entliken' : 'Abenteuer liken' }}</span>
+    <span class="sr-only">{{ changeableLikeStatus ? t('component_adventures_unlike_sr') : t('component_adventures_like_sr') }}</span>
   </Button>
 </template>
 
@@ -23,6 +23,8 @@ const props = withDefaults(defineProps<{
     isLiked: false,
     likesCount: 0,
 });
+
+const { t } = useI18n();
 
 const user = useUser();
 

@@ -8,7 +8,7 @@
       :class="{'opacity-50': !isSelected(interest.key)}"
     >
       <component :is="ICON_MAP[interest.iconKey]" />
-      <span class="capitalize">{{ interest.label }}</span>
+      <span class="capitalize">{{ $t(`interest_${interest.key}`) }}</span>
     </Badge>
   </div>
 </template>
@@ -27,6 +27,8 @@ const props = withDefaults(defineProps<{
 }>(), {
     interests: () => [],
 });
+
+const { t } = useI18n();
 
 const ICON_MAP: Record<InterestIconKey, any> = {
     Footprints, CookingPot, Gamepad2, Plane, Camera,

@@ -1,1 +1,10 @@
-{}
+{
+	"title": "Adventures - Entdecke spannende Erlebnisse in deiner Nähe",
+	"meta_description": "Finde und teile Abenteuer in deiner Umgebung. Entdecke neue Aktivitäten, verbinde dich mit Gleichgesinnten und erlebe unvergessliche Momente.",
+	"meta_keywords": "Adventures, Erlebnisse, Aktivitäten, Abenteuer in der Nähe, Abenteuer teilen, Abenteuer entdecken, Abenteuer Community",
+	"error_load_adventures": "Fehler beim Laden der Adventures",
+	"empty_no_adventures_title": "Keine Adventures gefunden",
+	"empty_no_adventures_description": "Versuche, deine Filter anzupassen, um mehr Ergebnisse zu erhalten.",
+	"sr_open_drafts": "Entwürfe ansehen",
+	"sr_open_profile_settings": "Profil Einstellungen"
+}

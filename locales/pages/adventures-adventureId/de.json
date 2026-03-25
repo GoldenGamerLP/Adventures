@@ -1,1 +1,10 @@
-{}
+{
+	"title_template_suffix": "Abenteuer entdecken",
+	"title_not_found": "Adventure nicht gefunden",
+	"description_not_found": "Das angeforderte Abenteuer konnte nicht gefunden werden.",
+	"error_title": "Adventure nicht gefunden",
+	"error_body": "Das Adventure wurde nicht gefunden weil es entweder nicht exestiert oder Privat ist.",
+	"error_fallback": "Unerwarteter Fehler",
+	"actions_back": "Zurück zu den Adventures",
+	"actions_support": "Support kontaktieren"
+}

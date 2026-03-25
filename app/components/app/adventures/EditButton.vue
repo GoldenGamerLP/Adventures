@@ -9,11 +9,11 @@
       <slot>
         <EditIcon />
       </slot>
-      <span class="sr-only">Editieren</span>
+      <span class="sr-only">{{ t('common_actions_edit') }}</span>
     </template>
     <template v-else>
       <Spinner />
-      <span class="sr-only">Laden...</span>
+      <span class="sr-only">{{ t('common_loading') }}</span>
     </template>
   </Button>
 </template>
@@ -24,6 +24,8 @@ import { EditIcon } from "lucide-vue-next";
 const props = defineProps<{
   adventure: Adventure;
 }>();
+
+const { t } = useI18n();
 
 const isLoading = ref(false);
 

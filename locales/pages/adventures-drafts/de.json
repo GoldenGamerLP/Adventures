@@ -1,1 +1,9 @@
-{}
+{
+	"title": "Entwürfe",
+	"count": "{count} von {max} Entwürfen",
+	"limit_title": "Limit erreicht",
+	"limit_description": "Lösche oder veröffentliche Entwürfe, um neue zu erstellen.",
+	"empty_title": "Keine Entwürfe",
+	"empty_description": "Erstelle deinen ersten Entwurf für ein Abenteuer.",
+	"draft_image_alt": "Entwurf"
+}

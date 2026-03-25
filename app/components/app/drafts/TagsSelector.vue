@@ -1,7 +1,6 @@
 <template>
   <div class="space-y-3">
-    <!-- Interest Grid -->
-    <div role="group" aria-label="Interessen auswählen" class="flex flex-wrap gap-2">
+    <div role="group" :aria-label="String(t('component_drafts_tags_group_aria'))" class="flex flex-wrap gap-2">
       <Button
         v-for="interest in ADVENTURE_TYPES"
         :key="interest.key"
@@ -15,16 +14,15 @@
         @keydown.enter.prevent="toggle(interest.key)"
       >
         <component :is="ICON_MAP[interest.iconKey]" aria-hidden="true" />
-        {{ interest.label }}
+        {{ t(`adventure_type_${interest.key}`) }}
       </Button>
     </div>
 
-    <!-- Counter -->
     <p v-if="max" class="text-xs text-muted-foreground" aria-live="polite">
       <span :class="modelValue.length >= max && 'text-primary font-medium'">
         {{ modelValue.length }}
       </span>
-      / {{ max }} ausgewählt
+      / {{ max }} {{ t('component_drafts_tags_selected') }}
     </p>
   </div>
 </template>
@@ -46,6 +44,8 @@ const modelValue = defineModel<string[]>({
   type: Array,
   default: () => [],
 });
+
+const { t } = useI18n();
 
 const ICON_MAP: Record<SelectorIconKey, any> = {
   // Outdoor

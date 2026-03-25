@@ -7,13 +7,15 @@
     @click="handleLogout"
   >
     <LogOut class="mr-2 h-4 w-4" />
-    <span v-if="isLoading">Abmelden...</span>
-    <span v-else>Abmelden</span>
+    <span v-if="isLoading">{{ $t('common_actions_logout_loading') }}</span>
+    <span v-else>{{ $t('common_actions_logout') }}</span>
   </Button>
 </template>
 
 <script lang="ts" setup>
 import { LogOut } from 'lucide-vue-next';
+
+const { $t } = useI18n();
 
 const isLoading = ref(false);
 

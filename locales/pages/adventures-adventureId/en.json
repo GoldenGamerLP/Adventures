@@ -1,1 +1,10 @@
-{}
+{
+	"title_template_suffix": "Discover adventures",
+	"title_not_found": "Adventure not found",
+	"description_not_found": "The requested adventure could not be found.",
+	"error_title": "Adventure not found",
+	"error_body": "The adventure could not be found because it does not exist or is private.",
+	"error_fallback": "Unexpected error",
+	"actions_back": "Back to adventures",
+	"actions_support": "Contact support"
+}

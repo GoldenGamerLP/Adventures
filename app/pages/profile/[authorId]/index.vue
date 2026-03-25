@@ -6,14 +6,14 @@
           <EmptyMedia variant="icon">
             <ImageOffIcon />
           </EmptyMedia>
-          <EmptyTitle>Benutzer nicht gefunden</EmptyTitle>
+          <EmptyTitle>{{ $t('not_found_title') }}</EmptyTitle>
           <EmptyDescription>
-            Der angeforderte Benutzer existiert nicht oder wurde gelöscht.
+            {{ $t('not_found_description') }}
           </EmptyDescription>
           <EmptyContent>
             <Button variant="outline" as-child>
               <NuxtLink :to="{ name: 'index' }">
-                Zur Startseite
+                {{ $t('common_actions_back_to_home') }}
               </NuxtLink>
             </Button>
             <AppNavigationGoBackButton :variant="'outline'" class="ml-2" :default-href="'/'" />
@@ -30,7 +30,7 @@
         <img
           v-if="userData.backgroundPictureId"
           :src="toPicturePath(userData.backgroundPictureId)"
-          alt="Hintergrundbild"
+          :alt="$t('common_background_image') as string"
           class="w-full h-full object-cover"
         />
         <ImageOffIcon v-else class="text-muted-foreground" />
@@ -45,7 +45,7 @@
             <AvatarImage
               v-if="userData.profilePictureId"
               :src="toPicturePath(userData.profilePictureId)"
-              alt="Profilbild"
+              :alt="$t('common_profile_picture') as string"
             />
           </Avatar>
           <div class="min-w-0 flex-1">
@@ -53,13 +53,13 @@
               {{ userData.name }}
             </h1>
             <p class="text-xs text-muted-foreground">
-              Beigetreten
-              <NuxtTime :datetime="userData.createdAt" relative />
+              {{ $t('common_joined') }}
+              {{ td(userData.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) }}
             </p>
           </div>
         </header>
         <RekaTabsRoot :default-value="useRoute().hash.slice(1) || 'about'" class="flex flex-col">
-          <RekaTabsList class="relative shrink-0 flex mb-4 bg-accent p-2 rounded-lg" aria-label="Profile Tabs">
+          <RekaTabsList class="relative shrink-0 flex mb-4 bg-accent p-2 rounded-lg" :aria-label="$t('tabs_aria')">
             <RekaTabsIndicator
               class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300"
             >
@@ -69,26 +69,26 @@
               value="about"
               class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
             >
-              Über
+              {{ $t('tabs_about') }}
             </RekaTabsTrigger>
             <RekaTabsTrigger
               value="adventures"
               class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
             >
-              Abenteuer
+              {{ $t('tabs_adventures') }}
             </RekaTabsTrigger>
           </RekaTabsList>
           <RekaTabsContent value="about">
             <div class="space-y-8">
               <div>
                 <h2 class="text-lg font-semibold mb-2">
-                  Interessen
+                  {{ $t('about_interests') }}
                 </h2>
                 <AppProfileInterestsPreview :interests="userData.interests" />
               </div>
               <div>
                 <h2 class="text-lg font-semibold mb-2">
-                  Biografie
+                  {{ $t('about_biography') }}
                 </h2>
                 <p v-if="userData.biography" class="text-sm text-muted-foreground line-clamp-2">
                   {{ userData.biography }}
@@ -102,9 +102,9 @@
                   <EmptyMedia variant="icon">
                     <ImageOffIcon />
                   </EmptyMedia>
-                  <EmptyTitle>Keine Informationen</EmptyTitle>
+                  <EmptyTitle>{{ $t('empty_info_title') }}</EmptyTitle>
                   <EmptyDescription>
-                    Dieser Benutzer hat noch keine Informationen in seinem Profil hinzugefügt.
+                    {{ $t('empty_info_description') }}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -123,6 +123,8 @@
 import { toPicturePath } from "#shared/utils/SharedUtils";
 import { ImageOff, ImageOffIcon } from 'lucide-vue-next';
 import { TabsContent as RekaTabsContent, TabsIndicator as RekaTabsIndicator, TabsList as RekaTabsList, TabsRoot as RekaTabsRoot, TabsTrigger as RekaTabsTrigger } from 'reka-ui';
+
+const { $t, td } = useI18n();
 
 const authorId = useRoute().params.authorId as string;
 

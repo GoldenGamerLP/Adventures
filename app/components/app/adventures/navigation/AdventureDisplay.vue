@@ -9,7 +9,7 @@
         <CarouselItem v-for="picture in adventure.pictureIds" :key="picture">
           <img
             :src="toPicturePath(picture)"
-            alt="Adventure Image"
+            :alt="String(t('component_adventures_image_alt'))"
             loading="lazy"
             class="h-72 w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           />
@@ -33,7 +33,7 @@
         <li v-for="(_, index) in carouselApi?.scrollSnapList()" :key="index" class="inline-block">
           <button
             class="size-2 rounded-full transition-all duration-200"
-            :aria-label="`Bild ${index + 1} von ${carouselApi?.scrollSnapList().length}`"
+            :aria-label="String(t('component_adventures_carousel_image_of_total', { current: index + 1, total: carouselApi?.scrollSnapList().length ?? 0 }))"
             :class="carouselApi?.selectedScrollSnap() === index ? 'bg-primary w-4' : 'bg-muted-foreground'"
           ></button>
         </li>
@@ -44,7 +44,7 @@
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0 flex-1">
           <p class="mb-0.5 text-[11px] font-medium text-muted-foreground/60">
-            von {{ adventure.author.name }}
+            {{ t('component_adventures_author_prefix', { name: adventure.author.name }) }}
           </p>
           <h2
             class="line-clamp-1 text-base font-semibold leading-snug"
@@ -70,7 +70,7 @@
         <div class="rounded-lg border bg-muted/40 px-2.5 py-2">
           <div class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <CalendarDays class="size-3" />
-            Datum
+            {{ t('component_adventures_tile_date') }}
           </div>
           <p class="mt-1 line-clamp-1 text-xs font-semibold">
             {{ scheduleSummary }}
@@ -80,7 +80,7 @@
         <div class="rounded-lg border bg-muted/40 px-2.5 py-2">
           <div class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Timer class="size-3" />
-            Dauer
+            {{ t('component_adventures_tile_duration') }}
           </div>
           <p class="mt-1 line-clamp-1 text-xs font-semibold">
             {{ formatDurationRange(adventure.schedule.estimatedDuration) }}
@@ -100,12 +100,12 @@
                   class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
                 >
                   <MapPin class="size-3" />
-                  {{ adventure.location.distance ? 'Entfernung' : 'Ort' }}
+                  {{ adventure.location.distance ? t('component_adventures_tile_distance') : t('component_adventures_tile_location') }}
                 </div>
                 <p class="mt-1 line-clamp-1 text-xs font-semibold">
                   {{ adventure.location.distance
                     ? formatDistance(adventure.location.distance)
-                    : shortLocation ?? '–' }}
+                    : shortLocation ?? t('common_untitled') }}
                 </p>
               </button>
             </PopoverTrigger>
@@ -132,10 +132,10 @@
               class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
             >
               <MapPin class="size-3" />
-              Bereich
+              {{ t('component_adventures_tile_category') }}
             </div>
             <p class="mt-1 line-clamp-1 text-xs font-semibold">
-              {{ categoryConfig.label }}
+              {{ t(categoryConfig.labelKey) }}
             </p>
           </div>
         </div>
@@ -145,15 +145,15 @@
       <div class="flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-3">
         <Badge variant="outline" :class="difficultyConfig.class">
           <Activity class="size-3" />
-          {{ difficultyConfig.label }}
+          {{ t(difficultyConfig.labelKey) }}
         </Badge>
         <Badge variant="outline">
           <component :is="categoryConfig.icon" class="size-3" />
-          {{ categoryConfig.label }}
+          {{ t(categoryConfig.labelKey) }}
         </Badge>
         <Badge v-if="adventure.schedule.repeatsAnnually" variant="outline" class="gap-1">
           <Repeat2 class="size-3" />
-          Jährl. wiederkehrend
+          {{ t('component_adventures_yearly_repeat') }}
         </Badge>
       </div>
     </div>
@@ -179,19 +179,21 @@ const props = defineProps<{
   adventure: AdventureWithMeta;
 }>();
 
+const { t } = useI18n();
+
 // Difficulty
 const difficultyConfigs = {
-  easy: { label: 'Leicht', class: 'border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-400' },
-  medium: { label: 'Mittel', class: 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400' },
-  hard: { label: 'Schwer', class: 'border-red-500/20   bg-red-500/10   text-red-700   dark:text-red-400' },
+  easy: { labelKey: 'component_search_filter_difficulty_easy', class: 'border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-400' },
+  medium: { labelKey: 'component_search_filter_difficulty_medium', class: 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400' },
+  hard: { labelKey: 'component_search_filter_difficulty_hard', class: 'border-red-500/20   bg-red-500/10   text-red-700   dark:text-red-400' },
 } as const;
 const difficultyConfig = computed(() => difficultyConfigs[props.adventure.difficulty]);
 
 // Category
 const categoryConfigs = {
-  indoor: { label: 'Indoor', icon: Home },
-  outdoor: { label: 'Outdoor', icon: TreePine },
-  mixed: { label: 'Indoor & Outdoor', icon: ArrowLeftRight },
+  indoor: { labelKey: 'component_adventures_category_indoor', icon: Home },
+  outdoor: { labelKey: 'component_adventures_category_outdoor', icon: TreePine },
+  mixed: { labelKey: 'component_adventures_category_mixed', icon: ArrowLeftRight },
 } as const;
 const categoryConfig = computed(() => categoryConfigs[props.adventure.category]);
 
@@ -217,7 +219,7 @@ const scheduleSummary = computed(() => {
     case 'range':
       return dateFormatter.formatRange(new Date(schedule.startDate!), new Date(schedule.endDate!));
     default:
-      return "Flexible";
+      return t('component_adventures_schedule_flexible');
   }
 });
 </script>

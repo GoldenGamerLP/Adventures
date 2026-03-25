@@ -12,7 +12,7 @@
           {{ adventure.title }}
         </h1>
         <p class="text-sm text-muted-foreground ml-2 truncate">
-          von {{ adventure.author.name }}
+          {{ $t('component_adventures_author_prefix', { name: adventure.author.name }) }}
         </p>
       </div>
     </header>
@@ -49,7 +49,7 @@
             @click="openShareDialog"
           >
             <Share2 class="h-5 w-5" />
-            <span class="sr-only">Teilen</span>
+            <span class="sr-only">{{ $t('component_adventures_share_sr') }}</span>
           </Button>
           <LazyAppAdventuresEditButton v-if="isOwner" :adventure="adventure" />
         </div>
@@ -59,7 +59,7 @@
 
       <div>
         <h2 class="text-lg font-semibold mb-2">
-          Beschreibung
+          {{ $t('component_adventures_description_title') }}
         </h2>
         <p class="text-base text-muted-foreground whitespace-pre-line leading-relaxed">
           {{ adventure.description }}
@@ -71,10 +71,10 @@
       <div v-if="adventure.location">
         <div class="mb-2">
           <h2 class="text-lg font-semibold">
-            Standort
+            {{ $t('component_adventures_location_title') }}
           </h2>
           <p class="text-muted-foreground text-sm">
-            Der Standort des Events
+            {{ $t('component_adventures_location_description') }}
           </p>
         </div>
         <div class="-mx-2.5 h-72 w-auto overflow-hidden border-y bg-muted sm:mx-0 sm:w-full sm:rounded-lg sm:border">
@@ -100,11 +100,11 @@
         <div class="flex flex-wrap gap-2 text-sm mt-1">
           <div class="flex gap-2 text-muted-foreground items-center">
             <MapPinnedIcon class="size-4" />
-            Event-Standort
+            {{ $t('component_adventures_event_location') }}
           </div>
           <div v-if="geolocation" class="flex gap-2 text-muted-foreground items-center">
             <HouseHeartIcon class="size-4" />
-            Dein Standort
+            {{ $t('component_adventures_your_location') }}
           </div>
         </div>
       </div>
@@ -128,15 +128,14 @@
             {{ adventure.author.name }}
           </p>
           <p class="text-sm text-muted-foreground">
-            Autor ansehen
+            {{ $t('component_adventures_view_author') }}
           </p>
         </div>
         <ChevronRight class="h-5 w-5 text-muted-foreground shrink-0" />
       </NuxtLink>
 
       <div class="text-xs text-muted-foreground text-right">
-        Erstellt am
-        <NuxtTime :datetime="adventure.createdAt" />
+        {{ $t('component_adventures_created_at', { date: td(adventure.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) }) }}
       </div>
     </section>
   </main>
@@ -158,6 +157,8 @@ import {
 const props = defineProps<{
   adventure: AdventureWithMeta;
 }>();
+
+const { $t, td } = useI18n();
 
 const { geolocation } = useGeoLocation();
 

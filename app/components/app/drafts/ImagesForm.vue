@@ -1,15 +1,15 @@
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Bilder</CardTitle>
-      <CardDescription>Lade Bilder hoch um dein Abenteuer zu dokumentieren</CardDescription>
+      <CardTitle>{{ t('component_drafts_images_title') }}</CardTitle>
+      <CardDescription>{{ t('component_drafts_images_description') }}</CardDescription>
     </CardHeader>
     <CardContent>
       <Alert v-if="error" variant="destructive" class="mb-4">
         <FileExclamationPointIcon />
-        <AlertTitle>{{ error?.titel }}</AlertTitle>
+        <AlertTitle>{{ t(error?.title ?? 'common_unknown_error') }}</AlertTitle>
         <AlertDescription>
-          {{ error?.message }}
+          {{ t(error?.message ?? 'common_unknown_error') }}
         </AlertDescription>
       </Alert>
       <div
@@ -18,12 +18,12 @@
         <img
           v-if="model.length > 0"
           :src="toPicturePath(model[0]!)"
-          alt="Titelbild Vorschau"
+          :alt="String(t('component_drafts_images_cover_preview_alt'))"
           class="w-full object-cover rounded-lg h-full aspect-video"
         />
         <span
           class="absolute top-[50%] right-[50%] translate-x-[50%] translate-y-[-50%] text-sm text-primary p-4 bg-accent/50 rounded-lg"
-        >Titelbild</span>
+        >{{ t('component_drafts_images_cover_label') }}</span>
       </div>
       <div ref="imageContainer" class="flex flex-row flex-nowrap overflow-x-auto gap-4">
         <Button
@@ -34,7 +34,7 @@
           @click="open"
         >
           <PlusIcon class="size-6 text-primary" />
-          <span class="text-xs text-muted-foreground mt-1">Hinzufügen</span>
+          <span class="text-xs text-muted-foreground mt-1">{{ t('component_drafts_images_add') }}</span>
         </Button>
         <div
           v-for="(image, idx) in model"
@@ -53,7 +53,7 @@
             @click="removeRegisteredFile(idx)"
           >
             <Trash2Icon class="size-4" />
-            <span class="sr-only">Lösche {{ idx }}</span>
+            <span class="sr-only">{{ t('component_drafts_images_delete_sr', { index: idx }) }}</span>
           </button>
         </div>
         <div v-for="(image, idx) in previews" :key="`preview-${idx}`" class="flex-none relative opacity-50">
@@ -67,15 +67,15 @@
             class="bg-background text-foreground rounded-bl-lg rounded-tr-lg absolute -top-1 -right-1 z-20 p-2"
           >
             <Trash class="size-4" />
-            <span class="sr-only">Vorschau {{ idx }}</span>
+            <span class="sr-only">{{ t('component_drafts_images_preview_sr', { index: idx }) }}</span>
           </div>
         </div>
       </div>
       <div class="mt-4">
         <Progress :model-value="compPercentageUsed" class="mt-1" />
         <p class="mt-2 text-sm text-muted-foreground text-right">
-          Bilder verwendet: {{ model.length }} / {{ DRAFT_CONFIG.MAX_PICTURES_PER_DRAFT }} &nbsp;|&nbsp;
-          Speicher verwendet: {{ formatFileSize(accumulatedFileSize) }} / {{
+          {{ t('component_drafts_images_used_count', { used: model.length, max: DRAFT_CONFIG.MAX_PICTURES_PER_DRAFT }) }} &nbsp;|&nbsp;
+          {{ t('component_drafts_images_used_storage') }}: {{ formatFileSize(accumulatedFileSize) }} / {{
             formatFileSize(MAX_BUNDLE_SIZE_BYTES) }}
         </p>
       </div>
@@ -110,7 +110,9 @@ const [imageContainer] = useDragAndDrop(model, {
     handlerSelector: '.dragHandler',
 });
 
-const error = ref<{ titel: string; message: string }>();
+const { t } = useI18n();
+
+const error = ref<{ title: string; message: string }>();
 
 const { open, onChange: handleFilesChange } = useFileDialog({
     multiple: true,
@@ -138,8 +140,8 @@ handleFilesChange((event: FileList | null) => {
             });
         } else {
             error.value = {
-                titel: 'Ungültige Datei',
-                message: `Die Datei "${currentFile?.name}" ist entweder zu groß oder hat ein nicht unterstütztes Format.`
+                title: 'component_drafts_images_error_invalid_file_title',
+                message: 'component_drafts_images_error_invalid_file_message'
             };
         }
 
@@ -148,8 +150,8 @@ handleFilesChange((event: FileList | null) => {
 
     if (accSize > MAX_BUNDLE_SIZE_BYTES) {
         error.value = {
-            titel: 'Zu große Dateibündel',
-            message: `Die ausgewählten Dateien überschreiten die maximale Bündelgröße von ${formatFileSize(MAX_BUNDLE_SIZE_BYTES)}.`
+            title: 'component_drafts_images_error_bundle_title',
+            message: 'component_drafts_images_error_bundle_message'
         };
         return;
     }
@@ -211,8 +213,8 @@ const removeRegisteredFile = async (index: number) => {
         emit('order-changed', [...model.value]);
     } catch (err: any) {
         error.value = {
-            titel: 'Löschen fehlgeschlagen',
-            message: err?.data?.message || 'Bild konnte nicht gelöscht werden.'
+            title: 'component_drafts_images_error_delete_title',
+            message: err?.data?.code || err?.data?.message || 'error_DRAFT_PICTURE_DELETE_FAILED'
         };
     }
 };
@@ -245,8 +247,8 @@ watch(() => [...model.value], (newOrder, oldOrder) => {
 const registerFiles = async () => {
     if (!props.draftId) {
         error.value = {
-            titel: 'Fehler',
-            message: 'Draft-ID fehlt. Bitte lade die Seite neu.'
+            title: 'component_drafts_images_error_generic_title',
+            message: 'error_DRAFT_ID_REQUIRED'
         };
         return;
     }
@@ -284,8 +286,8 @@ const registerFiles = async () => {
     } catch (uploadError: any) {
         console.error('Fehler beim Hochladen der Bilder:', uploadError);
         error.value = {
-            titel: 'Upload fehlgeschlagen',
-            message: uploadError?.data?.message || 'Die Bilder konnten nicht hochgeladen werden. Bitte versuche es erneut.'
+            title: 'component_drafts_images_error_upload_title',
+            message: uploadError?.data?.code || uploadError?.data?.message || 'error_DRAFT_PICTURE_UPLOAD_FAILED'
         };
     }
 }

@@ -1,1 +1,7 @@
-{}
+{
+	"title_edit": "Edit adventure",
+	"error_title": "Error",
+	"error_description": "The draft could not be loaded. Please try again later or contact support if the problem persists.",
+	"actions_back": "Back to overview",
+	"actions_support": "Contact support"
+}

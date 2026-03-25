@@ -4,20 +4,20 @@
       <VeeField v-slot="{ field, errors }" name="biography">
         <Field :data-invalid="!!errors.length">
           <FieldLabel for="form-biography">
-            Über dich
+            {{ t('component_profile_biography_label') }}
           </FieldLabel>
           <Textarea
             id="form-biography"
             :model-value="field.value"
             :aria-invalid="!!errors.length"
-            placeholder="Ich erlebe gerne neue Abenteuer..."
+            :placeholder="t('component_profile_biography_placeholder')"
             class="min-h-24 resize-none"
             :maxlength="500"
             @update:model-value="field.onChange"
           />
           <div class="flex items-center justify-between">
             <FieldDescription>
-              Erzähle etwas über dich, damit andere dich besser kennenlernen.
+              {{ t('component_profile_biography_description') }}
             </FieldDescription>
             <span class="text-xs text-muted-foreground shrink-0 tabular-nums">
               {{ field.value?.length ?? 0 }}/500
@@ -44,6 +44,8 @@ const props = withDefaults(defineProps<{
     initialBiography: '',
 });
 
+const { t } = useI18n();
+
 const { values, isFieldValid } = useForm({
     validationSchema: toTypedSchema(UpdateBiographySchema),
     initialValues: {
@@ -59,9 +61,9 @@ watchDebounced(values, async (newValues) => {
             method: 'PATCH',
             body: newValues,
         });
-        toast.info('Biografie aktualisiert');
+        toast.info(String(t('component_profile_biography_updated')));
     } catch (error) {
-        toast.error('Fehler beim Aktualisieren der Biografie');
+        toast.error(String(t('component_profile_biography_update_failed')));
         console.error('Failed to update biography:', error);
     }
 }, { debounce: 1500 });

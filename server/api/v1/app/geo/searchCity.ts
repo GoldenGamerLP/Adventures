@@ -1,11 +1,13 @@
 import { GeoSearchCitySchema } from '#shared/schema/GeoSchema';
+import { APP_ERROR_CODES } from '~~/shared/constants/Constants';
+import { createKeyedError } from '~~/server/utils/errors/ApiErrorUtils';
 import { searchCityFullText } from '~~/server/utils/geo/GeoDB';
 
 export default defineEventHandler(async (event) => {
     const { data, error } = await getValidatedQuery(event, GeoSearchCitySchema.safeParseAsync);
 
     if (error) {
-        throw createError({ statusCode: 400, statusMessage: 'Invalid query parameters' });
+        throw createKeyedError(400, APP_ERROR_CODES.INVALID_GEO_QUERY);
     }
 
     return searchCityFullText(data.query, 10);

@@ -1,1 +1,9 @@
-{}
+{
+	"title": "Drafts",
+	"count": "{count} of {max} drafts",
+	"limit_title": "Limit reached",
+	"limit_description": "Delete or publish drafts to create new ones.",
+	"empty_title": "No drafts",
+	"empty_description": "Create your first draft adventure.",
+	"draft_image_alt": "Draft"
+}

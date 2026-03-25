@@ -5,18 +5,15 @@
       <EmptyMedia variant="icon">
         <FileExclamationPointIcon />
       </EmptyMedia>
-      <EmptyTitle>Fehler</EmptyTitle>
+      <EmptyTitle>{{ $t('error_title') }}</EmptyTitle>
       <EmptyDescription>
-        Der Entwurf konnte nicht geladen werden. Bitte versuche es später erneut oder kontaktiere den Support,
-        wenn
-        das
-        Problem weiterhin besteht.
+        {{ $t('error_description') }}
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
       <Button as-child>
         <NuxtLink to="/adventures/drafts">
-          Zurück zur Übersicht
+          {{ $t('actions_back') }}
         </NuxtLink>
       </Button>
     </EmptyContent>
@@ -27,7 +24,7 @@
       size="sm"
     >
       <a href="#">
-        Support kontaktieren
+        {{ $t('actions_support') }}
         <ArrowUpRightIcon />
       </a>
     </Button>
@@ -36,6 +33,8 @@
 
 <script lang="ts" setup>
 import { ArrowUpRightIcon, FileExclamationPointIcon } from 'lucide-vue-next';
+
+const { $t } = useI18n();
 
 const draftId = useRoute().params.draftId as string;
 
@@ -49,8 +48,11 @@ const {
 );
 
 useHead({
-  titleTemplate: (titleChunk) => titleChunk ? `${titleChunk} - Adventure bearbeiten` : 'Adventure bearbeiten',
-  title: draftData.value ? draftData.value.formData.title : 'Adventure bearbeiten',
+  titleTemplate: (titleChunk) => {
+    const title = $t('title_edit') as string;
+    return titleChunk ? `${titleChunk} - ${title}` : title;
+  },
+  title: draftData.value ? draftData.value.formData.title : $t('title_edit') as string,
 });
 
 

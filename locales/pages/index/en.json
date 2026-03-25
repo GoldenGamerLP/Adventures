@@ -1,1 +1,10 @@
-{}
+{
+	"title": "Adventures - Discover exciting experiences near you",
+	"meta_description": "Find and share adventures in your area. Discover new activities, connect with like-minded people, and create unforgettable moments.",
+	"meta_keywords": "Adventures, experiences, activities, nearby adventures, share adventures, discover adventures, adventure community",
+	"error_load_adventures": "Failed to load adventures",
+	"empty_no_adventures_title": "No adventures found",
+	"empty_no_adventures_description": "Try adjusting your filters to get more results.",
+	"sr_open_drafts": "Open drafts",
+	"sr_open_profile_settings": "Profile settings"
+}

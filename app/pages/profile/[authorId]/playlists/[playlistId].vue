@@ -6,10 +6,10 @@
           <SearchAlert />
         </EmptyMedia>
         <EmptyTitle>
-          Playlist nicht gefunden
+          {{ $t('error_title') }}
         </EmptyTitle>
         <EmptyDescription>
-          Die angeforderte Playlist existiert nicht oder ist nicht öffentlich zugänglich.
+          {{ $t('error_description') }}
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
@@ -20,7 +20,7 @@
 
           <Button variant="secondary" size="icon">
             <MoreVerticalIcon />
-            <span class="sr-only">Playlist-Optionen</span>
+            <span class="sr-only">{{ $t('sr_options') }}</span>
           </Button>
         </nav>
         <div class="sticky top-0">
@@ -31,7 +31,7 @@
               v-for="(image, index) in playlistInfo.previewImages"
               :key="index"
               :src="toPicturePath(image)"
-              alt="Vorschaubild"
+              :alt="$t('preview_image_alt') as string"
               class="object-cover aspect-square"
             />
           </div>
@@ -53,7 +53,7 @@
                     alt="Profilbild"
                   />
                 </Avatar>
-                von {{ playlistInfo.owner.name }} erstellt
+                {{ $t('owner_created_by', { name: playlistInfo.owner.name }) }}
               </div>
             </div>
             <p class="text-sm text-muted-foreground">
@@ -73,6 +73,8 @@
 
 <script setup lang="ts">
 import { ImageOff, MoreVerticalIcon, SearchAlert } from 'lucide-vue-next';
+
+const { $t } = useI18n();
 
 const route = useRoute();
 

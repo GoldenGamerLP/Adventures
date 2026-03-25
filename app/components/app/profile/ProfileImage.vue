@@ -5,23 +5,22 @@
     </DialogTrigger>
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Ändere dein Profilbild</DialogTitle>
+        <DialogTitle>{{ t('component_profile_avatar_title') }}</DialogTitle>
         <DialogDescription>
           <Avatar>
             <AvatarFallback>
               <ImageOffIcon />
             </AvatarFallback>
-            <AvatarImage :src="toPicturePath(model.profilePictureId)" alt="Profilbild ändern" />
-          </Avatar> Wähle ein neues Profilbild aus, um es hochzuladen und zu verwenden. Unterstützte Formate
-          sind JPG,
-          PNG und WEBP mit einer maximalen Größe von 5MB.
+            <AvatarImage :src="toPicturePath(model.profilePictureId)" :alt="t('component_profile_avatar_alt')" />
+          </Avatar>
+          {{ t('component_profile_avatar_description') }}
         </DialogDescription>
         <DialogFooter>
           <Button variant="outline" :disabled="isLoading" @click="open">
-            Profilbild ändern
+            {{ t('component_profile_avatar_change') }}
           </Button>
           <Button variant="outline" :disabled="isLoading" @click="deleteProfilePicture">
-            Profilbild entfernen
+            {{ t('component_profile_avatar_remove') }}
           </Button>
         </DialogFooter>
       </DialogHeader>
@@ -37,8 +36,10 @@ import { compressImage } from "~/utils/PictureUtils";
 import { MAX_FILE_SIZE_BYTES, SUPPORTED_FILE_TYPES } from '~~/shared/constants/Constants';
 import type { UserProfile, UserProfileWithMeta } from "~~/shared/types/UserProfileTypes";
 
-
 const model = defineModel<UserProfileWithMeta>({ required: true });
+
+const { t } = useI18n();
+
 const isOpen = ref(false);
 
 const { open, onChange: handleFilesChange } = useFileDialog({
@@ -57,7 +58,7 @@ const deleteProfilePicture = async () => {
 
     model.value.profilePictureId = undefined;
   } catch (error) {
-    alert('Beim Entfernen des Profilbildes ist ein Fehler aufgetreten. Bitte versuche es erneut.');
+    alert(t('component_profile_avatar_remove_failed'));
     console.error('Error removing profile picture:', error);
   } finally {
     isLoading.value = false;
@@ -73,40 +74,44 @@ handleFilesChange(async (event: FileList | null) => {
   isLoading.value = true;
 
   if (!file) {
-    alert('Es wurde keine Datei ausgewählt. Bitte wähle eine Datei aus.');
+    alert(t('component_profile_file_none_selected'));
     isLoading.value = false;
     return;
   }
 
   if (file?.size > MAX_FILE_SIZE_BYTES) {
-    alert('Die ausgewählte Datei ist zu groß. Bitte wähle eine Datei mit maximal 5MB aus.');
+    alert(t('component_profile_file_too_large'));
     isLoading.value = false;
     return;
   }
 
   if (!SUPPORTED_FILE_TYPES.includes(file.name.split('.').pop()?.toLowerCase() || '')) {
-    alert('Der ausgewählte Dateityp wird nicht unterstützt. Bitte wähle eine gültige Bilddatei aus.');
+    alert(t('component_profile_file_invalid_type'));
     isLoading.value = false;
     return;
   }
 
   const image = await compressImage(file);
+  if (!image) {
+    alert(String(t('component_profile_avatar_upload_failed')));
+    isLoading.value = false;
+    return;
+  }
 
   const formData = new FormData();
   formData.append('image', image, sanitizedFileName(file.name, 0));
 
   try {
-    //Response is the new profile picture id
     const response = await $fetch<UserProfile>('/api/v1/app/profile/avatar/upload', {
       method: 'POST',
       body: formData,
     });
 
     model.value.profilePictureId = response.profilePictureId;
-    useUser().value!.profilePictureId = response.profilePictureId; // Update global user state
+    useUser().value!.profilePictureId = response.profilePictureId;
     isOpen.value = false;
   } catch (error) {
-    alert('Beim Hochladen des Profilbildes ist ein Fehler aufgetreten. Bitte versuche es erneut.');
+    alert(t('component_profile_avatar_upload_failed'));
     console.error('Error uploading profile picture:', error);
   } finally {
     isLoading.value = false;

@@ -1,1 +1,19 @@
-{}
+{
+	"empty_title": "Your profile",
+	"empty_description": "No profile could be found. Please sign in to view your profile.",
+	"sr_settings": "Settings",
+	"tabs_about": "About",
+	"tabs_adventures": "Your adventures",
+	"tabs_playlists": "Your playlists",
+	"interests_title": "Your interests",
+	"interests_description": "Select up to {max} interests.",
+	"profile_picture_description": "Change your profile picture to personalize your account.",
+	"settings_title": "Settings",
+	"settings_description": "App settings and account management.",
+	"settings_theme_title": "Theme",
+	"settings_theme_description": "Switch between light and dark.",
+	"settings_language_title": "Language",
+	"settings_language_description": "Change display language.",
+	"settings_logout_description": "Sign out of your account.",
+	"background_change": "Change background"
+}

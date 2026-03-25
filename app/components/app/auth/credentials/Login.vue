@@ -1,8 +1,8 @@
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Willkommen zurück</CardTitle>
-      <CardDescription>Melde dich mit deinem Account an</CardDescription>
+      <CardTitle>{{ $t('auth_login_title') }}</CardTitle>
+      <CardDescription>{{ $t('auth_login_description') }}</CardDescription>
     </CardHeader>
     <CardContent>
       <form class="space-y-4" @submit="onSubmit">
@@ -11,11 +11,11 @@
 
         <FormField v-slot="{ componentField }" name="email">
           <FormItem>
-            <FormLabel>E-Mail</FormLabel>
+            <FormLabel>{{ $t('auth_labels_email') }}</FormLabel>
             <FormControl>
               <Input
                 type="email"
-                placeholder="deine@email.de"
+                :placeholder="$t('auth_placeholders_email') as string"
                 v-bind="componentField"
                 :disabled="isLoading"
               />
@@ -26,11 +26,11 @@
 
         <FormField v-slot="{ componentField }" name="password">
           <FormItem>
-            <FormLabel>Passwort</FormLabel>
+            <FormLabel>{{ $t('auth_labels_password') }}</FormLabel>
             <FormControl>
               <Input
                 type="password"
-                placeholder="••••••••"
+                :placeholder="$t('auth_placeholders_password') as string"
                 v-bind="componentField"
                 :disabled="isLoading"
               />
@@ -50,7 +50,7 @@
 
         <Button type="submit" class="w-full" :disabled="isLoading">
           <Spinner v-if="isLoading" class="mr-2" />
-          {{ isLoading ? 'Anmeldung läuft...' : 'Anmelden' }}
+          {{ isLoading ? $t('auth_submit_login_loading') : $t('auth_submit_login') }}
         </Button>
       </form>
     </CardContent>
@@ -63,6 +63,8 @@ import { AlertCircle } from 'lucide-vue-next';
 import { useForm } from 'vee-validate';
 import { LoginSchema } from '~~/shared/schema/AuthenticationSchema';
 
+const { $t } = useI18n();
+
 const isLoading = ref(false);
 const errorMessage = ref('');
 const injectAuthDrawerOpen = inject<Ref<boolean>>('auth-credentials-drawer-open', ref(false));
@@ -73,12 +75,12 @@ const { handleSubmit } = useForm({
 });
 
 const getErrorMessage = (code: string): string => {
-  const messages: Record<string, string> = {
-    'INVALID_CREDENTIALS': 'E-Mail oder Passwort ist falsch.',
-    'VALIDATION_ERROR': 'Bitte überprüfe deine Eingaben.',
-    'NETWORK_ERROR': 'Netzwerkfehler. Bitte versuche es erneut.',
-  };
-  return messages[code] || 'Ein unerwarteter Fehler ist aufgetreten.';
+  const translated = $t(`error_${code}`) as string;
+  if (translated === `error_${code}`) {
+    return $t('common_unknown_error') as string;
+  }
+
+  return translated;
 };
 
 const onSubmit = handleSubmit(async (values) => {

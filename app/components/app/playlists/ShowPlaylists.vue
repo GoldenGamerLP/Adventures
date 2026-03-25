@@ -11,6 +11,7 @@
                 v-for="image in playlist.previewImages"
                 :key="image"
                 :src="toPicturePath(image)"
+                :alt="$t('component_playlists_preview_image_alt') as string"
                 class="object-cover aspect-square"
               />
             </div>
@@ -20,10 +21,10 @@
             <ItemDescription>{{ playlist.description }}</ItemDescription>
             <div class="flex gap-2">
               <Badge variant="secondary">
-                {{ playlist.entryCount }} Abenteuer
+                {{ $t('component_playlists_entry_count', { count: playlist.entryCount }) }}
               </Badge>
               <Badge variant="secondary">
-                Typ {{ playlist.listType }}
+                {{ $t('component_playlists_type', { type: playlist.listType }) }}
               </Badge>
             </div>
           </ItemContent>
@@ -38,6 +39,8 @@
 const props = defineProps<{
     for: "own" | "public";
 }>();
+
+const { $t } = useI18n();
 
 const { data: playlists, error } = await useFetch(`/api/v1/app/playlists/${props.for}`, {
     method: "GET",
