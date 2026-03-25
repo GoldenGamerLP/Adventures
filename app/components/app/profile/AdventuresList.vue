@@ -24,8 +24,11 @@
               Ansehen
             </NuxtLink>
           </Button>
-          <AppAdventuresLikeButton :is-liked="adventure.isLikedByUser" :adventure-id="adventure._id"
-            :likes-count="adventure.likesCount" />
+          <AppAdventuresLikeButton
+            :is-liked="adventure.isLikedByUser"
+            :adventure-id="adventure._id"
+            :likes-count="adventure.likesCount"
+          />
           <AppAdventuresEditButton :adventure="adventure" />
         </ItemActions>
       </Item>

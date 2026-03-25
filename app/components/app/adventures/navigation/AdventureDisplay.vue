@@ -2,6 +2,7 @@
   <NuxtLink
     :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id }, query: useRoute().query }"
     class="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md"
+    prefetch
   >
     <Carousel v-slot="{ carouselApi }" class="relative w-full">
       <CarouselContent>

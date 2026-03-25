@@ -20,7 +20,12 @@
         </NuxtLink>
       </Button>
     </EmptyContent>
-    <Button variant="link" as-child class="text-muted-foreground" size="sm">
+    <Button
+      variant="link"
+      as-child
+      class="text-muted-foreground"
+      size="sm"
+    >
       <a href="#">
         Support kontaktieren
         <ArrowUpRightIcon />

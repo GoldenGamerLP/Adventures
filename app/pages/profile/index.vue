@@ -14,12 +14,7 @@
     <main v-else class="relative">
       <!-- Top action bar -->
       <div class="absolute top-4 inset-x-4 z-20 flex items-center justify-between">
-        <Button variant="secondary" size="icon" as-child>
-          <NuxtLink :to="{ name: 'index' }">
-            <ChevronLeft />
-            <span class="sr-only">Zurück</span>
-          </NuxtLink>
-        </Button>
+        <AppNavigationGoBackButton :variant="'secondary'" />
         <Button variant="secondary" size="icon" @click="settingsOpen = true">
           <Settings />
           <span class="sr-only">Einstellungen</span>
@@ -30,12 +25,16 @@
       <div class="sticky top-0">
         <div class="w-full h-48 sm:h-72 flex justify-center items-center ">
           <template v-if="userData.backgroundPictureId">
-            <img :src="toPicturePath(userData.backgroundPictureId)" alt="Hintergrundbild"
-              class="w-full h-full object-cover" />
+            <img
+              :src="toPicturePath(userData.backgroundPictureId)"
+              alt="Hintergrundbild"
+              class="w-full h-full object-cover"
+            />
           </template>
           <template v-else>
             <div
-              class="w-full h-full bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg border-2 border-dashed border-muted flex flex-col items-center justify-center gap-2">
+              class="w-full h-full bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg border-2 border-dashed border-muted flex flex-col items-center justify-center gap-2"
+            >
               <ImageOffIcon class="size-6 text-muted-foreground" />
               <span class="text-sm text-muted-foreground">Kein Hintergrundbild</span>
             </div>
@@ -70,21 +69,29 @@
         <RekaTabsRoot :default-value="useRoute().hash.slice(1) || 'about'" class="flex flex-col">
           <RekaTabsList
             class="relative shrink-0 flex mb-4 bg-accent p-1.5 rounded-lg text-sm overflow-x-auto overflow-y-hidden"
-            aria-label="Profil-Tabs">
+            aria-label="Profil-Tabs"
+          >
             <RekaTabsIndicator
-              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300">
+              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300"
+            >
               <div class="bg-primary w-full h-full"></div>
             </RekaTabsIndicator>
-            <RekaTabsTrigger value="about"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
+            <RekaTabsTrigger
+              value="about"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
+            >
               Über
             </RekaTabsTrigger>
-            <RekaTabsTrigger value="adventures"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
+            <RekaTabsTrigger
+              value="adventures"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
+            >
               Deine Abenteuer
             </RekaTabsTrigger>
-            <RekaTabsTrigger value="playlists"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
+            <RekaTabsTrigger
+              value="playlists"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
+            >
               Deine Playlists
             </RekaTabsTrigger>
           </RekaTabsList>
@@ -118,8 +125,11 @@
                   <AvatarFallback>
                     <ImageOffIcon class="size-5" />
                   </AvatarFallback>
-                  <AvatarImage v-if="userData.profilePictureId" :src="toPicturePath(userData.profilePictureId)"
-                    alt="Profilbild" />
+                  <AvatarImage
+                    v-if="userData.profilePictureId"
+                    :src="toPicturePath(userData.profilePictureId)"
+                    alt="Profilbild"
+                  />
                 </Avatar>
                 <div class="flex flex-col min-w-0 flex-1">
                   <span class="text-sm font-semibold">Profilbild</span>
@@ -206,7 +216,7 @@
 
 <script lang="ts" setup>
 import { toPicturePath } from '#shared/utils/SharedUtils';
-import { ChevronLeft, EditIcon, ImageOffIcon, Languages, LogOut, Palette, SearchAlert, Settings } from 'lucide-vue-next';
+import { EditIcon, ImageOffIcon, Languages, LogOut, Palette, SearchAlert, Settings } from 'lucide-vue-next';
 import {
   TabsContent as RekaTabsContent,
   TabsIndicator as RekaTabsIndicator,

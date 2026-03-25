@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { AdventureListWithMeta, VirtualList } from "~~/shared/types/AdventureListsTypes";
+import type { AdventureListWithMeta, VirtualList } from "~~/shared/types/AdventureListsTypes";
 import database from "../database/DBUtils";
 
 const likeDatabase = database.collection<Like>("adventure_likes");

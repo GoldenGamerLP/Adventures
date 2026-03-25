@@ -4,7 +4,6 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     '@nuxtjs/tailwindcss',
-    '@nuxtjs/i18n',
     '@pinia/nuxt',
     '@nuxtjs/leaflet',
     'shadcn-nuxt',
@@ -13,7 +12,7 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     'nuxt-capo',
     'nuxt-actions',
-    '@nuxt/scripts',
+    'nuxt-i18n-micro',
   ],
   turnstile: {
     siteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '',
@@ -71,6 +70,11 @@ export default defineNuxtConfig({
     restoreState: true,
   },
   app: {
+    keepalive: {
+      max: 1,
+      //Include only the front page / index.vue
+      include: ['index'],
+    },
     head: {
       title: 'Adventures - Finde und erstelle spannende Outdoor-Abenteuer',
       meta: [
@@ -89,4 +93,9 @@ export default defineNuxtConfig({
   pinia: {
     storesDirs: ['./app/stores/**'],
   },
+  router: {
+    options: {
+      scrollBehaviorType: 'smooth',
+    }
+  }
 })

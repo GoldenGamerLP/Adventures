@@ -1,4 +1,4 @@
-import { AdventureListEntry, AdventureListWithMeta } from "~~/shared/types/AdventureListsTypes";
+import type { AdventureListEntry, AdventureListWithMeta } from "~~/shared/types/AdventureListsTypes";
 import { getLikedAdventuresByUserId, hydrateLikedAdevnturesList } from "../adventures/LikeUtils";
 import { getHistoryEntries, hydrateHistoryAdventuresList } from "../adventures/ViewsUtils";
 import database from "../database/DBUtils";

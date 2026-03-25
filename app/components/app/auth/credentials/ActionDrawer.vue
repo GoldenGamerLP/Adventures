@@ -49,4 +49,8 @@ const user = useUser();
 const isOpen = ref(false);
 provide('auth-credentials-drawer-open', isOpen);
 
+
+// Preload the login and register components for faster access
+preloadRouteComponents('/profile');
+preloadRouteComponents('/adventures/drafts');
 </script>
