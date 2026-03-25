@@ -144,14 +144,14 @@
 
 <script lang="ts" setup>
 import {
-  BadgeAlert,
-  CalendarClockIcon,
-  Calendar as CalendarIcon,
-  CalendarPlusIcon,
-  CalendarRange,
-  FlagTriangleLeftIcon,
-  FlagTriangleRightIcon,
-  InfinityIcon
+    BadgeAlert,
+    CalendarClockIcon,
+    Calendar as CalendarIcon,
+    CalendarPlusIcon,
+    CalendarRange,
+    FlagTriangleLeftIcon,
+    FlagTriangleRightIcon,
+    InfinityIcon
 } from 'lucide-vue-next';
 import { MAX_ADVENTURE_DURATION_MINUTES } from '~~/shared/constants/Constants';
 import { formatDuration, scheduleToCalenderFormat } from '~~/shared/utils/SharedUtils';

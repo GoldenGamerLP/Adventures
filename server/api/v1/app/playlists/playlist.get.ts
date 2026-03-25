@@ -1,7 +1,7 @@
+import { createKeyedError } from "~~/server/utils/errors/ApiErrorUtils";
 import { hasAccessToPlaylist } from "~~/server/utils/playlists/PlaylistUtils";
 import { APP_ERROR_CODES } from "~~/shared/constants/Constants";
 import { PlaylistGetSchema } from "~~/shared/schema/PlaylistSchema";
-import { createKeyedError } from "~~/server/utils/errors/ApiErrorUtils";
 
 export default defineEventHandler(async (event) => {
     const { data, error } = await getValidatedQuery(event, PlaylistGetSchema.safeParseAsync);

@@ -78,8 +78,8 @@
 </template>
 
 <script setup lang="ts">
-import { X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { toPicturePath } from "#shared/utils/SharedUtils";
+import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next';
 
 const props = defineProps<{
     images: string[];

@@ -217,11 +217,11 @@
 import { toPicturePath } from '#shared/utils/SharedUtils';
 import { EditIcon, ImageOffIcon, Languages, LogOut, Palette, SearchAlert, Settings } from 'lucide-vue-next';
 import {
-  TabsContent as RekaTabsContent,
-  TabsIndicator as RekaTabsIndicator,
-  TabsList as RekaTabsList,
-  TabsRoot as RekaTabsRoot,
-  TabsTrigger as RekaTabsTrigger,
+    TabsContent as RekaTabsContent,
+    TabsIndicator as RekaTabsIndicator,
+    TabsList as RekaTabsList,
+    TabsRoot as RekaTabsRoot,
+    TabsTrigger as RekaTabsTrigger,
 } from 'reka-ui';
 import type { UserProfileWithMeta } from '~~/shared/types/UserProfileTypes';
 import { MAX_INTERESTS } from '~~/shared/types/UserProfileTypes';

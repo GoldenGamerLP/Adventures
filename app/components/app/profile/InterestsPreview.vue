@@ -15,10 +15,10 @@
 
 <script lang="ts" setup>
 import {
-    BaggageClaim, Bike, BookOpen, Camera,
-    CookingPot, Dumbbell, Fish, Footprints, Gamepad2,
-    Headset, Leaf, Mountain, Music, Palette,
-    Plane, Tent, Waves,
+  BaggageClaim, Bike, BookOpen, Camera,
+  CookingPot, Dumbbell, Fish, Footprints, Gamepad2,
+  Headset, Leaf, Mountain, Music, Palette,
+  Plane, Tent, Waves,
 } from 'lucide-vue-next';
 import type { InterestIconKey } from '~~/shared/types/UserProfileTypes';
 

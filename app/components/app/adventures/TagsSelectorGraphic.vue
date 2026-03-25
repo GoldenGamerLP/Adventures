@@ -15,11 +15,11 @@
 
 <script lang="ts" setup>
 import {
-    Backpack, Bike, Camera,
-    Car,
-    CookingPot, Dumbbell, Fish, Footprints, Gamepad2,
-    GraduationCap, Headset, Landmark, Leaf, Mountain, MountainSnow, Music, Palette,
-    PartyPopper, Sailboat, Swords, Tent, Ticket, Tv, Users, Waves,
+  Backpack, Bike, Camera,
+  Car,
+  CookingPot, Dumbbell, Fish, Footprints, Gamepad2,
+  GraduationCap, Headset, Landmark, Leaf, Mountain, MountainSnow, Music, Palette,
+  PartyPopper, Sailboat, Swords, Tent, Ticket, Tv, Users, Waves,
 } from 'lucide-vue-next';
 
 const props = withDefaults(defineProps<{

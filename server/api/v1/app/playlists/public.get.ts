@@ -1,6 +1,6 @@
 import { PublicPlaylistsQuerySchema } from "#shared/schema/PlaylistSchema";
-import { APP_ERROR_CODES } from "~~/shared/constants/Constants";
 import { createKeyedError } from "~~/server/utils/errors/ApiErrorUtils";
+import { APP_ERROR_CODES } from "~~/shared/constants/Constants";
 
 export default defineEventHandler(async (event) => {
     const { data, error } = await getValidatedQuery(event, PublicPlaylistsQuerySchema.safeParseAsync);

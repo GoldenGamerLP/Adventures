@@ -1,7 +1,7 @@
 import { GeoSearchCitySchema } from '#shared/schema/GeoSchema';
-import { APP_ERROR_CODES } from '~~/shared/constants/Constants';
 import { createKeyedError } from '~~/server/utils/errors/ApiErrorUtils';
 import { searchCityFullText } from '~~/server/utils/geo/GeoDB';
+import { APP_ERROR_CODES } from '~~/shared/constants/Constants';
 
 export default defineEventHandler(async (event) => {
     const { data, error } = await getValidatedQuery(event, GeoSearchCitySchema.safeParseAsync);

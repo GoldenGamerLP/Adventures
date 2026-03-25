@@ -1,8 +1,8 @@
+import { createKeyedError } from "~~/server/utils/errors/ApiErrorUtils";
 import { findNearestCity } from "~~/server/utils/geo/GeoDB";
 import { APP_ERROR_CODES } from "~~/shared/constants/Constants";
 import { ResolveLatLongSchema } from "~~/shared/schema/GeoSchema";
 import type { FrontEndGeoState } from "~~/shared/types/GeoTypes";
-import { createKeyedError } from "~~/server/utils/errors/ApiErrorUtils";
 
 export default defineEventHandler(async (event) => {
     const { data, error } = await getValidatedQuery(event, ResolveLatLongSchema.safeParseAsync);

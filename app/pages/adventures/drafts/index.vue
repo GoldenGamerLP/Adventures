@@ -87,10 +87,10 @@
 <script lang="ts" setup>
 import { toPicturePath } from "#shared/utils/SharedUtils";
 import {
-  AlertCircle,
-  Clock,
-  FileText, ImageOff,
-  Timer
+    AlertCircle,
+    Clock,
+    FileText, ImageOff,
+    Timer
 } from 'lucide-vue-next';
 import { DRAFT_CONFIG } from '~~/shared/constants/Constants';
 import type { AdventureDraft } from '~~/shared/types/DraftTypes';
