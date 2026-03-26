@@ -225,6 +225,5 @@ const settingsOpen = ref(false);
 
 const { data: userData } = await useFetch<UserProfileWithMeta>(
   `/api/v1/app/profile/${user.value?._id}/public`,
-  { deep: true }
 );
 </script>

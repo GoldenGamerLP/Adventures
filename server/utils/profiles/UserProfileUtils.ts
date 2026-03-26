@@ -2,7 +2,7 @@ import type { UserProfile, UserProfileWithMeta } from "#shared/types/UserProfile
 import { ObjectId } from "mongodb";
 import { getCollection } from "../database/DBUtils";
 
-const getProfileDB = async () => getCollection<UserProfile>('user_profiles');
+const getProfileDB = async () => getCollection<UserProfile>('userProfiles');
 
 export const ensureUserProfileIndexes = async (): Promise<void> => {
     const profileDatabase = await getProfileDB();
