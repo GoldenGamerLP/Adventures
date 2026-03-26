@@ -34,7 +34,7 @@
             </NuxtLink>
           </Button>
 
-          <LazyAppMiscThemeToggle v-if="!user" />
+          <LazyAppMiscThemeToggle v-if="!user" variant="ghost" />
           <LazyAppAuthCredentialsActionDrawer v-if="!user" />
         </div>
       </div>

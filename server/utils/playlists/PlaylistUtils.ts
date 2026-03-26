@@ -1,7 +1,7 @@
 import type { AdventureListEntry, AdventureListWithMeta } from "~~/shared/types/AdventureListsTypes";
 import { getLikedAdventuresByUserId, hydrateLikedAdevnturesList } from "../adventures/LikeUtils";
 import { getHistoryEntries, hydrateHistoryAdventuresList } from "../adventures/ViewsUtils";
-import database from "../database/DBUtils";
+import { getCollection } from "../database/DBUtils";
 
 
 export const DEFAULT_LIKED_LIST = (userId: string): VirtualList => ({
@@ -13,6 +13,7 @@ export const DEFAULT_LIKED_LIST = (userId: string): VirtualList => ({
     ownerId: userId,
 });
 
+//TODO: Translation der Namen und Beschreibungen der System-Playlists
 export const DEFAULT_HISTORY_LIST = (userId: string): VirtualList => ({
     _id: `sys:history:${userId}`,
     name: "History",
@@ -22,10 +23,13 @@ export const DEFAULT_HISTORY_LIST = (userId: string): VirtualList => ({
     ownerId: userId,
 });
 
-const playlistDB = database.collection<UserList>("playlists");
-const playlistEntriesDB = database.collection<AdventureListEntry>("playlist_entries");
+const getPlaylistDB = async () => getCollection<UserList>("playlists");
+const getPlaylistEntriesDB = async () => getCollection<AdventureListEntry>("playlist_entries");
 
 export const ensurePlaylistIndexes = async (): Promise<void> => {
+    const playlistDB = await getPlaylistDB();
+    const playlistEntriesDB = await getPlaylistEntriesDB();
+
     await playlistDB.createIndex({ ownerId: 1 });
     await playlistDB.createIndex({ visibility: 1 });
     await playlistEntriesDB.createIndex({ adventureListId: 1 });
@@ -34,6 +38,8 @@ export const ensurePlaylistIndexes = async (): Promise<void> => {
 }
 
 export const getPlaylistByUserId = async (userId: string, visibility: "private" | "public" | "notListed"): Promise<AdventureListWithMeta[]> => {
+    const playlistDB = await getPlaylistDB();
+
     const result = await playlistDB.find({ ownerId: userId, visibility }).toArray();
 
     const playlistsWithMeta = result.map(hydratePlaylistWithMeta);
@@ -46,6 +52,8 @@ export const getPlaylistByUserId = async (userId: string, visibility: "private" 
 };
 
 const hydratePlaylistWithMeta = async (playlist: UserList): Promise<AdventureListWithMeta> => {
+    const playlistDB = await getPlaylistDB();
+
     const entryCount = await playlistDB.countDocuments({ adventureListId: playlist._id });
     const previewEntries = playlistDB.aggregate([
         { $match: { adventureListId: playlist._id } },
@@ -77,6 +85,8 @@ const hydratePlaylistWithMeta = async (playlist: UserList): Promise<AdventureLis
 };
 
 export const getPlaylistInfo = async (playlistId: string): Promise<AdventureListWithMeta> => {
+    const playlistDB = await getPlaylistDB();
+
     if (playlistId.startsWith("sys:")) {
         const [_, type, userId] = playlistId.split(":");
         if (type === "liked") {
@@ -98,6 +108,8 @@ export const getPlaylistInfo = async (playlistId: string): Promise<AdventureList
 };
 
 export const getPlaylistEntries = async (playlistId: string, ownerId: string | undefined, skip: number, limit: number): Promise<AdventureListEntry[]> => {
+    const playlistEntriesDB = await getPlaylistEntriesDB();
+
     const playlistType = playlistId.startsWith("sys:") ? "virtual" : "user";
     const playlistKey = playlistType === "virtual" ? playlistId.split(":")[1] : playlistId;
 
@@ -145,6 +157,8 @@ export const getPlaylistEntries = async (playlistId: string, ownerId: string | u
 }
 
 export const hasAccessToPlaylist = async (playlist: string, userId?: string) => {
+    const playlistDB = await getPlaylistDB();
+
     if (playlist.startsWith("sys:")) {
         const [_, type, ownerId] = playlist.split(":");
         if (type === "liked" || type === "history") {

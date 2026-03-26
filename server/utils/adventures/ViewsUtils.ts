@@ -1,14 +1,15 @@
-import type { Adventure, AdventureViewCounter, AdventureViewRecord, EnrichedViewRecord } from '~~/shared/types/AdventureTypes';
-import database from '../database/DBUtils';
+import { MAX_GUEST_VIEWS_PER_ADVENTURE, VIEW_COOLDOWN_MS } from '~~/shared/constants/Constants';
+import type { AdventureViewCounter, AdventureViewRecord, EnrichedViewRecord } from '~~/shared/types/AdventureTypes';
+import { getCollection } from '../database/DBUtils';
 
-const viewRecords = database.collection<AdventureViewRecord>('adventure_view_records');
-const viewCounters = database.collection<AdventureViewCounter>('adventure_view_counters');
+const getViewRecordsDB = () => getCollection<AdventureViewRecord>('adventure_view_records');
+const getViewCountersDB = () => getCollection<AdventureViewCounter>('adventure_view_counters');
 
-// Konfig
-const MAX_GUEST_VIEWS_PER_ADVENTURE = 100; // Danach keine neuen Gäste mehr tracken
-const VIEW_COOLDOWN_MS = 5 * 60 * 1000;      // 5 Min Cooldown zwischen Views
 
 export const ensureViewIndexes = async (): Promise<void> => {
+    const viewRecords = await getViewRecordsDB();
+    const viewCounters = await getViewCountersDB();
+
     // Compound-Index für schnelle Lookups - partialFilterExpression statt sparse
     // um null-Werte korrekt zu ignorieren
     await viewRecords.createIndex(
@@ -36,6 +37,9 @@ export const logView = async (
     adventureId: string,
     identifier: { userId: string } | { fingerprint: string }
 ): Promise<void> => {
+    const viewRecords = await getViewRecordsDB();
+    const viewCounters = await getViewCountersDB();
+
     const now = new Date().toISOString();
     const isUser = 'userId' in identifier;
 
@@ -120,6 +124,8 @@ export const logView = async (
 export const getViewCounter = async (
     adventureId: string
 ): Promise<AdventureViewCounter> => {
+    const viewCounters = await getViewCountersDB();
+
     const counter = await viewCounters.findOne({ adventureId });
     return counter ?? {
         adventureId,
@@ -136,6 +142,8 @@ export const getRecentlyViewed = async (
     userId: string,
     limit = 20
 ): Promise<AdventureViewRecord[]> => {
+    const viewRecords = await getViewRecordsDB();
+
     return viewRecords
         .find({ userId })
         .sort({ firstViewedAt: -1 })
@@ -144,6 +152,8 @@ export const getRecentlyViewed = async (
 };
 
 export const hydrateHistoryAdventuresList = async (list: VirtualList): Promise<AdventureListWithMeta> => {
+    const viewRecords = await getViewRecordsDB();
+
     const userId = list.ownerId;
 
     const entryCount = await viewRecords.countDocuments({ userId });
@@ -175,6 +185,8 @@ export const hydrateHistoryAdventuresList = async (list: VirtualList): Promise<A
 };
 
 export const getHistoryEntries = async (userId: string, skip: number, limit: number): Promise<AdventureListEntry[]> => {
+    const viewRecords = await getViewRecordsDB();
+
     const records = await viewRecords.aggregate([
         { $match: { userId } },
         { $sort: { lastViewedAt: -1 } },
@@ -202,30 +214,37 @@ export const getHistoryEntries = async (userId: string, skip: number, limit: num
     }));
 };
 
-
-
 export const getEnrichedRecentlyViewed = async (
     userId: string,
     limit = 20
 ): Promise<EnrichedViewRecord[]> => {
-    const records = await getRecentlyViewed(userId, limit);
-    return enrichViewRecords(records);
-}
+    const viewRecords = await getViewRecordsDB();
 
+    const result = viewRecords.aggregate([
+        { $match: { userId } },
+        { $sort: { firstViewedAt: -1 } },
+        { $limit: limit },
+        {
+            $lookup: {
+                from: "adventures",
+                localField: "adventureId",
+                foreignField: "_id",
+                as: "adventureDetails"
+            }
+        },
+        { $unwind: "$adventureDetails" },
+    ]);
 
-const enrichViewRecords = async (records: AdventureViewRecord[]): Promise<EnrichedViewRecord[]> => {
-    const adventureIds = records.map(r => r.adventureId);
-    const adventures = await database.collection<Adventure>('adventures')
-        .find({ _id: { $in: adventureIds } })
-        .toArray();
+    const records = await result.toArray();
 
-    const adventureMap = new Map(adventures.map(a => [a._id, a]));
-
-    return records
-        .map(r => {
-            const adventure = adventureMap.get(r.adventureId);
-            if (!adventure) return null; // Sollte nicht passieren
-            return { ...adventure, view: r };
-        })
-        .filter((x): x is EnrichedViewRecord => x !== null);
+    return records.map(r => ({
+        ...r.adventureDetails,
+        view: {
+            adventureId: r.adventureId,
+            userId: r.userId,
+            viewCount: r.viewCount,
+            firstViewedAt: r.firstViewedAt,
+            lastViewedAt: r.lastViewedAt,
+        }
+    }));
 }

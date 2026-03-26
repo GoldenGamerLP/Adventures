@@ -1,59 +1,69 @@
-import type { Db } from "mongodb";
+import type { Db, Document } from "mongodb";
 import { GridFSBucket, MongoClient, ServerApiVersion } from "mongodb";
 
-if (!process.env.MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
-}
+let databasePromise: Promise<Db> | null = null;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(process.env.MONGODB_URI, {
-  retryWrites: true,
-  retryReads: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: false,
-    deprecationErrors: true,
-  },
-});
+const getDatabase = async (): Promise<Db> => {
+  if (!databasePromise) {
+    databasePromise = (async () => {
+      const client = buildMongoClient();
 
-const database = client.db(process.env.MONGODB_DATABASE);
+      await client.connect();
 
-// Initialize GridFS bucket
-let gridFSBucket: GridFSBucket;
+      if (!process.env.MONGODB_DATABASE) {
+        throw new Error("Please define the MONGODB_DATABASE environment variable inside .env.local");
+      }
 
-export async function connectToDatabase() {
-  try {
-    await client.connect();
-    console.log('Connected to MongoDB');
-    
-    // Initialize GridFS bucket after connection
-    gridFSBucket = new GridFSBucket(database, {
-      bucketName: 'uploads'
+      const database = client.db(process.env.MONGODB_DATABASE);
+
+      // Validate the connection lazily on first real access.
+      await database.command({ ping: 1 });
+      console.log("Successfully connected to MongoDB");
+
+      return database;
+    })().catch((error) => {
+      // Allow subsequent calls to retry after a failed first attempt.
+      databasePromise = null;
+      console.error("Failed to connect to MongoDB", error);
+      throw error;
     });
-    
-    return { client, database, gridFSBucket };
-  } catch (error) {
-    console.error('Failed to connect to MongoDB', error);
-    throw error;
   }
+
+  return databasePromise;
 }
 
-// Call this during server startup
-connectToDatabase().catch(console.error);
+export async function getGridFSBucket(name: string): Promise<GridFSBucket> {
+  const database = await getDatabase();
 
-export function getGridFSBucket(): GridFSBucket {
-  if (!gridFSBucket) {
-    throw new Error('GridFS bucket not initialized. Make sure to connect to the database first.');
-  }
-  return gridFSBucket;
+  return new GridFSBucket(database, {
+    bucketName: name,
+  });
 }
 
-//When nodejs/shutdown
-process.on("SIGINT", async () => {
-  console.log("Closing MongoDB connection");
-  await client.close();
-});
+const buildMongoClient = () => {
+  if (!process.env.MONGODB_URI) {
+    throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
+  }
 
-export default database as Db;
+  return new MongoClient(process.env.MONGODB_URI, {
+    retryWrites: true,
+    retryReads: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    serverApi: {
+      version: ServerApiVersion.v1,
+      strict: false,
+      deprecationErrors: true,
+    },
+  })
+}
+
+const getCollection = async <T extends Document>(collectionName: string) => {
+  const database = await getDatabase();
+  return database.collection<T>(collectionName);
+}
+
+export {
+  getCollection, getDatabase
+};
+

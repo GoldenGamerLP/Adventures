@@ -2,22 +2,21 @@ import type { RegisterSchemaType } from "#shared/schema/AuthenticationSchema";
 import type { Session, User } from "#shared/types/AuthenticationTypes";
 import { SessionDetails } from "#shared/types/AuthenticationTypes";
 import type { EventHandlerRequest, H3Event } from "h3";
-import type { Collection } from "mongodb";
 import { ObjectId } from "mongodb";
 import type { UserSummary } from "~~/shared/types/UserProfileTypes";
-import database from "../database/DBUtils";
+import { getCollection } from "../database/DBUtils";
 import { createUserProfile } from "../profiles/UserProfileUtils";
 
 export const sessionCookieName = "auth_session";
 export const expireAfterSeconds = 60 * 60 * 24 * 7; // 1 week
 
-export const users = database.collection("users") as Collection<User>;
-const sessions = database.collection("sessions") as Collection<Session>;
+const getUsersDB = async () => getCollection<User>('users');
+const getSessionsDB = async () => getCollection<Session>('sessions');
 
 export function userNameToId(userMail: string) {
-  return users.findOne({
+  return getUsersDB().then(users => users.findOne({
     mail: userMail,
-  });
+  }));
 }
 
 export const registerLogin = async (
@@ -28,8 +27,10 @@ export const registerLogin = async (
   return createSession(user._id, sessionDetails);
 };
 
-const setLastLogin = (userId: string, sessionDetails: [SessionDetails, string][] | undefined,
+const setLastLogin = async (userId: string, sessionDetails: [SessionDetails, string][] | undefined,
 ) => {
+  const users = await getUsersDB();
+
   return users.updateOne(
     { _id: userId },
     { $set: { last_login: new Date().toUTCString() } }
@@ -37,6 +38,8 @@ const setLastLogin = (userId: string, sessionDetails: [SessionDetails, string][]
 };
 
 export async function createUser(userToCreate: RegisterSchemaType, currentIp: string | undefined) {
+  const users = await getUsersDB();
+
   const user: User = {
     _id: new ObjectId().toHexString(),
     email: userToCreate.email.toLowerCase(),
@@ -53,6 +56,7 @@ export async function createUser(userToCreate: RegisterSchemaType, currentIp: st
 }
 
 export async function getSessionsByUserId(userId: string) {
+  const sessions = await getSessionsDB();
   return sessions.find({ user_id: userId }).toArray();
 }
 
@@ -63,6 +67,8 @@ export async function getSessionsByUserId(userId: string) {
  * @returns 
  */
 export const updateProfilePicture = async (userId: string, pictureId?: string) => {
+  const users = await getUsersDB();
+
   return users.findOneAndUpdate(
     { _id: userId },
     { $set: { "profilePictureId": pictureId } },
@@ -71,17 +77,17 @@ export const updateProfilePicture = async (userId: string, pictureId?: string) =
 }
 
 export async function invalidateSession(sessionId: string, userId?: string) {
-  const session = await sessions.findOne({ _id: sessionId });
+  const session = await getSessionsDB().then(sessions => sessions.findOne({ _id: sessionId }));
 
   if (!session || (userId && session.user_id !== userId)) {
     throw new Error("Session not found");
   }
 
-  return sessions.deleteOne({ _id: sessionId });
+  return getSessionsDB().then(sessions => sessions.deleteOne({ _id: sessionId }));
 }
 
 export async function invalidateAllSessionsForUser(userId: string) {
-  return sessions.deleteMany({ user_id: userId });
+  return getSessionsDB().then(sessions => sessions.deleteMany({ user_id: userId }));
 }
 
 function verifyHash(hashedPassword: number, password: string) {
@@ -93,12 +99,14 @@ function hashPassword(password: string) {
 }
 
 export const findSession = async (sessionId: string) => {
-  return sessions.findOne({ _id: sessionId });
+  return getSessionsDB().then(sessions => sessions.findOne({ _id: sessionId }));
 };
 
 export async function getUserById(
   userId: string
 ): Promise<UserSummary | null> {
+  const users = await getUsersDB();
+
   return users.findOne(
     { _id: userId },
     {
@@ -116,6 +124,8 @@ export async function createSession(
   userIdentity: string,
   sessionDetails: [SessionDetails, string][] | undefined
 ) {
+  const sessions = await getSessionsDB();
+
   await sessions.deleteMany({ user_id: userIdentity });
 
   const session: Session = {
@@ -158,7 +168,7 @@ export const verifyPassword = async (
   mail: string,
   password: string
 ): Promise<User | null> => {
-  const user = await users.findOne({ email: mail.toLowerCase() });
+  const user = await getUsersDB().then(users => users.findOne({ email: mail.toLowerCase() }));
   if (!user) return null;
 
   if (!verifyHash(user.password_hash, password)) return null;
@@ -167,7 +177,7 @@ export const verifyPassword = async (
 };
 
 export function usernameToUserIdentity(email: string) {
-  return users.findOne({ email: email.toLowerCase() });
+  return getUsersDB().then(users => users.findOne({ email: email.toLowerCase() }));
 }
 
 export const constructSessionDetailsFromEvent = (event: H3Event<EventHandlerRequest>) => {
@@ -194,6 +204,8 @@ export const constructSessionDetailsFromEvent = (event: H3Event<EventHandlerRequ
 export const searchForUser = async (
   userMail: string
 ): Promise<UserSummary[] | null> => {
+  const users = await getUsersDB();
+
   const user = await users.findOne(
     { mail: userMail },
     { projection: { _id: 1, mail: 1, name: 1, lastname: 1 } }
@@ -206,6 +218,7 @@ export const searchForUser = async (
       _id: user._id,
       name: user.name,
       profilePictureId: user.profilePictureId,
+      createdAt: user.createdAt,
     },
   ];
 };

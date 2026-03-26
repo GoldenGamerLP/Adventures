@@ -1,13 +1,18 @@
 import { ObjectId } from "mongodb";
 import type { AdventureListWithMeta, VirtualList } from "~~/shared/types/AdventureListsTypes";
-import database from "../database/DBUtils";
+import { getCollection } from "../database/DBUtils";
 
-const likeDatabase = database.collection<Like>("adventure_likes");
+const getLikeDB = async () => getCollection<Like>('adventure_likes');
 
 const ensureLikeIndexes = async (): Promise<void> => {
-    await likeDatabase.createIndex({ adventureId: 1 });
-    await likeDatabase.createIndex({ userId: 1 });
-    await likeDatabase.createIndex({ adventureId: 1, userId: 1 }, { unique: true });
+    const likeDatabase = await getLikeDB();
+
+    await Promise.all([
+        likeDatabase.createIndex({ adventureId: 1 }),
+        likeDatabase.createIndex({ userId: 1 }),
+        likeDatabase.createIndex({ adventureId: 1, userId: 1 }, { unique: true }),
+    ]);
+
     console.log('[LikeUtils] Like indexes created');
 }
 
@@ -17,6 +22,8 @@ const ensureLikeIndexes = async (): Promise<void> => {
  * @param userId 
  */
 const addLike = async (adventureId: string, userId: string): Promise<void> => {
+    const likeDatabase = await getLikeDB();
+
     await likeDatabase.insertOne({
         _id: new ObjectId().toString(),
         adventureId,
@@ -26,10 +33,13 @@ const addLike = async (adventureId: string, userId: string): Promise<void> => {
 }
 
 const removeLike = async (adventureId: string, userId: string): Promise<void> => {
+    const likeDatabase = await getLikeDB();
+
     await likeDatabase.deleteOne({ adventureId, userId });
 }
 
 const toggleLike = async (adventureId: string, userId: string): Promise<boolean> => {
+    const likeDatabase = await getLikeDB();
     const existingLike = await likeDatabase.countDocuments({ adventureId, userId });
 
     if (existingLike > 0) {
@@ -42,11 +52,13 @@ const toggleLike = async (adventureId: string, userId: string): Promise<boolean>
 }
 
 const getLikedAdventuresForUser = async (userId: string): Promise<string[]> => {
+    const likeDatabase = await getLikeDB();
     const likes = await likeDatabase.find({ userId }).toArray();
     return likes.map(like => like.adventureId);
 }
 
 const getLikedAdventuresByUserId = async (userId: string, skip: number, limit: number): Promise<AdventureListEntry[]> => {
+    const likeDatabase = await getLikeDB();
     const result = await likeDatabase.aggregate([
         {
             '$match': {
@@ -96,8 +108,9 @@ interface Like {
 }
 
 const hydrateLikedAdevnturesList = async (list: VirtualList): Promise<AdventureListWithMeta> => {
-    const userId = list.ownerId;
+    const likeDatabase = await getLikeDB();
 
+    const userId = list.ownerId;
     const likedAdventureCount = await likeDatabase.countDocuments({ userId });
     const result = await likeDatabase.aggregate([
         {

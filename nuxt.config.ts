@@ -97,5 +97,5 @@ export default defineNuxtConfig({
     options: {
       scrollBehaviorType: 'smooth',
     }
-  }
+  },
 })

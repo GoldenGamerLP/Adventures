@@ -5,15 +5,17 @@ import type {
 } from "#shared/types/PictureTypes";
 import { ObjectId } from "mongodb";
 import { DRAFT_CONFIG } from "~~/shared/constants/Constants";
-import database from "../database/DBUtils";
+import { getCollection } from "../database/DBUtils";
 import { deleteFile, getFileStream, uploadFileFromWeb } from "../database/FileUtils";
 
-const pictureDatabase = database.collection<Picture>("pictures");
+const getPictureDB = async () => getCollection<Picture>("pictures");
 
 /**
  * Erstellt Indexes für Picture-Collection
  */
 export async function ensurePictureIndexes(): Promise<void> {
+    const pictureDatabase = await getPictureDB();
+
     // Index für Draft-Bilder (für Cleanup)
     await pictureDatabase.createIndex({ status: 1, draftId: 1 });
 
@@ -45,6 +47,7 @@ const uploadDraftPictures = async (
         });
     }
 
+    const pictureDatabase = await getPictureDB();
     const uploadedPictures: DraftPicture[] = [];
 
     for (const file of files) {
@@ -78,6 +81,8 @@ const uploadDraftPictures = async (
 };
 
 const removeDecorationPictures = async (userId: string, type: 'profile' | 'background') => {
+    const pictureDatabase = await getPictureDB();
+
     const result = await pictureDatabase.find({ uploadedBy: userId, status: type }).toArray();
 
     if (result) {
@@ -93,6 +98,8 @@ const storeDecorationalUserPicture = async (
     file: File | File[],
     status: 'profile' | 'background',
 ): Promise<Picture[]> => {
+    const pictureDatabase = await getPictureDB();
+
     const oldImages = await pictureDatabase.find({ uploadedBy: userId, status }).toArray();
 
     if (oldImages.length > 0) {
@@ -149,6 +156,7 @@ const promotePicturesToPublished = async (
     pictureIds: string[]
 ): Promise<number> => {
     const now = new Date().toISOString();
+    const pictureDatabase = await getPictureDB();
 
     const result = await pictureDatabase.updateMany(
         {
@@ -175,6 +183,8 @@ const promotePicturesToPublished = async (
  * Holt alle Bilder für einen Draft
  */
 const getPicturesByDraftId = async (draftId: string): Promise<DraftPicture[]> => {
+    const pictureDatabase = await getPictureDB();
+
     const pictures = await pictureDatabase
         .find({ draftId } as Partial<DraftPicture>)
         .toArray();
@@ -186,6 +196,8 @@ const getPicturesByDraftId = async (draftId: string): Promise<DraftPicture[]> =>
  * Holt alle veröffentlichten Bilder für ein Adventure
  */
 const getPicturesByAdventureId = async (adventureId: string): Promise<PublishedPicture[]> => {
+    const pictureDatabase = await getPictureDB();
+
     const pictures = await pictureDatabase
         .find({ status: 'published', adventureId } as Partial<PublishedPicture>)
         .toArray();
@@ -194,6 +206,8 @@ const getPicturesByAdventureId = async (adventureId: string): Promise<PublishedP
 };
 
 const markPicturesAsPublished = async (draft: { _id: string }): Promise<void> => {
+    const pictureDatabase = await getPictureDB();
+
     const now = new Date().toISOString();
     await pictureDatabase.updateMany(
         { status: 'draft', draftId: draft._id },
@@ -210,6 +224,8 @@ const markPicturesAsPublished = async (draft: { _id: string }): Promise<void> =>
  * Holt ein einzelnes Bild anhand der ID
  */
 const getPictureById = async (pictureId: string): Promise<Picture | null> => {
+    const pictureDatabase = await getPictureDB();
+
     return pictureDatabase.findOne({ _id: pictureId });
 };
 
@@ -221,6 +237,8 @@ const deleteDraftPicture = async (
     draftId: string,
     userId: string
 ): Promise<boolean> => {
+    const pictureDatabase = await getPictureDB();
+
     const picture = await pictureDatabase.findOne({
         _id: pictureId,
         status: 'draft',
@@ -244,6 +262,8 @@ const deleteDraftPicture = async (
  * Wird bei Draft-Löschung oder -Ablauf aufgerufen
  */
 const deleteAllDraftPictures = async (draftId: string): Promise<number> => {
+    const pictureDatabase = await getPictureDB();
+
     const pictures = await getPicturesByDraftId(draftId);
 
     // Lösche alle Dateien aus GridFS
@@ -324,15 +344,21 @@ const addPictureLegacy = async (
         },
     };
 
+    const pictureDatabase = await getPictureDB();
+
     await pictureDatabase.insertOne(legacyPicture as any);
     return legacyPicture;
 };
 
-const getFileFromPictureId = (pictureId: string) => {
+const getFileFromPictureId = async (pictureId: string) => {
+    const pictureDatabase = await getPictureDB();
+
     return pictureDatabase.findOne({ _id: pictureId });
 };
 
 const getPictureFromBucket = async (bucketId: string): Promise<Picture[]> => {
+    const pictureDatabase = await getPictureDB();
+
     const results = await pictureDatabase.find(
         { bucketId } as any,
         { sort: { uploadedAt: -1 } }

@@ -1,34 +1,54 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button, type ButtonVariants } from '@/components/ui/button';
 import { Laptop, Moon, Sun } from 'lucide-vue-next';
+import type { PrimitiveProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
-const props = defineProps<{
-    class?: HTMLAttributes["class"];
-}>();
+interface Props extends PrimitiveProps {
+  variant?: ButtonVariants["variant"]
+  size?: ButtonVariants["size"]
+  class?: HTMLAttributes["class"]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  as: "button",
+})
 
 const colorMode = useColorMode();
 
+const toggleColorMode = () => {
+  if (colorMode.currentColorMode.value === 'light') {
+    colorMode.setColorMode('dark');
+  } else if (colorMode.currentColorMode.value === 'dark') {
+    colorMode.setColorMode('light');
+  } else {
+    // If system, switch to the opposite of the current system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    colorMode.setColorMode(prefersDark ? 'light' : 'dark');
+  }
+}
 </script>
 
 <template>
-  <DropdownMenu>
-    <DropdownMenuTrigger as-child>
-      <Button variant="ghost" v-bind="props">
-        <component
-          :is="colorMode.currentColorMode.value === 'light' ? Sun : colorMode.currentColorMode.value === 'dark' ? Moon : Laptop"
-        />
-        <span class="sr-only">Toggle theme</span>
-      </Button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
-      <DropdownMenuItem @click="colorMode.setColorMode('light')">
-        Light
-      </DropdownMenuItem>
-      <DropdownMenuItem @click="colorMode.setColorMode('dark')">
-        Dark
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
+  <Button :variant="props.variant" :size="props.size" :class="props.class" @click="toggleColorMode">
+    <Transition name="fade" mode="out-in">
+      <component
+        :is="colorMode.currentColorMode.value === 'light' ? Sun : colorMode.currentColorMode.value === 'dark' ? Moon : Laptop" />
+    </Transition>
+    <span class="sr-only">
+      {{ colorMode.currentColorMode.value === 'light' ? "Switch to dark mode" : "Switch to light mode" }}
+    </span>
+  </Button>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

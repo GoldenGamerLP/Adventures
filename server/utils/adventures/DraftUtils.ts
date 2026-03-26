@@ -8,31 +8,35 @@ import type {
 import { ObjectId } from "mongodb";
 import { DRAFT_CONFIG } from "~~/shared/constants/Constants";
 import { calculateCompletionPercent } from "~~/shared/utils/SharedUtils";
-import database from "../database/DBUtils";
+import { getCollection } from "../database/DBUtils";
 import { markPicturesAsPublished } from "../pictures/PictureUtils";
 import { publishFromDraft } from "./AdventureUtils";
 
-const draftCollection = database.collection<AdventureDraft>("adventure_drafts");
+const getDraftDB = async () => getCollection<AdventureDraft>('adventure_drafts');
 
 /**
  * Erstellt TTL-Index für automatische Draft-Löschung
  * Sollte beim Server-Start aufgerufen werden
  */
 export async function ensureDraftIndexes(): Promise<void> {
+    const draftDB = await getDraftDB();
+
     // TTL-Index: MongoDB löscht Dokumente automatisch wenn expiresAt < now
-    await draftCollection.createIndex(
+    await draftDB.createIndex(
         { expiresAt: 1 },
         { expireAfterSeconds: 0 }
     );
 
     // Index für schnelle User-Abfragen
-    await draftCollection.createIndex({ authorId: 1 });
+    await draftDB.createIndex({ authorId: 1 });
 
     console.log('[DraftUtils] Draft indexes created');
 }
 
 export async function canCreateNewDraft(authorId: string): Promise<boolean> {
-    const existingCount = await draftCollection.countDocuments({
+    const draftDB = await getDraftDB();
+
+    const existingCount = await draftDB.countDocuments({
         authorId
     });
 
@@ -56,7 +60,8 @@ export async function createDraft(input: CreateDraftInput): Promise<AdventureDra
         expiresAt: new Date(now.getTime() + DRAFT_CONFIG.TTL_MS),
     };
 
-    const result = await draftCollection.insertOne(draft);
+    const draftDB = await getDraftDB();
+    const result = await draftDB.insertOne(draft);
 
     if (!result.acknowledged) return null;
 
@@ -76,7 +81,8 @@ export async function getOrCreateNewEditableDraft(adventureId: string, authorId:
         throw createError({ statusCode: 404, statusMessage: 'Adventure not found' });
     }
 
-    const existingDraft = await draftCollection.findOne({
+    const draftDB = await getDraftDB();
+    const existingDraft = await draftDB.findOne({
         _id: adventure.draftId,
         authorId,
         state: 'published', // Nur veröffentlichte Drafts sind gültige Edit-Drafts
@@ -88,7 +94,7 @@ export async function getOrCreateNewEditableDraft(adventureId: string, authorId:
 
     const newDraft = convertAdventureToDraft(adventure);
 
-    await draftCollection.insertOne(newDraft);
+    await draftDB.insertOne(newDraft);
 
     return newDraft;
 }
@@ -107,7 +113,8 @@ export async function getDraftById(
         query.authorId = authorId;
     }
 
-    return draftCollection.findOne(query);
+    const draftDB = await getDraftDB();
+    return draftDB.findOne(query);
 }
 
 /**
@@ -140,7 +147,8 @@ const enrichDraftWithPictures = async (draft: AdventureDraftWithMeta): Promise<A
  * Holt alle Drafts eines Users
  */
 export async function getDraftsByAuthor(authorId: string): Promise<AdventureDraft[]> {
-    return draftCollection
+    const draftDB = await getDraftDB();
+    return draftDB
         .find({ authorId, state: 'draft' })
         .sort({ updatedAt: -1 })
         .toArray();
@@ -331,7 +339,4 @@ function enrichDraftWithMeta(draft: AdventureDraft): AdventureDraftWithMeta {
     };
 }
 
-export {
-    draftCollection
-};
 

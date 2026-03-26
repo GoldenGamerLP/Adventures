@@ -39,7 +39,7 @@
       </a>
     </Button>
   </Empty>
-  <AppAdventuresAdventureView v-else-if="adventure" :adventure="adventure!" />
+  <AppAdventuresAdventureView v-else :adventure="adventure!" />
 </template>
 
 <script lang="ts" setup>

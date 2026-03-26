@@ -4,19 +4,21 @@ import type { AdventuresQueryFilterType } from "~~/shared/schema/AdventuresSchem
 import type { Adventure, AdventureWithMeta } from "~~/shared/types/AdventureTypes";
 import type { AdventureDraft } from "~~/shared/types/DraftTypes";
 import type { UserSummary } from "~~/shared/types/UserProfileTypes";
-import database from "../database/DBUtils";
+import { getCollection } from "../database/DBUtils";
 import { getViewCounter } from "./ViewsUtils";
 
-const adventureDB = database.collection<Adventure>('adventures');
+const getAdventureDB = async () => getCollection<Adventure>('adventures');
 
 export const ensureAdventureIndexes = async (): Promise<void> => {
     //Index für schnelle Abfragen nach DraftId
-    await adventureDB.createIndex({ draftId: 1 });
-    await adventureDB.createIndex({ 'location.coordinates': '2dsphere' });
-    await adventureDB.createIndex({ 'title': 'text' });
-    await adventureDB.createIndex({ authorId: 1 });
-    await adventureDB.createIndex({ visibility: 1 });
-    await adventureDB.createIndex({ createdAt: -1 });
+    const adventureDB = await getAdventureDB();
+
+    await Promise.all([
+        adventureDB.createIndex({ 'location.coordinates': '2dsphere' }),
+        adventureDB.createIndex({ 'title': 'text' }),
+        adventureDB.createIndex({ visibility: 1 }),
+        adventureDB.createIndex({ createdAt: -1 }),
+    ]);
 
     console.log('[AdventureUtils] Adventure indexes created');
 }
@@ -24,6 +26,8 @@ export const ensureAdventureIndexes = async (): Promise<void> => {
 
 const createAdventure = async (adventure: Omit<Adventure, '_id' | 'createdAt' | 'updatedAt'>): Promise<Adventure> => {
     //Erstelle neues Adventure-Dokument oder Aktualisiere ein bestehendes
+    const adventureDB = await getAdventureDB();
+
     const foundAdventure = await adventureDB.findOne({ draftId: adventure.draftId });
 
     if (foundAdventure) {
@@ -42,15 +46,19 @@ const createAdventure = async (adventure: Omit<Adventure, '_id' | 'createdAt' | 
 }
 
 const getAdventureById = async (id: string): Promise<Adventure | null> => {
+    const adventureDB = await getAdventureDB();
+
     return await adventureDB.findOne({ _id: id });
 }
 
 const validateAdventureOwnership = async (adventureId: string, userId: string): Promise<boolean> => {
+    const adventureDB = await getAdventureDB();
     const adventure = await adventureDB.findOne({ _id: adventureId, authorId: userId });
     return !!adventure;
 }
 
 const updateAdventure = async (id: string, updates: Partial<Omit<Adventure, '_id' | 'createdAt' | 'authorId'>>): Promise<Adventure | null> => {
+    const adventureDB = await getAdventureDB();
     const now = new Date();
     const result = await adventureDB.findOneAndUpdate(
         { _id: id },
@@ -61,6 +69,7 @@ const updateAdventure = async (id: string, updates: Partial<Omit<Adventure, '_id
 }
 
 const getAllAdventures = async (): Promise<Adventure[]> => {
+    const adventureDB = await getAdventureDB();
     return await adventureDB.find().toArray();
 }
 
@@ -81,6 +90,7 @@ const publishFromDraft = async (draft: AdventureDraft): Promise<Adventure> => {
 }
 
 const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: AdventuresQueryFilterType, limit = 25): Promise<AdventureWithMeta[]> => {
+    const adventureDB = await getAdventureDB();
     const query: any = [];
 
     const radiusInMeters = (filter.radius || DEFAULT_MAX_SEARCH_RADIUS_KM) * 1000;
@@ -313,6 +323,7 @@ const enrichAdventureWithViews = async (adventure: AdventureWithMeta): Promise<A
 }
 
 const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise<AdventureWithMeta | null> => {
+    const adventureDB = await getAdventureDB();
     const query: any[] = [
         {
             $match: {
@@ -401,6 +412,7 @@ const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise
  * @returns 
  */
 const getAdventuresByAuthor = async (authorId: string, user?: UserSummary, visibility: 'all' | 'public' | 'unlisted' | 'private' = 'public'): Promise<AdventureWithMeta[]> => {
+    const adventureDB = await getAdventureDB();
     const query: any[] = [
         { $match: { authorId, ...(visibility && visibility !== 'all' ? { visibility } : {}) } },
     ]
@@ -473,15 +485,6 @@ const getAdventuresByAuthor = async (authorId: string, user?: UserSummary, visib
     const adventures = await adventureDB.aggregate<AdventureWithMeta>(query).toArray();
     return Promise.all(adventures.map(enrichAdventureWithViews));
 }
-
-//TODO: Einheitliche ID-Generierung, damit die URLs lesbar und SEO-freundlich sind, z.B. basierend auf Titel + MongoDB-ID
-const constructHumanReadableAdventureId = (adventure: Adventure): string => {
-    //Eine lesbare ID, die kurz und einzigartig ist, basierend auf dem Titel und der MongoDB-ID
-    const titlePart = adventure.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50);
-    const idPart = adventure._id.slice(-6);
-    return `${titlePart}-${idPart}`;
-}
-
 
 export {
     createAdventure,

@@ -64,15 +64,15 @@
         <h3 class="text-sm font-medium">
           {{ $t('component_schedule_opening_hours') }}
         </h3>
-        <div class="grid grid-cols-7 gap-2">
+        <div class="flex flex-wrap gap-4">
           <div
             v-for="day in 7"
             :key="day"
             class="flex flex-col items-center text-xs text-muted-foreground"
             :class="{ 'text-primary font-semibold': hasSlot(day - 1) }"
           >
-            <span>{{ getDayOfWeeklabel(day - 1) }}</span>
-            <span class="text-center">{{ getFormattedSlotTime(day - 1) }}</span>
+            <p>{{ getDayOfWeeklabel(day - 1) }}</p>
+            <p>{{ getFormattedSlotTime(day - 1) }}</p>
           </div>
         </div>
       </div>
@@ -144,14 +144,14 @@
 
 <script lang="ts" setup>
 import {
-    BadgeAlert,
-    CalendarClockIcon,
-    Calendar as CalendarIcon,
-    CalendarPlusIcon,
-    CalendarRange,
-    FlagTriangleLeftIcon,
-    FlagTriangleRightIcon,
-    InfinityIcon
+  BadgeAlert,
+  CalendarClockIcon,
+  Calendar as CalendarIcon,
+  CalendarPlusIcon,
+  CalendarRange,
+  FlagTriangleLeftIcon,
+  FlagTriangleRightIcon,
+  InfinityIcon
 } from 'lucide-vue-next';
 import { MAX_ADVENTURE_DURATION_MINUTES } from '~~/shared/constants/Constants';
 import { formatDuration, scheduleToCalenderFormat } from '~~/shared/utils/SharedUtils';

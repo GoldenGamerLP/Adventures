@@ -1,21 +1,28 @@
 import type { GeoDBEntry } from "#shared/types/GeoTypes";
 import { readFileSync } from "node:fs";
-import database from "../database/DBUtils";
+import { getCollection } from "../database/DBUtils";
 
 //Collection for geographic data from https://github.com/zauberware/postal-codes-json-xml-csv/blob/master/data/DE.zip
 //Index on: zipcode, place (full text) and search index on place
 const zipcodeJsonFile = "./data/DE_zipcodes.json";
-const GeoDB = database.collection<GeoDBEntry>("zipcodes");
+const getGeoDB = async () => getCollection<GeoDBEntry>("zipcodes");
 
 const ensureGeoIndexes = async () => {
-    initializeGeoDB(); // Ensure DB is initialized before creating indexes
+    const GeoDB = await getGeoDB();
 
-    await GeoDB.createIndex({ zipcode: 1 });
-    await GeoDB.createIndex({ place: "text" });
-    await GeoDB.createIndex({ location: "2dsphere" });
+    await initializeGeoDB(); // Ensure DB is initialized before creating indexes
+
+    await Promise.all([
+        GeoDB.createIndex({ place: "text" }),
+        GeoDB.createIndex({ location: "2dsphere" }),
+    ]);
+
+    console.log('[GeoDB] Indexes created');
 }
 
 const searchCityFullText = async (query: string, limit = 10): Promise<GeoDBEntry[]> => {
+    const GeoDB = await getGeoDB();
+
     const response = GeoDB.aggregate([
         { $search: { autocomplete: { query, path: "place", tokenOrder: "sequential" } } },
         { $limit: limit }
@@ -25,11 +32,15 @@ const searchCityFullText = async (query: string, limit = 10): Promise<GeoDBEntry
 };
 
 const getCityByZipcode = async (zipcode: string): Promise<GeoDBEntry | null> => {
+    const GeoDB = await getGeoDB();
+
     const response = await GeoDB.findOne({ zipcode });
     return response;
 };
 
 const findNearestCity = async (latitude: number, longitude: number): Promise<GeoDBEntry | null> => {
+    const GeoDB = await getGeoDB();
+
     const response = await GeoDB.findOne({
         location: {
             $near: {
@@ -45,6 +56,8 @@ const findNearestCity = async (latitude: number, longitude: number): Promise<Geo
 
 const initializeGeoDB = async () => {
     try {
+        const GeoDB = await getGeoDB();
+
         const count = await GeoDB.estimatedDocumentCount();
         if (count === 0) {
             const startTime = Date.now();
@@ -72,3 +85,4 @@ const convertJsonToGeoJsonEntry = (entry: any) => {
 }
 
 export { ensureGeoIndexes, findNearestCity, GeoDB, getCityByZipcode, searchCityFullText };
+
