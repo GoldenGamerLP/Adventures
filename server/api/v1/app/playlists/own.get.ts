@@ -1,5 +1,6 @@
 import { createKeyedError } from "~~/server/utils/errors/ApiErrorUtils";
 import { APP_ERROR_CODES } from "~~/shared/constants/Constants";
+import { GetPlaylistsByAdventureQuerySchema } from "~~/shared/schema/PlaylistSchema";
 
 export default defineEventHandler(async (event) => {
     const user = event.context.user;
@@ -8,5 +9,11 @@ export default defineEventHandler(async (event) => {
         throw createKeyedError(401, APP_ERROR_CODES.UNAUTHORIZED);
     }
 
-    return await getPlaylistByUserId(user._id, "private");
+    const { data, error } = await getValidatedQuery(event, GetPlaylistsByAdventureQuerySchema.safeParseAsync);
+
+    if (error) {
+        throw createKeyedError(400, APP_ERROR_CODES.INVALID_REQUEST_PARAMS);
+    }
+
+    return await getPlaylistByUserId(user._id, data);
 });

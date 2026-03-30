@@ -6,7 +6,7 @@ export type AdventureList = UserList | VirtualList;
 interface BaseList {
     _id: string;
     name: string;
-    description: string;
+    description?: string;
     listType: "user" | "virtual";
     ownerId: string;
 }
@@ -22,7 +22,7 @@ export interface UserList extends BaseList {
         canRead: string[];
         canWrite: string[];
     };
-    visibility: "private" | "public" | "notListed";
+    visibility: "private" | "public" | "unlisted";
 }
 
 /**

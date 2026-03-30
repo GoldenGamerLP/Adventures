@@ -24,20 +24,10 @@
           </Button>
         </nav>
         <div class="sticky top-0">
-          <div
-            class="grid h-64 w-full rounded-lg grid-cols-2 grid-rows-2 auto-rows-fr overflow-hidden bg-card p-1 blur -my-16 -z-10 shadow-inner relative"
-          >
-            <img
-              v-for="(image, index) in playlistInfo.previewImages"
-              :key="index"
-              :src="toPicturePath(image)"
-              :alt="$t('preview_image_alt') as string"
-              class="object-cover aspect-square"
-            />
-          </div>
+          <AppMiscImagesPreview :preview-images="playlistInfo.previewImages" class="w-full h-48 sm:h-72 blur" />
         </div>
         <main class="sticky top-0">
-          <header class="py-4 space-y-2 bg-linear-180 from-transparent to-card px-2">
+          <header class="py-4 space-y-2 bg-linear-180 from-transparent via-card/80 to-card px-2">
             <h1 class="text-2xl font-bold">
               {{ playlistInfo.name }}
             </h1>
@@ -47,11 +37,8 @@
                   <AvatarFallback>
                     <ImageOff />
                   </AvatarFallback>
-                  <AvatarImage
-                    v-if="playlistInfo.owner.profilePictureId"
-                    :src="toPicturePath(playlistInfo.owner.profilePictureId)"
-                    alt="Profilbild"
-                  />
+                  <AvatarImage v-if="playlistInfo.owner.profilePictureId"
+                    :src="toPicturePath(playlistInfo.owner.profilePictureId)" alt="Profilbild" />
                 </Avatar>
                 {{ $t('owner_created_by', { name: playlistInfo.owner.name }) }}
               </div>
@@ -60,7 +47,7 @@
               {{ playlistInfo.description }}
             </p>
           </header>
-          <div class="flex flex-col gap-4 bg-card">
+          <div class="flex flex-col gap-4 bg-card rounded-b-lg">
             <template v-for="entry in playlist" :key="entry._id">
               <AppPlaylistsPlaylistEntry :entry="entry!" />
             </template>
@@ -78,20 +65,22 @@ const { $t } = useI18n();
 
 const route = useRoute();
 
-const authorId = route.params.authorId as string;
 const playlistId = route.params.playlistId as string;
 
-const { data: playlistInfo } = await useFetch(`/api/v1/app/playlists/playlistInfo`, {
+const { data: playlistInfo } = await useFetch(`/api/v1/app/playlists/${playlistId}/info`, {
+  key: `playlist-info-${playlistId}`,
   method: "GET",
-  query: {
-    playlistId,
-  }
 });
 
-const { data: playlist, error } = await useFetch<AdventureListEntry[]>(`/api/v1/app/playlists/playlist`, {
+const { data: playlist, error } = await useFetch<AdventureListEntry[]>(`/api/v1/app/playlists/${playlistId}/entries`, {
+  key: `playlist-entries-${playlistId}`,
   method: "GET",
-  query: {
-    playlistId,
-  }
+});
+
+useHead({
+  title: playlistInfo.value ? playlistInfo.value.name : $t('common_app_name') as string,
+  titleTemplate(title) {
+    return title ? `${title} - ${$t('common_app_name')}` : $t('common_app_name') as string;
+  },
 });
 </script>

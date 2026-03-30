@@ -4,7 +4,7 @@ import { APP_ERROR_CODES } from "~~/shared/constants/Constants";
 import { PlaylistInfoQuerySchema } from "~~/shared/schema/PlaylistSchema";
 
 export default defineEventHandler(async (event) => {
-    const { data, error } = await getValidatedQuery(event, PlaylistInfoQuerySchema.safeParseAsync);
+    const { data, error } = await getValidatedRouterParams(event, PlaylistInfoQuerySchema.safeParseAsync);
 
     if (error) {
         throw createKeyedError(400, APP_ERROR_CODES.INVALID_PLAYLIST_QUERY, { cause: error });

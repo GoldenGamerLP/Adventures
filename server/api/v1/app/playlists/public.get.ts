@@ -11,5 +11,5 @@ export default defineEventHandler(async (event) => {
 
     const { userId } = data;
 
-    return await getPlaylistByUserId(userId, "public");
+    return await getPlaylistByUserId(userId, { includeVirtual: false, mode: "public" });
 });

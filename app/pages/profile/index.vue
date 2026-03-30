@@ -211,19 +211,24 @@ import {
 import type { UserProfileWithMeta } from '~~/shared/types/UserProfileTypes';
 import { MAX_INTERESTS } from '~~/shared/types/UserProfileTypes';
 
-const { $t, td } = useI18n();
-
-
-const user = useUser();
-
 definePageMeta({
   layout: 'navigation-bar',
   middleware: 'auth-requirement',
 });
 
+
+const { $t, td } = useI18n();
+const user = useUser();
 const settingsOpen = ref(false);
 
 const { data: userData } = await useFetch<UserProfileWithMeta>(
   `/api/v1/app/profile/${user.value?._id}/public`,
 );
+
+useHead({
+  title: $t('common_nav_profile') as string,
+  titleTemplate(title) {
+    return title ? `${title} - ${$t('common_app_name')}` : $t('common_app_name') as string;
+  },
+});
 </script>

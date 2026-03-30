@@ -43,13 +43,11 @@
         <ItemContent>
           <ItemTitle>
             {{ td(schedule.startDate!, { dateStyle: 'full', timeStyle: 'short' }) }}
-            &ndash;
-            {{ td(schedule.endDate!, { dateStyle: 'full', timeStyle: 'short' }) }}
           </ItemTitle>
           <ItemDescription>
-            {{ td(schedule.startDate!, { dateStyle: 'medium', timeStyle: 'short' }) }}
+            <span class="font-semibold">{{ td(schedule.startDate!, { dateStyle: 'short', timeStyle: 'short' }) }}</span>
             {{ $t('component_schedule_until') }}
-            {{ td(schedule.endDate!, { dateStyle: 'medium', timeStyle: 'short' }) }}
+            <span class="font-semibold">{{ td(schedule.endDate!, { dateStyle: 'short', timeStyle: 'short' }) }}</span>
           </ItemDescription>
         </ItemContent>
         <Badge variant="secondary" @click="downloadCalendar">
@@ -65,12 +63,8 @@
           {{ $t('component_schedule_opening_hours') }}
         </h3>
         <div class="flex flex-wrap gap-4">
-          <div
-            v-for="day in 7"
-            :key="day"
-            class="flex flex-col items-center text-xs text-muted-foreground"
-            :class="{ 'text-primary font-semibold': hasSlot(day - 1) }"
-          >
+          <div v-for="day in 7" :key="day" class="flex flex-col items-center text-xs text-muted-foreground"
+            :class="{ 'text-primary font-semibold': hasSlot(day - 1) }">
             <p>{{ getDayOfWeeklabel(day - 1) }}</p>
             <p>{{ getFormattedSlotTime(day - 1) }}</p>
           </div>
@@ -85,10 +79,8 @@
       </h3>
       <div class="relative w-full pt-6 pb-2">
         <!-- Min/Max position labels -->
-        <div
-          class="absolute top-2 text-xs font-medium text-primary -translate-x-1/2 whitespace-nowrap"
-          :style="{ left: durationBarPercent.midPer + '%' }"
-        >
+        <div class="absolute top-2 text-xs font-medium text-primary -translate-x-1/2 whitespace-nowrap"
+          :style="{ left: durationBarPercent.midPer + '%' }">
           {{ minLabel }} - {{ maxLabel }}
         </div>
 

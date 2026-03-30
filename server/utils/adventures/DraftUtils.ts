@@ -171,7 +171,8 @@ export async function updateDraft(
         return null;
     }
 
-    const result = await draftCollection.findOneAndUpdate(
+    const draftDB = await getDraftDB();
+    const result = await draftDB.findOneAndUpdate(
         { _id: draftId, authorId },
         {
             $set: {
@@ -207,8 +208,9 @@ export async function addPictureToDraft(
     }
 
     const now = new Date();
+    const draftDB = await getDraftDB();
 
-    return draftCollection.findOneAndUpdate(
+    return draftDB.findOneAndUpdate(
         { _id: draftId, authorId },
         {
             $addToSet: { pictureIds: pictureId },
@@ -229,9 +231,10 @@ export async function removePictureFromDraft(
     authorId: string,
     pictureId: string
 ): Promise<AdventureDraft | null> {
+    const draftDb = await getDraftDB();
     const now = new Date();
 
-    const result = await draftCollection.findOneAndUpdate(
+    const result = await draftDb.findOneAndUpdate(
         { _id: draftId, authorId },
         {
             $pull: { pictureIds: pictureId },
@@ -252,7 +255,8 @@ export async function deleteDraft(
     draftId: string,
     authorId: string
 ): Promise<boolean> {
-    const result = await draftCollection.deleteOne({
+    const draftDB = await getDraftDB();
+    const result = await draftDB.deleteOne({
         _id: draftId,
         authorId
     });
@@ -267,7 +271,8 @@ export async function validateDraftOwnership(
     draftId: string,
     authorId: string
 ): Promise<boolean> {
-    const count = await draftCollection.countDocuments({
+    const draftDB = await getDraftDB();
+    const count = await draftDB.countDocuments({
         _id: draftId,
         authorId
     });
@@ -288,9 +293,10 @@ export async function publishDraft(
         throw createError({ statusCode: 404, statusMessage: 'Draft not found' });
     }
 
+    const draftDB = await getDraftDB();
     await markPicturesAsPublished(draft);
     const adventure = await publishFromDraft(draft);
-    await draftCollection.deleteOne({ _id: draftId, authorId });
+    await draftDB.deleteOne({ _id: draftId, authorId });
 
     return adventure;
 }

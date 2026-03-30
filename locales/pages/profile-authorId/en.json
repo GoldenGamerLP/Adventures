@@ -7,5 +7,6 @@
 	"about_biography": "Biography",
 	"empty_info_title": "No information",
 	"empty_info_description": "This user has not added any profile information yet.",
-	"tabs_aria": "Profile tabs"
+	"tabs_aria": "Profile tabs",
+	"tabs_adventure_lists": "Adventure lists"
 }

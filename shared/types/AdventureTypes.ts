@@ -29,6 +29,7 @@ export interface AdventureWithMeta extends Adventure {
     viewCount: AdventureViewCounter;
     isLikedByUser: boolean;
     likesCount: number;
+    adventureListIds: string[]; // IDs der Playlists, in denen dieses Adventure ist (nur für eingeloggte User)
 }
 
 export enum AdventureCategory {

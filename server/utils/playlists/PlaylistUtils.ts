@@ -1,3 +1,6 @@
+import { ObjectId } from "mongodb";
+import { AdventureListCreateInput } from "~~/shared/schema/AdventureListSchema";
+import { GetPlaylistsByAdventureQueryType } from "~~/shared/schema/PlaylistSchema";
 import type { AdventureListEntry, AdventureListWithMeta } from "~~/shared/types/AdventureListsTypes";
 import { getLikedAdventuresByUserId, hydrateLikedAdevnturesList } from "../adventures/LikeUtils";
 import { getHistoryEntries, hydrateHistoryAdventuresList } from "../adventures/ViewsUtils";
@@ -23,8 +26,8 @@ export const DEFAULT_HISTORY_LIST = (userId: string): VirtualList => ({
     ownerId: userId,
 });
 
-const getPlaylistDB = async () => getCollection<UserList>("playlists");
-const getPlaylistEntriesDB = async () => getCollection<AdventureListEntry>("playlist_entries");
+const getPlaylistDB = async () => getCollection<UserList>("adventure_lists");
+const getPlaylistEntriesDB = async () => getCollection<AdventureListEntry>("adventure_list_entries");
 
 export const ensurePlaylistIndexes = async (): Promise<void> => {
     const playlistDB = await getPlaylistDB();
@@ -34,16 +37,40 @@ export const ensurePlaylistIndexes = async (): Promise<void> => {
     await playlistDB.createIndex({ visibility: 1 });
     await playlistEntriesDB.createIndex({ adventureListId: 1 });
     await playlistEntriesDB.createIndex({ adventureId: 1 });
+    await playlistEntriesDB.createIndex({ adventureIds: 1, ownerId: 1 });
     console.log('[PlaylistUtils] Playlist indexes created');
 }
 
-export const getPlaylistByUserId = async (userId: string, visibility: "private" | "public" | "notListed"): Promise<AdventureListWithMeta[]> => {
+export const createPlaylist = async (user: string, data: AdventureListCreateInput): Promise<void> => {
     const playlistDB = await getPlaylistDB();
 
-    const result = await playlistDB.find({ ownerId: userId, visibility }).toArray();
+    const newPlaylist: UserList = {
+        _id: new ObjectId().toString(),
+        name: data.name,
+        description: data.description,
+        ownerId: user,
+        visibility: data.visibility,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+
+        listType: "user",
+        permissions: {
+            canRead: [],
+            canWrite: [],
+        }
+    };
+
+    await playlistDB.insertOne(newPlaylist);
+}
+
+export const getPlaylistByUserId = async (userId: string, query: GetPlaylistsByAdventureQueryType): Promise<AdventureListWithMeta[]> => {
+    const playlistDB = await getPlaylistDB();
+
+    const visibilityFilter = getHigherOrderVisibility(query.mode) as ("private" | "unlisted" | "public")[];
+    const result = await playlistDB.find({ ownerId: userId, visibility: { $in: visibilityFilter } }).toArray();
 
     const playlistsWithMeta = result.map(hydratePlaylistWithMeta);
-    if (visibility === "private") {
+    if (query.includeVirtual && query.mode === "private") {
         playlistsWithMeta.unshift(hydrateLikedAdevnturesList(DEFAULT_LIKED_LIST(userId)));
         playlistsWithMeta.unshift(hydrateHistoryAdventuresList(DEFAULT_HISTORY_LIST(userId)));
     }
@@ -51,13 +78,19 @@ export const getPlaylistByUserId = async (userId: string, visibility: "private" 
     return await Promise.all(playlistsWithMeta);
 };
 
-const hydratePlaylistWithMeta = async (playlist: UserList): Promise<AdventureListWithMeta> => {
-    const playlistDB = await getPlaylistDB();
+const getHigherOrderVisibility = (visibility: "private" | "public" | "unlisted") => {
+    if (visibility === "private") return ["private", "unlisted", "public"];
+    if (visibility === "unlisted") return ["unlisted", "public"];
+    return ["public"];
+}
 
-    const entryCount = await playlistDB.countDocuments({ adventureListId: playlist._id });
-    const previewEntries = playlistDB.aggregate([
+const hydratePlaylistWithMeta = async (playlist: UserList): Promise<AdventureListWithMeta> => {
+    const entriesDB = await getPlaylistEntriesDB();
+
+    const entryCount = await entriesDB.countDocuments({ adventureListId: playlist._id });
+    const previewEntries = await entriesDB.aggregate([
         { $match: { adventureListId: playlist._id } },
-        { $sort: { createdAt: -1 } },
+        { $sort: { updatedAt: -1 } },
         { $limit: 4 },
         {
             $lookup: {
@@ -68,11 +101,13 @@ const hydratePlaylistWithMeta = async (playlist: UserList): Promise<AdventureLis
             }
         },
         { $unwind: "$adventureDetails" },
-        { $project: { "adventureDetails.images": 1 } },
+        {
+            $group: {
+                _id: null,
+                images: { $addToSet: { $first: "$adventureDetails.pictureIds" } }
+            }
+        }
     ]).toArray();
-
-    const result = await previewEntries;
-    const previewImages = result.flatMap(entry => entry.adventureDetails.images.slice(0, 1)); // nur erstes Bild pro Abenteuer
 
     const ownerObject = await getUserById(playlist.ownerId);
 
@@ -81,7 +116,7 @@ const hydratePlaylistWithMeta = async (playlist: UserList): Promise<AdventureLis
         throw new Error("Owner not found for playlist");
     }
 
-    return { ...playlist, entryCount, previewImages, owner: ownerObject };
+    return { ...playlist, entryCount, previewImages: previewEntries[0]?.images || [], owner: ownerObject };
 };
 
 export const getPlaylistInfo = async (playlistId: string): Promise<AdventureListWithMeta> => {
@@ -154,7 +189,43 @@ export const getPlaylistEntries = async (playlistId: string, ownerId: string | u
         updatedAt: entry.updatedAt,
         populatedAdventure: entry.adventureDetails,
     }));
+};
+
+interface AddResult {
+    status: "added" | "already_exists";
 }
+
+export const addAdventureToPlaylist = async (playlistId: string, adventureId: string, userId: string, force: boolean): Promise<AddResult> => {
+    const playlistEntriesDB = await getPlaylistEntriesDB();
+
+    const existingEntry = await playlistEntriesDB.findOne({ adventureListId: playlistId, adventureId });
+    if (existingEntry) {
+        if (!force) {
+            return { status: "already_exists" };
+        }
+        //Wenn der EIntrag schon exestiert duplizieren wir ihn, damit er in der Playlist weiter unten nochmal auftaucht
+        await playlistEntriesDB.insertOne({
+            _id: new ObjectId().toString(),
+            adventureListId: playlistId,
+            adventureId,
+            order: existingEntry.order + 0.0001, // minimal höherer Wert, damit die Reihenfolge erhalten bleibt
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        });
+        return { status: "added" };
+    }
+
+    await playlistEntriesDB.insertOne({
+        _id: new ObjectId().toString(),
+        adventureListId: playlistId,
+        adventureId,
+        order: Date.now(), // neuer Eintrag bekommt aktuellen Timestamp als Order, damit er am Ende der Liste erscheint
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    });
+    return { status: "added" };
+}
+
 
 export const hasAccessToPlaylist = async (playlist: string, userId?: string) => {
     const playlistDB = await getPlaylistDB();
@@ -167,7 +238,14 @@ export const hasAccessToPlaylist = async (playlist: string, userId?: string) => 
 
         throw new Error("Unknown system playlist type");
     }
-    const response = await playlistDB.findOne({ _id: playlist, visibility: { $in: ["notListed", "public"] } });
+    const response = await playlistDB.countDocuments({
+        _id: playlist,
+        $or: [
+            { visibility: "public" },
+            { visibility: "unlisted" },
+            { ownerId: userId }
+        ]
+    });
 
-    return response !== null;
+    return response > 0;
 }

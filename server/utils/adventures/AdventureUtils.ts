@@ -130,6 +130,114 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
                 as: 'userLikes'
             }
         });
+
+        //Fügt eine liste namens "foundAdventureLists" hinzu, die alle AdventureListIds enthält, in denen das Adventure enthalten ist, basierend auf den AdventureLists des eingeloggten Users
+        query.push(
+
+            {
+                $lookup:
+                {
+                    from: "adventure_lists",
+                    pipeline: [
+                        {
+                            $match: {
+                                ownerId: user._id
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                ids: {
+                                    $addToSet: "$_id"
+                                }
+                            }
+                        }
+                    ],
+                    as: "playlistsIds"
+                }
+            },
+            {
+                $unwind:
+                {
+                    path: "$playlistsIds"
+                }
+            },
+            {
+                $set:
+                {
+                    adventureListsIds: "$playlistsIds.ids"
+                }
+            },
+            {
+                $lookup:
+
+                {
+                    from: "adventure_list_entries",
+                    let: {
+                        adventureId: "$_id",
+                        pids: "$adventureListsIds"
+                    },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        {
+                                            $in: [
+                                                "$adventureListId",
+                                                "$$pids"
+                                            ]
+                                        },
+                                        {
+                                            $eq: [
+                                                "$adventureId",
+                                                "$$adventureId"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                lists: {
+                                    $addToSet: "$adventureListId"
+                                }
+                            }
+                        }
+                    ],
+                    as: "adventureListIds"
+                }
+            },
+            {
+                $unwind:
+                {
+                    path: "$adventureListIds",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $set:
+                {
+                    adventureListIds:
+                        "$adventureListIds.lists"
+                }
+            },
+            {
+                $unset:
+                    ["adventureListsIds", "playlistsIds"]
+            },
+            {
+                $set: {
+                    adventureListIds: {
+                        $ifNull: ["$adventureListIds", []]
+                    }
+                }
+            }
+
+
+        );
     }
 
     //Feld "isLikedByUser" basierend auf der Anzahl der gefundenen Likes setzen

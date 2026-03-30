@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
@@ -71,9 +71,11 @@ export default defineNuxtConfig({
   },
   app: {
     keepalive: {
-      max: 1,
       //Include only the front page / index.vue
-      include: ['index'],
+      exclude: [
+        "adventure-drafts",
+        "adventure-drafts-[draftId]",
+      ]
     },
     head: {
       title: 'Adventures - Finde und erstelle spannende Outdoor-Abenteuer',

@@ -1,7 +1,7 @@
 <template>
   <main>
     <header
-      class="sticky top-0 bg-card text-card-foreground shadow-xl rounded-b-lg py-2 flex w-full z-20 max-w-3xl mx-auto border-b"
+      class="sticky top-0 bg-card text-card-foreground shadow-xl rounded-b-lg py-2 flex w-full z-20 max-w-2xl mx-auto border-b"
     >
       <AppNavigationGoBackButton :variant="'ghost'" :size="'icon'" />
       <div class="min-w-0 flex-1">

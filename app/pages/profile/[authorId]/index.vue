@@ -27,12 +27,8 @@
 
 
       <div class="w-full h-72 flex justify-center items-center">
-        <img
-          v-if="userData.backgroundPictureId"
-          :src="toPicturePath(userData.backgroundPictureId)"
-          :alt="$t('common_background_image') as string"
-          class="w-full h-full object-cover"
-        />
+        <img v-if="userData.backgroundPictureId" :src="toPicturePath(userData.backgroundPictureId)"
+          :alt="$t('common_background_image') as string" class="w-full h-full object-cover" />
         <ImageOffIcon v-else class="text-muted-foreground" />
       </div>
 
@@ -42,11 +38,8 @@
             <AvatarFallback>
               <ImageOff />
             </AvatarFallback>
-            <AvatarImage
-              v-if="userData.profilePictureId"
-              :src="toPicturePath(userData.profilePictureId)"
-              :alt="$t('common_profile_picture') as string"
-            />
+            <AvatarImage v-if="userData.profilePictureId" :src="toPicturePath(userData.profilePictureId)"
+              :alt="$t('common_profile_picture') as string" />
           </Avatar>
           <div class="min-w-0 flex-1">
             <h1 class="text-lg font-bold truncate">
@@ -61,21 +54,20 @@
         <RekaTabsRoot :default-value="useRoute().hash.slice(1) || 'about'" class="flex flex-col">
           <RekaTabsList class="relative shrink-0 flex mb-4 bg-accent p-2 rounded-lg" :aria-label="$t('tabs_aria')">
             <RekaTabsIndicator
-              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300"
-            >
+              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300">
               <div class="bg-primary w-full h-full"></div>
             </RekaTabsIndicator>
-            <RekaTabsTrigger
-              value="about"
-              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
-            >
+            <RekaTabsTrigger value="about"
+              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium">
               {{ $t('tabs_about') }}
             </RekaTabsTrigger>
-            <RekaTabsTrigger
-              value="adventures"
-              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium"
-            >
+            <RekaTabsTrigger value="adventures"
+              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium">
               {{ $t('tabs_adventures') }}
+            </RekaTabsTrigger>
+            <RekaTabsTrigger value="adventurelists"
+              class="flex-1 flex items-center justify-center data-[state=active]:text-primary data-[state=active]:font-medium">
+              {{ $t('tabs_adventure_lists') }}
             </RekaTabsTrigger>
           </RekaTabsList>
           <RekaTabsContent value="about">
@@ -94,10 +86,8 @@
                   {{ userData.biography }}
                 </p>
               </div>
-              <Empty
-                v-if="!userData.biography && (!userData.interests || userData.interests.length === 0)"
-                class="pt-6"
-              >
+              <Empty v-if="!userData.biography && (!userData.interests || userData.interests.length === 0)"
+                class="pt-6">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
                     <ImageOffIcon />
@@ -112,6 +102,9 @@
           </RekaTabsContent>
           <RekaTabsContent value="adventures">
             <AppAdventuresListByAuthor :author-id="authorId" />
+          </RekaTabsContent>
+          <RekaTabsContent value="adventurelists">
+            <LazyAppPlaylistsPublicShowPlaylists />
           </RekaTabsContent>
         </RekaTabsRoot>
       </div>
@@ -129,4 +122,11 @@ const { $t, td } = useI18n();
 const authorId = useRoute().params.authorId as string;
 
 const { data: userData, error } = await useFetch(`/api/v1/app/profile/${authorId}/public`);
+
+useHead({
+  title: userData.value ? userData.value.name : $t('common_app_name') as string,
+  titleTemplate(title) {
+    return title ? `${title} - ${$t('common_app_name')}` : $t('common_app_name') as string;
+  },
+});
 </script>
