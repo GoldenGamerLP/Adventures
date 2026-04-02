@@ -37,6 +37,7 @@
 
         <!-- Actions -->
         <div class="flex items-center gap-1">
+          <AppPlaylistsAddToPlaylistDialog :adventure="adventure" />
           <AppAdventuresLikeButton
             :is-liked="adventure.isLikedByUser"
             :adventure-id="adventure._id"
@@ -128,14 +129,19 @@
             {{ adventure.author.name }}
           </p>
           <p class="text-sm text-muted-foreground">
-            {{ $t('component_adventures_view_author') }}
+            {{ $t('common_view_profile') }}
           </p>
         </div>
         <ChevronRight class="h-5 w-5 text-muted-foreground shrink-0" />
       </NuxtLink>
 
       <div class="text-xs text-muted-foreground text-right">
-        {{ $t('component_adventures_created_at', { date: td(adventure.createdAt, { dateStyle: 'medium', timeStyle: 'short' }) }) }}
+        {{ $t('component_adventures_created_at', {
+          date: td(adventure.createdAt, {
+            dateStyle: 'medium', timeStyle:
+              'short'
+          })
+        }) }}
       </div>
     </section>
   </main>
@@ -146,12 +152,12 @@ import type { AdventureWithMeta } from '#shared/types/AdventureTypes';
 import { toPicturePath } from "#shared/utils/SharedUtils";
 import { useShare } from '@vueuse/core';
 import {
-  ChevronRight,
-  HouseHeartIcon,
-  MapPin,
-  MapPinnedIcon,
-  Share2,
-  Signal
+    ChevronRight,
+    HouseHeartIcon,
+    MapPin,
+    MapPinnedIcon,
+    Share2,
+    Signal
 } from 'lucide-vue-next';
 
 const props = defineProps<{

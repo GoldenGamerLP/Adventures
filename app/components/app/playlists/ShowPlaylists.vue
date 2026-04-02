@@ -7,11 +7,25 @@
             <AppMiscImagesPreview :preview-images="playlist.previewImages" class="size-16 rounded-lg" />
           </ItemMedia>
           <ItemContent>
-            <ItemTitle>{{ playlist.name }}</ItemTitle>
-            <ItemDescription>{{ playlist.description }}</ItemDescription>
+            <ItemTitle>
+              <template v-if="isVirtual(playlist)">
+                {{ $t(playlist.name) }}
+              </template>
+              <template v-else>
+                {{ playlist.name }}
+              </template>
+            </ItemTitle>
+            <ItemDescription>
+              <template v-if="isVirtual(playlist)">
+                {{ $t(playlist.description!) }}
+              </template>
+              <template v-else>
+                {{ playlist.description }}
+              </template>
+            </ItemDescription>
             <div class="flex gap-2">
               <Badge variant="secondary">
-                {{ $t('component_playlists_entry_count', { count: playlist.entryCount }) }}
+                {{ $tc('component_playlists_entry_count', { count: playlist.entryCount }) }}
               </Badge>
               <Badge variant="secondary">
                 {{ $t('component_playlists_type', { type: playlist.listType }) }}
@@ -48,4 +62,8 @@ const { data: playlists, error } = await useFetch(`/api/v1/app/playlists/own`, {
     mode: 'private',
   },
 });
+
+const isVirtual = (playlist: AdventureList) => {
+  return playlist.listType === 'virtual';
+};
 </script>

@@ -129,4 +129,8 @@ useHead({
     return title ? `${title} - ${$t('common_app_name')}` : $t('common_app_name') as string;
   },
 });
+
+definePageMeta({
+  layout: 'navigation-bar',
+});
 </script>

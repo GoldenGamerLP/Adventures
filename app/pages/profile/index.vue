@@ -25,12 +25,16 @@
       <div class="sticky top-0">
         <div class="w-full h-48 sm:h-72 flex justify-center items-center ">
           <template v-if="userData.backgroundPictureId">
-            <img :src="toPicturePath(userData.backgroundPictureId)" alt="Hintergrundbild"
-              class="w-full h-full object-cover" />
+            <img
+              :src="toPicturePath(userData.backgroundPictureId)"
+              alt="Hintergrundbild"
+              class="w-full h-full object-cover"
+            />
           </template>
           <template v-else>
             <div
-              class="w-full h-full bg-linear-to-r from-primary/20 to-secondary/20 rounded-lg border-2 border-dashed border-muted flex flex-col items-center justify-center gap-2">
+              class="w-full h-full bg-linear-to-r from-primary/20 to-secondary/20 rounded-lg border-2 border-dashed border-muted flex flex-col items-center justify-center gap-2"
+            >
               <ImageOffIcon class="size-6 text-muted-foreground" />
               <span class="text-sm text-muted-foreground">{{ $t('common_no_background_image') }}</span>
             </div>
@@ -65,21 +69,29 @@
         <RekaTabsRoot :default-value="useRoute().hash.slice(1) || 'about'" class="flex flex-col">
           <RekaTabsList
             class="relative shrink-0 flex mb-4 bg-accent p-1.5 rounded-lg text-sm overflow-x-auto overflow-y-hidden"
-            aria-label="Profil-Tabs">
+            aria-label="Profil-Tabs"
+          >
             <RekaTabsIndicator
-              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300">
+              class="absolute px-8 left-0 h-0.5 bottom-0 w-(--reka-tabs-indicator-size) translate-x-(--reka-tabs-indicator-position) translate-y-px rounded-t-lg transition-all duration-300"
+            >
               <div class="bg-primary w-full h-full"></div>
             </RekaTabsIndicator>
-            <RekaTabsTrigger value="about"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
+            <RekaTabsTrigger
+              value="about"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
+            >
               {{ $t('tabs_about') }}
             </RekaTabsTrigger>
-            <RekaTabsTrigger value="adventures"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
+            <RekaTabsTrigger
+              value="adventures"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
+            >
               {{ $t('tabs_adventures') }}
             </RekaTabsTrigger>
-            <RekaTabsTrigger value="playlists"
-              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium">
+            <RekaTabsTrigger
+              value="playlists"
+              class="flex-1 flex items-center justify-center py-1.5 rounded-md data-[state=active]:text-primary data-[state=active]:font-medium"
+            >
               {{ $t('tabs_playlists') }}
             </RekaTabsTrigger>
           </RekaTabsList>
@@ -113,8 +125,11 @@
                   <AvatarFallback>
                     <ImageOffIcon class="size-5" />
                   </AvatarFallback>
-                  <AvatarImage v-if="userData.profilePictureId" :src="toPicturePath(userData.profilePictureId)"
-                    alt="Profilbild" />
+                  <AvatarImage
+                    v-if="userData.profilePictureId"
+                    :src="toPicturePath(userData.profilePictureId)"
+                    alt="Profilbild"
+                  />
                 </Avatar>
                 <div class="flex flex-col min-w-0 flex-1">
                   <span class="text-sm font-semibold">{{ $t('common_profile_picture') }}</span>
@@ -136,7 +151,7 @@
 
           <!-- Playlists -->
           <RekaTabsContent value="playlists">
-            <AppPlaylistsShowPlaylists :for="'own'" />
+            <AppPlaylistsShowPlaylists />
           </RekaTabsContent>
         </RekaTabsRoot>
       </div>

@@ -1,27 +1,39 @@
 <template>
-    <Dialog v-model:open="isOpen">
-        <DialogTrigger as-child>
-            <Button variant="ghost" size="icon" @click.stop.prevent>
-                <component :is="computedIsInAnyPlaylist ? BookmarkCheck : Bookmark" />
-                <span class="sr-only">
-                    Add to adevnture list
-                </span>
-            </Button>
-        </DialogTrigger>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>{{ $t('component_playlists_add_to_playlist') }}
-                </DialogTitle>
-                <DialogDescription>
-                    {{ $t('component_playlists_add_to_playlist_description', { adventure: props.adventure.title }) }}
-                </DialogDescription>
-            </DialogHeader>
-            <div>
-                <LazyAppPlaylistsSelectPlaylistView @playlist-selected="addAdventureToPlaylist" :disabled="isLoading"
-                    :adventure-lists="foundPlaylistIds" />
-            </div>
-        </DialogContent>
-    </Dialog>
+  <Dialog v-model:open="isOpen">
+    <DialogTrigger as-child>
+      <Button
+        variant="ghost"
+        size="icon"
+        :disabled="!user"
+        @click.stop.prevent
+      >
+        <component :is="computedIsInAnyPlaylist ? BookmarkCheck : Bookmark" />
+        <span class="sr-only">
+          Add to adevnture list
+        </span>
+        <span v-if="user">
+          {{ foundPlaylistIds.length }}
+        </span>
+      </Button>
+    </DialogTrigger>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>
+          {{ $t('component_playlists_add_to_playlist') }}
+        </DialogTitle>
+        <DialogDescription>
+          {{ $t('component_playlists_add_to_playlist_description', { adventure: props.adventure.title }) }}
+        </DialogDescription>
+      </DialogHeader>
+      <div>
+        <LazyAppPlaylistsSelectPlaylistView
+          :disabled="isLoading"
+          :adventure-lists="foundPlaylistIds"
+          @playlist-selected="addAdventureToPlaylist"
+        />
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -31,6 +43,8 @@ import { toast } from 'vue-sonner';
 const props = defineProps<{
     adventure: AdventureWithMeta;
 }>();
+
+const user = useUser();
 
 const foundPlaylistIds = ref(props.adventure.adventureListIds || []);
 const isOpen = ref(false);

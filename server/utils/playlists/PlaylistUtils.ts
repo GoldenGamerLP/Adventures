@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
-import { AdventureListCreateInput } from "~~/shared/schema/AdventureListSchema";
-import { GetPlaylistsByAdventureQueryType } from "~~/shared/schema/PlaylistSchema";
+import type { AdventureListCreateInput, ChangeAdventureOrderInput, DeleteAdventureListInput, UpdateAdventureListInput } from "~~/shared/schema/AdventureListSchema";
+import type { GetPlaylistsByAdventureQueryType } from "~~/shared/schema/PlaylistSchema";
 import type { AdventureListEntry, AdventureListWithMeta } from "~~/shared/types/AdventureListsTypes";
 import { getLikedAdventuresByUserId, hydrateLikedAdevnturesList } from "../adventures/LikeUtils";
 import { getHistoryEntries, hydrateHistoryAdventuresList } from "../adventures/ViewsUtils";
@@ -9,8 +9,8 @@ import { getCollection } from "../database/DBUtils";
 
 export const DEFAULT_LIKED_LIST = (userId: string): VirtualList => ({
     _id: `sys:liked:${userId}`,
-    name: "Liked Adventures",
-    description: "A collection of adventures you've liked.",
+    name: "components_playlists_liked_title",
+    description: "components_playlists_liked_description",
     listType: "virtual",
     systemKey: "liked",
     ownerId: userId,
@@ -19,8 +19,8 @@ export const DEFAULT_LIKED_LIST = (userId: string): VirtualList => ({
 //TODO: Translation der Namen und Beschreibungen der System-Playlists
 export const DEFAULT_HISTORY_LIST = (userId: string): VirtualList => ({
     _id: `sys:history:${userId}`,
-    name: "History",
-    description: "A collection of adventures you've viewed.",
+    name: "components_playlists_history_title",
+    description: "components_playlists_history_description",
     listType: "virtual",
     systemKey: "history",
     ownerId: userId,
@@ -61,6 +61,42 @@ export const createPlaylist = async (user: string, data: AdventureListCreateInpu
     };
 
     await playlistDB.insertOne(newPlaylist);
+}
+
+export const deletePlaylist = async (data: DeleteAdventureListInput): Promise<void> => {
+    const playlistDB = await getPlaylistDB();
+    const playlistEntriesDB = await getPlaylistEntriesDB();
+
+    const playlist = await playlistDB.findOneAndDelete({ _id: data.adventureListId, ownerId: data.userId });
+
+    if (!playlist) {
+        throw new Error("Playlist not found or user is not the owner");
+    }
+
+    await playlistEntriesDB.deleteMany({ adventureListId: data.adventureListId });
+}
+
+export const updatePlaylist = async (data: UpdateAdventureListInput): Promise<void> => {
+    const playlistDB = await getPlaylistDB();
+    const updateData: Partial<UserList> = { ...data, updatedAt: new Date().toISOString() };
+
+    const result = await playlistDB.updateOne({ _id: data.adventureListId, ownerId: data.userId }, { $set: updateData });
+    if (result.matchedCount === 0) {
+        throw new Error("Playlist not found or user is not the owner");
+    }
+}
+
+export const removeAdventureFromPlaylist = async (adventurelistid: string, adventureentryid: string): Promise<void> => {
+    const playlistEntriesDB = await getPlaylistEntriesDB();
+
+    //Benutzen von entryId da es mehrere Einträge mit adventureId geben kann (wenn force add aktiviert ist, duplikate)
+    await playlistEntriesDB.deleteMany({ adventureListId: adventurelistid, _id: adventureentryid });
+}
+
+export const changeAdventureOrderInPlaylist = async (data: ChangeAdventureOrderInput): Promise<void> => {
+    const playlistEntriesDB = await getPlaylistEntriesDB();
+
+    await playlistEntriesDB.updateOne({ adventureListId: data.adventureListId, _id: data.adventureEntryId }, { $set: { order: data.newOrder, updatedAt: new Date().toISOString() } });
 }
 
 export const getPlaylistByUserId = async (userId: string, query: GetPlaylistsByAdventureQueryType): Promise<AdventureListWithMeta[]> => {

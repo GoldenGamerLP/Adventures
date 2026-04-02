@@ -30,10 +30,16 @@ const toggleColorMode = () => {
 </script>
 
 <template>
-  <Button :variant="props.variant" :size="props.size" :class="props.class" @click="toggleColorMode">
+  <Button
+    :variant="props.variant"
+    :size="props.size"
+    :class="props.class"
+    @click="toggleColorMode"
+  >
     <Transition name="fade" mode="out-in">
       <component
-        :is="colorMode.currentColorMode.value === 'light' ? Sun : colorMode.currentColorMode.value === 'dark' ? Moon : Laptop" />
+        :is="colorMode.currentColorMode.value === 'light' ? Sun : colorMode.currentColorMode.value === 'dark' ? Moon : Laptop"
+      />
     </Transition>
     <span class="sr-only">
       {{ colorMode.currentColorMode.value === 'light' ? "Switch to dark mode" : "Switch to light mode" }}

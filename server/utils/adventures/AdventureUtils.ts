@@ -483,6 +483,113 @@ const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise
                 isLikedByUser: { $cond: { if: { $isArray: "$userLikes" }, then: { $gt: [{ $size: "$userLikes" }, 0] }, else: false } }
             }
         });
+
+        query.push(
+
+            {
+                $lookup:
+                {
+                    from: "adventure_lists",
+                    pipeline: [
+                        {
+                            $match: {
+                                ownerId: user._id
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                ids: {
+                                    $addToSet: "$_id"
+                                }
+                            }
+                        }
+                    ],
+                    as: "playlistsIds"
+                }
+            },
+            {
+                $unwind:
+                {
+                    path: "$playlistsIds"
+                }
+            },
+            {
+                $set:
+                {
+                    adventureListsIds: "$playlistsIds.ids"
+                }
+            },
+            {
+                $lookup:
+
+                {
+                    from: "adventure_list_entries",
+                    let: {
+                        adventureId: "$_id",
+                        pids: "$adventureListsIds"
+                    },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        {
+                                            $in: [
+                                                "$adventureListId",
+                                                "$$pids"
+                                            ]
+                                        },
+                                        {
+                                            $eq: [
+                                                "$adventureId",
+                                                "$$adventureId"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                lists: {
+                                    $addToSet: "$adventureListId"
+                                }
+                            }
+                        }
+                    ],
+                    as: "adventureListIds"
+                }
+            },
+            {
+                $unwind:
+                {
+                    path: "$adventureListIds",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $set:
+                {
+                    adventureListIds:
+                        "$adventureListIds.lists"
+                }
+            },
+            {
+                $unset:
+                    ["adventureListsIds", "playlistsIds"]
+            },
+            {
+                $set: {
+                    adventureListIds: {
+                        $ifNull: ["$adventureListIds", []]
+                    }
+                }
+            }
+
+
+        );
     }
 
     query.push({
