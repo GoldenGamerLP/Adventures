@@ -3,5 +3,5 @@
 	"error_description": "Die angeforderte Playlist existiert nicht oder ist nicht öffentlich zugänglich.",
 	"sr_options": "Playlist-Optionen",
 	"preview_image_alt": "Vorschaubild",
-	"owner_created_by": "von {name} erstellt",
+	"owner_created_by": "von {name} erstellt"
 }

@@ -1,5 +1,22 @@
 <template>
-  <div v-if="playlists?.length">
+  <ItemGroup>
+    <Item>
+      <ItemMedia variant="icon">
+        <PlusIcon />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>{{ $t('component_playlists_new_playlist') }}</ItemTitle>
+        <ItemDescription>{{ $t('component_playlists_create_new_description') }}</ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <AppPlaylistsCreatePlaylistDialog>
+          <Button variant="outline">
+            {{ $t('component_playlists_new_playlist_create') }}
+          </Button>
+        </AppPlaylistsCreatePlaylistDialog>
+      </ItemActions>
+    </Item>
+    <ItemSeparator />
     <template v-for="(playlist, index) in playlists" :key="playlist._id">
       <NuxtLink :to="`/profile/${playlist.ownerId}/playlists/${playlist._id}`">
         <Item class="hover:bg-accent">
@@ -36,8 +53,8 @@
       </NuxtLink>
       <ItemSeparator v-if="index < playlists!.length - 1" />
     </template>
-  </div>
-  <Empty v-else>
+  </ItemGroup>
+  <Empty v-if="playlists && playlists.length === 0">
     <EmptyHeader>
       <EmptyMedia variant="icon">
         <ListChecksIcon />
@@ -51,11 +68,12 @@
 </template>
 
 <script setup lang="ts">
-import { ListChecksIcon } from 'lucide-vue-next';
+import { ListChecksIcon, PlusIcon } from 'lucide-vue-next';
 
 const { $t } = useI18n();
 
 const { data: playlists, error } = await useFetch(`/api/v1/app/playlists/own`, {
+  key: 'playlists-own',
   method: "GET",
   query: {
     includeVirtual: true,

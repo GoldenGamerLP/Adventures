@@ -29,9 +29,7 @@
               <DropdownMenuSeparator />
               <DropdownMenuItem>Berechtigungen</DropdownMenuItem>
               <DropdownMenuItem>Mitglieder</DropdownMenuItem>
-              <DropdownMenuItem>
-
-              </DropdownMenuItem>
+              <DropdownMenuItem />
             </DropdownMenuContent>
           </DropdownMenu>
         </nav>
@@ -59,8 +57,11 @@
                   <AvatarFallback>
                     <ImageOff />
                   </AvatarFallback>
-                  <AvatarImage v-if="playlistInfo.owner.profilePictureId"
-                    :src="toPicturePath(playlistInfo.owner.profilePictureId)" alt="Profilbild" />
+                  <AvatarImage
+                    v-if="playlistInfo.owner.profilePictureId"
+                    :src="toPicturePath(playlistInfo.owner.profilePictureId)"
+                    alt="Profilbild"
+                  />
                 </Avatar>
                 {{ $t('owner_created_by', { name: playlistInfo.owner.name }) }}
               </div>
@@ -108,7 +109,7 @@
           </header>
           <div class="flex flex-col gap-4 bg-card rounded-b-lg">
             <template v-for="entry in playlist" :key="entry._id">
-              <AppPlaylistsPlaylistEntry :entry="entry!" @entry:delete="deleteEntry" :isVirtual="isVirtual" />
+              <AppPlaylistsPlaylistEntry :entry="entry!" :is-virtual="isVirtual" @entry:delete="deleteEntry" />
             </template>
           </div>
         </main>

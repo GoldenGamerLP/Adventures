@@ -103,7 +103,7 @@ export const getPlaylistByUserId = async (userId: string, query: GetPlaylistsByA
     const playlistDB = await getPlaylistDB();
 
     const visibilityFilter = getHigherOrderVisibility(query.mode) as ("private" | "unlisted" | "public")[];
-    const result = await playlistDB.find({ ownerId: userId, visibility: { $in: visibilityFilter } }).toArray();
+    const result = await playlistDB.find({ ownerId: userId, visibility: { $in: visibilityFilter } }).sort({ createdAt: -1 }).toArray();
 
     const playlistsWithMeta = result.map(hydratePlaylistWithMeta);
     if (query.includeVirtual && query.mode === "private") {

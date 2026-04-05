@@ -159,13 +159,17 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
             {
                 $unwind:
                 {
-                    path: "$playlistsIds"
+                    path: "$playlistsIds",
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
                 $set:
                 {
-                    adventureListsIds: "$playlistsIds.ids"
+                    playlistsIds: {
+                        $ifNull: ["$playlistsIds.ids", []]
+                    }
+
                 }
             },
             {
@@ -175,7 +179,7 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
                     from: "adventure_list_entries",
                     let: {
                         adventureId: "$_id",
-                        pids: "$adventureListsIds"
+                        pids: "$playlistsIds"
                     },
                     pipeline: [
                         {
@@ -207,36 +211,24 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
                             }
                         }
                     ],
-                    as: "adventureListIds"
+                    as: "playlistsIds"
                 }
             },
             {
                 $unwind:
                 {
-                    path: "$adventureListIds",
+                    path: "$playlistsIds",
                     preserveNullAndEmptyArrays: true
                 }
             },
             {
                 $set:
                 {
-                    adventureListIds:
-                        "$adventureListIds.lists"
-                }
-            },
-            {
-                $unset:
-                    ["adventureListsIds", "playlistsIds"]
-            },
-            {
-                $set: {
                     adventureListIds: {
-                        $ifNull: ["$adventureListIds", []]
+                        $ifNull: ["$playlistsIds.lists", []]
                     }
                 }
-            }
-
-
+            },
         );
     }
 
@@ -418,8 +410,9 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
         }
     }
 
-    const response = await adventureDB.aggregate<AdventureWithMeta>(query).limit(limit).toArray();
-    return Promise.all(response.map(enrichAdventureWithViews));
+    const response = await adventureDB.aggregate<AdventureWithMeta>(query).limit(limit);
+    const results = await response.toArray();
+    return Promise.all(results.map(enrichAdventureWithViews));
 }
 
 const enrichAdventureWithViews = async (adventure: AdventureWithMeta): Promise<AdventureWithMeta> => {

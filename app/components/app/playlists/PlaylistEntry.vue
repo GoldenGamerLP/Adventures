@@ -1,9 +1,11 @@
 <template>
   <Item>
     <ItemMedia variant="image">
-      <img v-if="entry.populatedAdventure!.pictureIds.length > 0"
+      <img
+        v-if="entry.populatedAdventure!.pictureIds.length > 0"
         :src="toPicturePath(entry.populatedAdventure!.pictureIds[0])"
-        :alt="$t('component_playlists_entry_image_alt') as string" />
+        :alt="$t('component_playlists_entry_image_alt') as string"
+      />
     </ItemMedia>
     <ItemContent>
       <ItemTitle>{{ entry.populatedAdventure!.title }}</ItemTitle>
@@ -26,7 +28,12 @@
             {{ $t('common_view') }}
           </NuxtLink>
         </Button>
-        <Button variant="link" color="destructive" @click="$emit('entry:delete', entry._id)" v-if="!props.isVirtual">
+        <Button
+          v-if="!props.isVirtual"
+          variant="link"
+          color="destructive"
+          @click="$emit('entry:delete', entry._id)"
+        >
           {{ $t('common_delete') }}
         </Button>
       </ButtonGroup>

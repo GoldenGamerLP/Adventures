@@ -22,7 +22,7 @@
     </EmptyHeader>
     <EmptyContent>
       <Button as-child>
-        <NuxtLink>
+        <NuxtLink to="/" prefetch>
           {{ $t('actions_back') }}
         </NuxtLink>
       </Button>
