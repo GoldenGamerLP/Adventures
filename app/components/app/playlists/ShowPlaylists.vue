@@ -6,7 +6,7 @@
       </ItemMedia>
       <ItemContent>
         <ItemTitle>{{ $t('component_playlists_new_playlist') }}</ItemTitle>
-        <ItemDescription>{{ $t('component_playlists_create_new_description') }}</ItemDescription>
+        <ItemDescription>{{ $t('component_playlists_new_playlist_description') }}</ItemDescription>
       </ItemContent>
       <ItemActions>
         <AppPlaylistsCreatePlaylistDialog>
