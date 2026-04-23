@@ -2,6 +2,22 @@ import type { EventSchedule } from "#shared/types/EventTypes";
 import type { GeoLocation } from "#shared/types/GeoTypes";
 import type { UserSummary } from "./UserProfileTypes";
 
+export interface AdventureSource {
+    provider: 'user' | 'wikipedia';
+}
+
+export interface UserAdventureSource extends AdventureSource {
+    provider: 'user';
+    userId: string; // ID des Users, der das Adventure erstellt hat
+}
+
+export interface WikipediaAdventureSource extends AdventureSource {
+    provider: 'wikipedia';
+    wikipediaPageId: string; // z.B. "Q12345"
+    externalUrl?: string;    // z.B. Link zum Original
+    attribution?: string;    // Wichtig für ODbL / CC-Lizenzen
+}
+
 //Interface for protoyping purposes
 export interface Adventure {
     _id: string;
@@ -17,8 +33,11 @@ export interface Adventure {
     pictureIds: string[];
     tags: AdventureTypeKey[];
     authorId: string;
-    draftId: string;
+    draftId?: string; // Optional: Seed-Adventures durchlaufen nicht zwingend den Draft-Prozess
     visibility: 'public' | 'private' | 'unlisted';
+
+    // --- Future Proofing & Seeding ---
+    source: AdventureSource;
 }
 
 export interface AdventureWithMeta extends Adventure {

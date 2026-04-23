@@ -9,6 +9,7 @@ import { getCollection } from "../database/DBUtils";
 import { deleteFile, getFileStream, uploadFileFromWeb } from "../database/FileUtils";
 
 const getPictureDB = async () => getCollection<Picture>("pictures");
+const seedingBucketId = 'seeding_uploads';
 
 /**
  * Erstellt Indexes für Picture-Collection
@@ -29,6 +30,38 @@ export async function ensurePictureIndexes(): Promise<void> {
     // TODO: In Zukunft
 
     console.log('[PictureUtils] Picture indexes created');
+}
+
+const uploadSeedingPictures = async (files: File[]): Promise<any[]> => {
+    const pictureDatabase = await getPictureDB();
+    const uploadedPictures: any[] = [];
+
+    for (const file of files) {
+        const fileId = new ObjectId();
+        await uploadFileFromWeb(fileId, file, seedingBucketId);
+
+        const picture: any = {
+            _id: new ObjectId().toString(),
+            fileId: fileId.toString(),
+            bucketId: seedingBucketId,
+            status: 'published', // Seeding-Bilder werden direkt als veröffentlicht markiert
+            uploadedBy: 'seeding', // Spezieller User für Seeding-Bilder
+            uploadedAt: new Date().toISOString(),
+            publishedAt: new Date().toISOString(),
+            adventureId: `seed-${new ObjectId().toString()}`,
+            meta: {
+                contentType: file.type,
+                fileName: file.name,
+                lastModified: new Date(file.lastModified).toISOString(),
+                size: file.size,
+            },
+        };
+
+        await pictureDatabase.insertOne(picture);
+        uploadedPictures.push(picture);
+    }
+
+    return uploadedPictures;
 }
 
 /**
@@ -288,7 +321,7 @@ const deleteAllDraftPictures = async (draftId: string): Promise<number> => {
  * Öffnet einen Download-Stream für ein Bild
  */
 const openDownloadStreamForPicture = (picture: Picture) => {
-    return getFileStream(new ObjectId(picture.fileId));
+    return getFileStream(new ObjectId(picture.fileId), picture.bucketId || 'uploads');
 };
 
 // ============= Legacy Functions (für Abwärtskompatibilität) =============
@@ -370,6 +403,7 @@ export {
     deleteAllDraftPictures, deleteDraftPicture, getFileFromPictureId, getPictureById, getPictureFromBucket, getPicturesByAdventureId, getPicturesByDraftId, markPicturesAsPublished, openDownloadStreamForPicture, promotePicturesToPublished, removeDecorationPictures, storeDecorationalUserPicture,
     // Neue API
     uploadDraftPictures,
+    uploadSeedingPictures,
     // Legacy API
     uploadPictures
 };

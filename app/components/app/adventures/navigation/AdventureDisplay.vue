@@ -1,42 +1,30 @@
 <template>
-  <NuxtLink
-    :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id }, query: useRoute().query }"
+  <NuxtLink :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id }, query: useRoute().query }"
     class="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md"
-    prefetch
-  >
+    prefetch>
     <Carousel v-slot="{ carouselApi }" class="relative w-full">
       <CarouselContent>
         <CarouselItem v-for="picture in adventure.pictureIds" :key="picture">
-          <img
-            :src="toPicturePath(picture)"
-            :alt="String(t('component_adventures_image_alt'))"
-            loading="lazy"
-            class="h-72 w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-          />
+          <img :src="toPicturePath(picture)" :alt="String(t('component_adventures_image_alt'))" loading="lazy"
+            class="h-72 w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
         </CarouselItem>
       </CarouselContent>
       <div class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between p-3">
         <AppAdventuresTagsSelectorGraphic :selected-tags="adventure.tags" class="max-w-[75%]" />
-        <Badge
-          variant="secondary"
-          class="border border-background/60 bg-background/85 text-[11px] shadow-sm backdrop-blur"
-        >
+        <Badge variant="secondary"
+          class="border border-background/60 bg-background/85 text-[11px] shadow-sm backdrop-blur">
           <Eye class="size-3.5" />
           {{ adventure.viewCount.totalViews }}
         </Badge>
       </div>
       <div class="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-card/90 to-transparent">
       </div>
-      <ol
-        v-if="(carouselApi?.scrollSnapList().length || 0) > 1"
-        class="absolute bottom-2.5 left-1/2 z-30 flex -translate-x-1/2 gap-1.5 bg-muted/60 px-3 rounded-full"
-      >
+      <ol v-if="(carouselApi?.scrollSnapList().length || 0) > 1"
+        class="absolute bottom-2.5 left-1/2 z-30 flex -translate-x-1/2 gap-1.5 bg-muted/60 px-3 rounded-full">
         <li v-for="(_, index) in carouselApi?.scrollSnapList()" :key="index" class="inline-block">
-          <button
-            class="size-2 rounded-full transition-all duration-200"
+          <button class="size-2 rounded-full transition-all duration-200"
             :aria-label="String(t('component_adventures_carousel_image_of_total', { current: index + 1, total: carouselApi?.scrollSnapList().length ?? 0 }))"
-            :class="carouselApi?.selectedScrollSnap() === index ? 'bg-primary w-4' : 'bg-muted-foreground'"
-          ></button>
+            :class="carouselApi?.selectedScrollSnap() === index ? 'bg-primary w-4' : 'bg-muted-foreground'"></button>
         </li>
       </ol>
     </Carousel>
@@ -47,10 +35,8 @@
           <button class="text-xs font-medium text-muted-foreground p-0.5" @click.stop.prevent="goToAuthor()">
             {{ t('component_adventures_author_prefix', { name: adventure.author.name }) }}
           </button>
-          <h2
-            class="line-clamp-1 text-base font-semibold leading-snug"
-            :style="{ 'view-transition-name': `adventure-title-${adventure._id}` }"
-          >
+          <h2 class="line-clamp-1 text-base font-semibold leading-snug"
+            :style="{ 'view-transition-name': `adventure-title-${adventure._id}` }">
             {{ adventure.title }}
           </h2>
           <p class="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
@@ -59,11 +45,8 @@
         </div>
         <div class="shrink-0">
           <AppPlaylistsAddToPlaylistDialog :adventure="adventure" class="ml-auto" />
-          <AppAdventuresLikeButton
-            :is-liked="adventure.isLikedByUser"
-            :adventure-id="adventure._id"
-            :likes-count="adventure.likesCount"
-          />
+          <AppAdventuresLikeButton :is-liked="adventure.isLikedByUser" :adventure-id="adventure._id"
+            :likes-count="adventure.likesCount" />
         </div>
       </div>
 
@@ -93,14 +76,11 @@
         <div>
           <Popover v-if="adventure.location?.coordinates">
             <PopoverTrigger as-child>
-              <button
-                type="button"
+              <button type="button"
                 class="w-full rounded-lg border bg-muted/40 px-2.5 py-2 text-left transition-colors hover:bg-muted/60"
-                @click.stop.prevent
-              >
+                @click.stop.prevent>
                 <div
-                  class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-                >
+                  class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   <MapPin class="size-3" />
                   {{ adventure.location.distance ? t('component_adventures_tile_distance') :
                     t('component_adventures_tile_location') }}
@@ -114,13 +94,8 @@
             </PopoverTrigger>
             <PopoverContent class="w-72 overflow-hidden p-0" side="top">
               <ClientOnly>
-                <LMap
-                  :zoom="13"
-                  :center="adventure.location.coordinates"
-                  class="h-44 aspect-square w-full"
-                  style="z-index: 0"
-                  :use-global-leaflet="false"
-                >
+                <LMap :zoom="13" :center="adventure.location.coordinates" class="h-44 aspect-square w-full"
+                  style="z-index: 0" :use-global-leaflet="false">
                   <LTileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <LMarker :lat-lng="adventure.location.coordinates" />
                 </LMap>
@@ -132,8 +107,7 @@
           </Popover>
           <div v-else class="rounded-lg border bg-muted/40 px-2.5 py-2">
             <div
-              class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-            >
+              class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               <MapPin class="size-3" />
               {{ t('component_adventures_tile_category') }}
             </div>
@@ -167,15 +141,16 @@
 import { formatDistance, formatDurationRange, toPicturePath } from '#shared/utils/SharedUtils';
 import {
   Activity,
-  ArrowLeftRight,
   CalendarDays,
   Eye,
   Home,
   MapPin,
   Repeat2,
+  ScaleIcon,
   Timer,
-  TreePine,
+  TreePine
 } from 'lucide-vue-next';
+import { useLocale } from 'reka-ui';
 import type { AdventureWithMeta } from '~~/shared/types/AdventureTypes';
 
 const props = defineProps<{
@@ -200,7 +175,7 @@ const difficultyConfig = computed(() => difficultyConfigs[props.adventure.diffic
 const categoryConfigs = {
   indoor: { labelKey: 'component_adventures_category_indoor', icon: Home },
   outdoor: { labelKey: 'component_adventures_category_outdoor', icon: TreePine },
-  mixed: { labelKey: 'component_adventures_category_mixed', icon: ArrowLeftRight },
+  mixed: { labelKey: 'component_adventures_category_mixed', icon: ScaleIcon },
 } as const;
 const categoryConfig = computed(() => categoryConfigs[props.adventure.category]);
 
@@ -216,7 +191,7 @@ const shortLocation = computed(() => {
 });
 
 // Schedule summary with full written dates
-const dateFormatter = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long' });
+const dateFormatter = new Intl.DateTimeFormat(useLocale().value, { day: 'numeric', month: 'long' });
 
 const scheduleSummary = computed(() => {
   const { schedule } = props.adventure;

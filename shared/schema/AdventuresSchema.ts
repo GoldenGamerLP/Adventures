@@ -32,3 +32,19 @@ export const AdventureStartEditSchema = z.object({
 export const AdventureGetByIdSchema = z.object({
     adventureId: ObjectIdSchema,
 });
+
+export const AdventureUserSourceSchema = z.object({
+    type: z.literal('user'),
+    userId: ObjectIdSchema,
+});
+
+export const WikipediaAdventureSourceSchema = z.object({
+    type: z.literal('wikipedia'),
+    wikipediaPageId: z.string(),
+    externalUrl: z.string().url(),
+    attribution: z.string().optional(),
+});
+
+export const AdventureSource = z.union([AdventureUserSourceSchema, WikipediaAdventureSourceSchema]);
+
+export type AdventureSource = z.infer<typeof AdventureUserSourceSchema> | z.infer<typeof WikipediaAdventureSourceSchema>;

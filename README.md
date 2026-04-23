@@ -7,6 +7,10 @@ Adventures is a platform for sharing and discovering outdoor and indoor activiti
 
 ## TODO
 
+- Seeding pipeline verebssern! Bessere Fehlerbehandlung, Logging, Fortschrittsanzeige, und ganz wichtig: die Möglichkeit, bereits genehmigte Abenteuer zu aktualisieren, ohne dass sie ihren Status verlieren.
+- Seeding: Noch mehr Daten anzeigen
+- Bessere reviewed anzeige, auhtor Id auflösen und zeit anzeigen wann es reviewd wurde + ändern des statuss (approved, rejected) ermöglichen
+
 - Crop Editor für Bilder
 - Kommentare/Bewertungssystem
 - Auf Profil Seite die Abenteuer in Kartenansicht anzeigen

@@ -14,6 +14,9 @@ interface PictureBase {
     /** GridFS File-ID */
     fileId: string;
 
+    /** Optionaler GridFS Bucket-Name (Standard: uploads) */
+    bucketId?: string;
+
     /** User der das Bild hochgeladen hat */
     uploadedBy: string;
 

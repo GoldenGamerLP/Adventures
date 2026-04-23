@@ -23,7 +23,7 @@ export interface GeoLocation {
     type: 'Point';
     displayname: string;
     name?: string;
-    coordinates: [number, number];
+    coordinates: [number, number]; // [latitude, longitude]
     address?: Record<string, string>;
 }
 

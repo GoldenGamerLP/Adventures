@@ -86,7 +86,8 @@
               <FormItem>
                 <FormLabel>{{ t('component_drafts_form_title_label') }}</FormLabel>
                 <FormControl>
-                  <Input type="text" :placeholder="t('component_drafts_form_title_placeholder')" v-bind="componentField" />
+                  <Input type="text" :placeholder="t('component_drafts_form_title_placeholder')"
+                    v-bind="componentField" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -96,12 +97,8 @@
               <FormItem>
                 <FormLabel>{{ t('component_drafts_form_description_label') }}</FormLabel>
                 <FormControl>
-                  <Textarea
-                    :placeholder="t('component_drafts_form_description_placeholder')"
-                    v-bind="componentField"
-                    rows="4"
-                    class="resize-none"
-                  />
+                  <Textarea :placeholder="t('component_drafts_form_description_placeholder')" v-bind="componentField"
+                    rows="4" class="resize-none" />
                 </FormControl>
                 <FormDescription>
                   {{ (values.description?.length || 0) }}/1000 {{ t('component_drafts_form_characters') }}
@@ -114,11 +111,8 @@
               <FormItem>
                 <FormLabel>{{ t('component_drafts_form_tags_label') }}</FormLabel>
                 <FormControl>
-                  <TagsSelector
-                    :max="MAX_SELECTORS_SELECTED"
-                    :model-value="field.value"
-                    @update:model-value="handleChange"
-                  />
+                  <TagsSelector :max="MAX_SELECTORS_SELECTED" :model-value="field.value"
+                    @update:model-value="handleChange" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -140,12 +134,8 @@
                 <FormItem>
                   <FormLabel>{{ t('component_search_filter_difficulty') }}</FormLabel>
                   <FormControl>
-                    <ToggleGroup
-                      variant="outline"
-                      type="single"
-                      class="grid grid-cols-3 w-full"
-                      v-bind="componentField"
-                    >
+                    <ToggleGroup variant="outline" type="single" class="grid grid-cols-3 w-full"
+                      v-bind="componentField">
                       <ToggleGroupItem value="easy" class="data-[state=on]:bg-green-500/20">
                         {{ t('component_search_filter_difficulty_easy') }}
                       </ToggleGroupItem>
@@ -165,18 +155,18 @@
                 <FormItem>
                   <FormLabel>{{ t('component_drafts_form_category_label') }}</FormLabel>
                   <FormControl>
-                    <ToggleGroup
-                      variant="outline"
-                      type="single"
-                      class="grid grid-cols-2 w-full"
-                      v-bind="componentField"
-                    >
+                    <ToggleGroup variant="outline" type="single" class="grid grid-cols-2 w-full"
+                      v-bind="componentField">
                       <ToggleGroupItem value="outdoor">
-                        <Sun class="h-4 w-4 mr-1" />
+                        <Sun />
                         {{ t('component_adventures_category_outdoor') }}
                       </ToggleGroupItem>
+                      <ToggleGroupItem value="mixed">
+                        <ScaleIcon />
+                        {{ t('component_adventures_category_mixed') }}
+                      </ToggleGroupItem>
                       <ToggleGroupItem value="indoor">
-                        <Home class="h-4 w-4 mr-1" />
+                        <Home />
                         {{ t('component_adventures_category_indoor') }}
                       </ToggleGroupItem>
                     </ToggleGroup>
@@ -207,11 +197,9 @@
 
                       <ol class="mt-2 flex flex-wrap gap-4">
                         <li v-for="location in foundLocations" :key="location.name">
-                          <Badge
-                            variant="secondary"
+                          <Badge variant="secondary"
                             :class="cn('cursor-pointer', isGeoLocationSame(location, value) ? 'border-primary bg-primary/10' : '')"
-                            @click="setValue(location)"
-                          >
+                            @click="setValue(location)">
                             <component :is="isGeoLocationSame(location, value) ? MapPinCheck : MapPin" />
                             <span class="max-w-32 line-clamp-1">
                               {{ location.displayname }}
@@ -232,13 +220,8 @@
                     <!-- Map Preview -->
                     <div class="h-48 sm:h-64 w-full rounded-lg overflow-hidden border bg-muted mt-4">
                       <template v-if="field.value?.coordinates">
-                        <LMap
-                          :zoom="13"
-                          :center="field.value.coordinates"
-                          class="h-full w-full z-0"
-                          :use-global-leaflet="false"
-                          @ready="setMap"
-                        >
+                        <LMap :zoom="13" :center="field.value.coordinates" class="h-full w-full z-0"
+                          :use-global-leaflet="false" @ready="setMap">
                           <LTileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                           <LMarker :lat-lng="field.value.coordinates" />
                         </LMap>
@@ -303,12 +286,8 @@
                   </p>
                 </div>
                 <FormControl>
-                  <ToggleGroup
-                    type="single"
-                    variant="outline"
-                    v-bind="componentField"
-                    class="flex flex-nowrap overflow-x-hidden"
-                  >
+                  <ToggleGroup type="single" variant="outline" v-bind="componentField"
+                    class="flex flex-nowrap overflow-x-hidden">
                     <ToggleGroupItem value="private">
                       <EyeOffIcon />
                       {{ t('component_drafts_form_visibility_private') }}
@@ -333,22 +312,12 @@
     <!-- Mobile Footer -->
     <footer class="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t p-4 sm:hidden z-10">
       <div class="max-w-4xl mx-auto flex gap-2">
-        <Button
-          type="submit"
-          class="flex-1"
-          :disabled="isPublishing"
-          @click="onSubmit"
-        >
+        <Button type="submit" class="flex-1" :disabled="isPublishing" @click="onSubmit">
           <Loader2 v-if="isPublishing" class="h-4 w-4 mr-2 animate-spin" />
           <Send v-else class="h-4 w-4 mr-2" />
           {{ t('component_drafts_form_publish') }}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          :disabled="isSaving"
-          @click="saveNow"
-        >
+        <Button type="button" variant="outline" :disabled="isSaving" @click="saveNow">
           <Loader2 v-if="isSaving" class="h-4 w-4 animate-spin" />
           <Save v-else class="h-4 w-4" />
         </Button>
@@ -365,12 +334,7 @@
           </NuxtLink>
         </Button>
         <div class="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            :disabled="isSaving"
-            @click="saveNow"
-          >
+          <Button type="button" variant="outline" :disabled="isSaving" @click="saveNow">
             <Loader2 v-if="isSaving" class="h-4 w-4 mr-2 animate-spin" />
             <Save v-else class="h-4 w-4 mr-2" />
             {{ t('common_actions_save') }}
@@ -401,7 +365,7 @@ import {
   Loader2,
   MapPin,
   MapPinCheck,
-  Save, Send,
+  Save, ScaleIcon, Send,
   Settings,
   Sun,
   Trash2,

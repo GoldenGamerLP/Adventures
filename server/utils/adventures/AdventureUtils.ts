@@ -1,13 +1,23 @@
 import { ObjectId } from "mongodb";
 import { DEFAULT_MAX_SEARCH_RADIUS_KM } from "~~/shared/constants/Constants";
 import type { AdventuresQueryFilterType } from "~~/shared/schema/AdventuresSchema";
-import type { Adventure, AdventureWithMeta } from "~~/shared/types/AdventureTypes";
+import type { Adventure, AdventureCategory, AdventureWithMeta } from "~~/shared/types/AdventureTypes";
 import type { AdventureDraft } from "~~/shared/types/DraftTypes";
 import type { UserSummary } from "~~/shared/types/UserProfileTypes";
 import { getCollection } from "../database/DBUtils";
 import { getViewCounter } from "./ViewsUtils";
 
 const getAdventureDB = async () => getCollection<Adventure>('adventures');
+
+const normalizeSchedule = (schedule: AdventureDraft['formData']['schedule']): Adventure['schedule'] => ({
+    type: schedule.type,
+    estimatedDuration: schedule.estimatedDuration,
+    isApproximate: schedule.isApproximate,
+    repeatsAnnually: schedule.repeatsAnnually,
+    slots: schedule.slots,
+    startDate: schedule.startDate ? schedule.startDate.toISOString() : undefined,
+    endDate: schedule.endDate ? schedule.endDate.toISOString() : undefined,
+});
 
 export const ensureAdventureIndexes = async (): Promise<void> => {
     //Index für schnelle Abfragen nach DraftId
@@ -24,7 +34,7 @@ export const ensureAdventureIndexes = async (): Promise<void> => {
 }
 
 
-const createAdventure = async (adventure: Omit<Adventure, '_id' | 'createdAt' | 'updatedAt'>): Promise<Adventure> => {
+export const createAdventure = async (adventure: Omit<Adventure, '_id' | 'createdAt' | 'updatedAt'>): Promise<Adventure> => {
     //Erstelle neues Adventure-Dokument oder Aktualisiere ein bestehendes
     const adventureDB = await getAdventureDB();
 
@@ -48,7 +58,7 @@ const createAdventure = async (adventure: Omit<Adventure, '_id' | 'createdAt' | 
 const getAdventureById = async (id: string): Promise<Adventure | null> => {
     const adventureDB = await getAdventureDB();
 
-    return await adventureDB.findOne({ _id: id });
+    return await adventureDB.findOne({ _id: id }) as Adventure | null;
 }
 
 const validateAdventureOwnership = async (adventureId: string, userId: string): Promise<boolean> => {
@@ -70,7 +80,7 @@ const updateAdventure = async (id: string, updates: Partial<Omit<Adventure, '_id
 
 const getAllAdventures = async (): Promise<Adventure[]> => {
     const adventureDB = await getAdventureDB();
-    return await adventureDB.find().toArray();
+    return await adventureDB.find().toArray() as Adventure[];
 }
 
 const publishFromDraft = async (draft: AdventureDraft): Promise<Adventure> => {
@@ -78,14 +88,17 @@ const publishFromDraft = async (draft: AdventureDraft): Promise<Adventure> => {
         title: draft.formData.title!,
         description: draft.formData.description!,
         location: draft.formData.location,
-        schedule: draft.formData.schedule,
+        schedule: normalizeSchedule(draft.formData.schedule),
         difficulty: draft.formData.difficulty!,
-        category: draft.formData.category!,
+        category: draft.formData.category! as AdventureCategory,
         pictureIds: draft.pictureIds,
-        tags: draft.formData.tags || [],
+        tags: (draft.formData.tags || []) as Adventure['tags'],
         authorId: draft.authorId,
         draftId: draft._id,
         visibility: draft.formData.visibility!,
+        source: {
+            provider: 'user',
+        },
     });
 }
 
@@ -695,7 +708,6 @@ const getAdventuresByAuthor = async (authorId: string, user?: UserSummary, visib
 }
 
 export {
-    createAdventure,
     getAdventureById, getAdventureByIdWithMeta, getAdventuresByAuthor, getAdventuresByFilterAndUser, getAllAdventures, publishFromDraft, updateAdventure, validateAdventureOwnership
 };
 
