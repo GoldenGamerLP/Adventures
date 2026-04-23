@@ -403,8 +403,7 @@ export {
     deleteAllDraftPictures, deleteDraftPicture, getFileFromPictureId, getPictureById, getPictureFromBucket, getPicturesByAdventureId, getPicturesByDraftId, markPicturesAsPublished, openDownloadStreamForPicture, promotePicturesToPublished, removeDecorationPictures, storeDecorationalUserPicture,
     // Neue API
     uploadDraftPictures,
-    uploadSeedingPictures,
     // Legacy API
-    uploadPictures
+    uploadPictures, uploadSeedingPictures
 };
 
