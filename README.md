@@ -135,6 +135,20 @@ yarn dev
 bun run dev
 ```
 
+## Adventure Source Migration
+
+Falls Alt-Daten noch `source.type` oder `authorId` enthalten, kann die Source-Struktur mit folgendem Skript normalisiert werden:
+
+```bash
+npm run migrate:adventure-source
+```
+
+Das Skript:
+- migriert `source.type` zu `source.provider`
+- entfernt veraltetes `authorId` aus `adventures`, `seeding_adventures` und `seeding_approvals`
+- ergänzt bei alten User-Adventures `source.userId` aus `authorId`
+- entfernt ungültige `source.review`-Felder bei `provider: user`
+
 ## Production
 
 Build the application for production:

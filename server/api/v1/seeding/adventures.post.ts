@@ -1,6 +1,6 @@
 import { createKeyedError } from "~~/server/utils/errors/ApiErrorUtils";
 import { uploadSeedingPictures } from "~~/server/utils/pictures/PictureUtils";
-import { assertSeedingApiKey, createSeedingAdventure } from "~~/server/utils/seeding/SeedingUtils";
+import { assertSeedingApiKey, createSeedingAdventure, seedingExists } from "~~/server/utils/seeding/SeedingUtils";
 import { APP_ERROR_CODES } from "~~/shared/constants/Constants";
 import { SeedingAdventureUploadSchema } from "~~/shared/schema/SeedingSchema";
 
@@ -19,7 +19,6 @@ export default defineEventHandler(async (event) => {
         location: formData.get('location'),
         schedule: formData.get('schedule'),
         visibility: formData.get('visibility'),
-        authorId: formData.get('authorId'),
         source: formData.get('source'),
         pictures,
     };
@@ -30,6 +29,10 @@ export default defineEventHandler(async (event) => {
         throw createKeyedError(400, APP_ERROR_CODES.SEEDING_INVALID_PAYLOAD, {
             issues: error.issues,
         });
+    }
+
+    if (await seedingExists(data.title)) {
+        throw createKeyedError(409, APP_ERROR_CODES.SEEDING_INVALID_PAYLOAD);
     }
 
     const uploadedPictures = await uploadSeedingPictures(data.pictures);

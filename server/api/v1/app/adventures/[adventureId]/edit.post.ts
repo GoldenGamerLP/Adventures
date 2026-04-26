@@ -1,5 +1,4 @@
-import { validateAdventureOwnership } from "~~/server/utils/adventures/AdventureUtils";
-import { getOrCreateNewEditableDraft } from "~~/server/utils/adventures/DraftUtils";
+import { createEditableDraftFromAdventure } from "~~/server/utils/adventures/DraftUtils";
 import { AdventureStartEditSchema } from "~~/shared/schema/AdventuresSchema";
 
 export default defineEventHandler(async (event) => {
@@ -16,14 +15,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const { adventureId } = data;
-    
-    const isOwner = await validateAdventureOwnership(adventureId, user._id);
 
-    if (!isOwner) {
-        throw createError({ statusCode: 403, statusMessage: 'Forbidden: You do not own this adventure' });
-    }
-
-    const draft = await getOrCreateNewEditableDraft(adventureId, user._id);
+    const draft = await createEditableDraftFromAdventure(adventureId, user._id);
 
     return draft._id;
 });

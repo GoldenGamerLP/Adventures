@@ -1,3 +1,4 @@
+import type { UserPermissionRoles } from "./AuthenticationTypes";
 
 export type UserProfile = {
     _id: string;         // gleiche ID wie User
@@ -17,6 +18,7 @@ export type UserSummary = {
     name: string;
     profilePictureId?: string;
     createdAt: Date | string;
+    roles: UserPermissionRoles[];
 }
 
 export type UserProfileWithMeta = UserProfile & UserSummary;

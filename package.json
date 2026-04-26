@@ -9,7 +9,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "preload": "node -e \"import('geolite2-redist').then(geolite => geolite.downloadDbs())\"",
-    "lint": "eslint --fix"
+    "lint": "eslint --fix",
+    "migrate:adventure-source": "node data/migrate-adventure-source.mjs"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
@@ -20,6 +21,7 @@
     "@nuxtjs/tailwindcss": "7.0.0-beta.1",
     "@nuxtjs/turnstile": "^1.1.2",
     "@pinia/nuxt": "0.11.3",
+    "@tanstack/vue-virtual": "^3.13.24",
     "@vee-validate/zod": "^4.15.1",
     "@vueuse/core": "^14.2.1",
     "class-variance-authority": "^0.7.1",

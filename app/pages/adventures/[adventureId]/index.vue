@@ -21,29 +21,16 @@
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
-      <Button as-child>
-        <NuxtLink to="/" prefetch>
-          {{ $t('actions_back') }}
-        </NuxtLink>
-      </Button>
+      <AppNavigationGoBackButton>
+        {{ $t('actions_back') }}
+      </AppNavigationGoBackButton>
     </EmptyContent>
-    <Button
-      variant="link"
-      as-child
-      class="text-muted-foreground"
-      size="sm"
-    >
-      <a href="#">
-        {{ $t('actions_support') }}
-        <ArrowUpRightIcon />
-      </a>
-    </Button>
   </Empty>
   <AppAdventuresAdventureView v-else :adventure="adventure!" />
 </template>
 
 <script lang="ts" setup>
-import { ArrowUpRightIcon, SearchAlertIcon } from 'lucide-vue-next';
+import { SearchAlertIcon } from 'lucide-vue-next';
 
 const { $t } = useI18n();
 
@@ -55,7 +42,6 @@ const { data: adventure, error, pending } = await useFetch<AdventureWithMeta>(
   {
     method: 'GET',
     query: route.query,
-    lazy: true,
   }
 );
 

@@ -1,8 +1,6 @@
 <template>
-  <main>
-    <header
-      class="sticky top-0 bg-card text-card-foreground shadow-xl rounded-b-lg py-2 flex w-full z-20 max-w-2xl mx-auto border-b"
-    >
+  <main class="mx-auto max-w-2xl">
+    <header class="sticky top-0 bg-card text-card-foreground shadow rounded-b-lg py-2 flex w-full z-20 border-b">
       <AppNavigationGoBackButton :variant="'ghost'" :size="'icon'" />
       <div class="min-w-0 flex-1">
         <h1
@@ -17,11 +15,15 @@
       </div>
     </header>
 
-    <section class="py-2 sticky top-18 max-w-2xl mx-auto w-full">
-      <AppAdventuresDynamicGallery :images="adventure.pictureIds" />
+    <section class="w-full mt-4 sticky top-16 overflow-hidden rounded-lg">
+      <AppMiscImageScrollGallery
+        :picture-ids="adventure.pictureIds"
+        :style="{ 'view-transition-name': `adventure-image-${adventure._id}` }"
+        @click-image="(index) => openLightbox(index)"
+      />
     </section>
 
-    <section class="max-w-2xl mx-auto w-full flex flex-col gap-6 py-4 px-4 bg-card rounded-lg shadow relative">
+    <section class="w-full flex flex-col gap-6 py-4 px-4 bg-card rounded-lg shadow relative">
       <!-- Quick Info Bar -->
       <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
         <div class="flex items-center gap-4 text-sm text-muted-foreground">
@@ -111,6 +113,7 @@
       </div>
 
       <NuxtLink
+        v-if="adventure.source.provider === 'user'"
         :to="`/profile/${adventure.author._id}`"
         class="flex items-center gap-3 p-3 -mx-3 rounded-lg hover:bg-accent transition-colors"
       >
@@ -135,7 +138,7 @@
         <ChevronRight class="h-5 w-5 text-muted-foreground shrink-0" />
       </NuxtLink>
 
-      <div class="text-xs text-muted-foreground text-right">
+      <div v-if="adventureSourceIsUser(adventure.source)" class="text-xs text-muted-foreground text-right">
         {{ $t('component_adventures_created_at', {
           date: td(adventure.createdAt, {
             dateStyle: 'medium', timeStyle:
@@ -143,26 +146,42 @@
           })
         }) }}
       </div>
+      <div v-if="adventureSourceIsReview(adventure.source)" class="text-xs text-muted-foreground text-right">
+        {{ $t('component_adventures_imported_from_wikipedia_at', {
+          date: td(adventure.createdAt, {
+            dateStyle: 'medium', timeStyle:
+              'short'
+          }),
+          author: adventure.author.name,
+          source: adventure.source.wikipediaPageId,
+          attribution: adventure.source.attribution || 'N/A'
+        }) }}
+      </div>
     </section>
   </main>
+  <LazyAppMiscLightbox ref="lightboxRef" :images="adventure.pictureIds" />
 </template>
 
 <script lang="ts" setup>
-import type { AdventureWithMeta } from '#shared/types/AdventureTypes';
+import type { AdventureWithMeta, UserAdventureSource } from '#shared/types/AdventureTypes';
 import { toPicturePath } from "#shared/utils/SharedUtils";
 import { useShare } from '@vueuse/core';
 import {
-    ChevronRight,
-    HouseHeartIcon,
-    MapPin,
-    MapPinnedIcon,
-    Share2,
-    Signal
+  ChevronRight,
+  HouseHeartIcon,
+  MapPin,
+  MapPinnedIcon,
+  Share2,
+  Signal
 } from 'lucide-vue-next';
+import type { AdventureSource } from '~~/shared/schema/AdventuresSchema';
+import type Lightbox from '../misc/Lightbox.vue';
 
 const props = defineProps<{
   adventure: AdventureWithMeta;
 }>();
+
+const lightboxRef = ref<InstanceType<typeof Lightbox>>();
 
 const { $t, td } = useI18n();
 
@@ -178,6 +197,18 @@ const openShareDialog = () => {
   share();
 }
 
+const openLightbox = (index: number) => {
+  lightboxRef.value?.open(index);
+};
+
+const adventureSourceIsUser = (source: AdventureSource): source is UserAdventureSource => {
+  return source.provider === 'user';
+};
+
+const adventureSourceIsReview = (source: AdventureSource): source is WikipediaAdventureSource => {
+  return source.provider === 'wikipedia';
+};
+
 
 const getDifficultyLabel = (difficulty: string): string => {
   const labels: Record<string, string> = {
@@ -189,7 +220,16 @@ const getDifficultyLabel = (difficulty: string): string => {
 };
 
 const isOwner = computed(() => {
-  return props.adventure.authorId === useUser().value?._id;
+  const currentUserId = useUser().value?._id;
+  if (!currentUserId) {
+    return false;
+  }
+
+  if (props.adventure.source.provider === 'user') {
+    return props.adventure.source.userId === currentUserId;
+  }
+
+  return props.adventure.source.review?.reviewerId === currentUserId;
 });
 
 

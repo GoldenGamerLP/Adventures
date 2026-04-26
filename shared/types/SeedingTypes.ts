@@ -1,5 +1,4 @@
-import type { AdventureSource } from "../schema/AdventuresSchema";
-import type { AdventureCategory, AdventureTypeKey } from "./AdventureTypes";
+import type { AdventureCategory, AdventureSource, AdventureTypeKey } from "./AdventureTypes";
 import type { EventSchedule } from "./EventTypes";
 import type { GeoLocation } from "./GeoTypes";
 
@@ -18,7 +17,6 @@ export interface AdventureSeedData {
     updatedAt: Date;
     pictureIds: string[];
     tags: AdventureTypeKey[];
-    authorId: string;
     draftId?: string; // Optional: Seed-Adventures durchlaufen nicht zwingend den Draft-Prozess
     visibility: 'public' | 'private' | 'unlisted';
     status: SeedingStatus;

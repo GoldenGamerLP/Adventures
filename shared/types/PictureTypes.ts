@@ -17,6 +17,7 @@ interface PictureBase {
     /** Optionaler GridFS Bucket-Name (Standard: uploads) */
     bucketId?: string;
 
+
     /** User der das Bild hochgeladen hat */
     uploadedBy: string;
 
@@ -48,8 +49,8 @@ export interface PictureMeta {
 export interface DraftPicture extends PictureBase {
     status: 'draft';
 
-    /** Referenz zum AdventureDraft */
-    draftId: string;
+    /** ContentId - Eindeutige ID die auf entweder ein Draft oder Adventure zeigt, Draft & Adventure haben die gleiche Id. */
+    contentId: string;
 
     ttl: Date; // Zeit in Sekunden bis das Bild automatisch gelöscht wird (für TTL-Index)
 }
@@ -64,24 +65,13 @@ export interface UserSourcePicture extends PictureBase {
 export interface PublishedPicture extends PictureBase {
     status: 'published';
 
-    /** Referenz zum Adventure */
-    adventureId: string;
+    /** ContentId - Eindeutige ID die auf entweder ein Draft oder Adventure zeigt, Draft & Adventure haben die gleiche Id. */
+    contentId: string;
 
     /** Zeitpunkt der Veröffentlichung */
     publishedAt: string;
 }
 
-/**
- * Discriminated Union für alle Picture-Typen
- * Ermöglicht Type-Narrowing basierend auf status
- * 
- * @example
- * if (picture.status === 'draft') {
- *   console.log(picture.draftId); // TypeScript kennt draftId
- * } else {
- *   console.log(picture.adventureId); // TypeScript kennt adventureId
- * }
- */
 export type Picture = DraftPicture | PublishedPicture | UserSourcePicture;
 
 /**
@@ -108,7 +98,6 @@ export function isUserSourcePicture(picture: Picture): picture is UserSourcePict
 export interface CreatePictureInput {
     fileId: string;
     uploadedBy: string;
-    draftId: string;
     meta: PictureMeta;
 }
 

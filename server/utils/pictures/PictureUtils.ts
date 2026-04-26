@@ -94,7 +94,7 @@ const uploadDraftPictures = async (
             _id: new ObjectId().toString(),
             fileId: fileId.toString(),
             status: 'draft',
-            draftId,
+            contentId: draftId, // contentId ist die gleiche wie draftId für Draft-Bilder
             uploadedBy: userId,
             uploadedAt: new Date().toISOString(),
             meta: {
@@ -195,16 +195,16 @@ const promotePicturesToPublished = async (
         {
             _id: { $in: pictureIds },
             status: 'draft',
-            draftId,
+            contentId: draftId,
         },
         {
             $set: {
                 status: 'published',
-                adventureId,
+                contentId: adventureId,
                 publishedAt: now,
             },
             $unset: {
-                draftId: '',
+                contentId: '',
             },
         }
     );
@@ -219,7 +219,7 @@ const getPicturesByDraftId = async (draftId: string): Promise<DraftPicture[]> =>
     const pictureDatabase = await getPictureDB();
 
     const pictures = await pictureDatabase
-        .find({ draftId } as Partial<DraftPicture>)
+        .find({ contentId: draftId } as Partial<DraftPicture>)
         .toArray();
 
     return pictures as DraftPicture[];
@@ -232,7 +232,7 @@ const getPicturesByAdventureId = async (adventureId: string): Promise<PublishedP
     const pictureDatabase = await getPictureDB();
 
     const pictures = await pictureDatabase
-        .find({ status: 'published', adventureId } as Partial<PublishedPicture>)
+        .find({ status: 'published', contentId: adventureId } as Partial<PublishedPicture>)
         .toArray();
 
     return pictures as PublishedPicture[];
@@ -243,7 +243,7 @@ const markPicturesAsPublished = async (draft: { _id: string }): Promise<void> =>
 
     const now = new Date().toISOString();
     await pictureDatabase.updateMany(
-        { status: 'draft', draftId: draft._id },
+        { status: 'draft', contentId: draft._id },
         {
             $set: {
                 status: 'published',
@@ -275,7 +275,7 @@ const deleteDraftPicture = async (
     const picture = await pictureDatabase.findOne({
         _id: pictureId,
         status: 'draft',
-        draftId,
+        contentId: draftId,
         uploadedBy: userId,
     } as Partial<DraftPicture>);
 
@@ -311,7 +311,7 @@ const deleteAllDraftPictures = async (draftId: string): Promise<number> => {
     // Lösche alle Dokumente
     const result = await pictureDatabase.deleteMany({
         status: 'draft',
-        draftId
+        contentId: draftId
     } as Partial<DraftPicture>);
 
     return result.deletedCount;

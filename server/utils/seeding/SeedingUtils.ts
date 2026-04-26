@@ -2,7 +2,7 @@ import { getRequestHeaders } from "h3";
 import { ObjectId } from "mongodb";
 import { APP_ERROR_CODES } from "~~/shared/constants/Constants";
 import type { SeedingAdventureUploadInput, SeedingDecisionInput } from "~~/shared/schema/SeedingSchema";
-import type { Adventure } from "~~/shared/types/AdventureTypes";
+import type { Adventure, AdventureSource } from "~~/shared/types/AdventureTypes";
 import type { AdventureSeedData, SeedingDecision, SeedingStatus } from "~~/shared/types/SeedingTypes";
 import { createAdventure } from "../adventures/AdventureUtils";
 import { getCollection } from "../database/DBUtils";
@@ -49,7 +49,6 @@ const mapUploadToSeedRecord = (
         updatedAt: now,
         pictureIds,
         tags: input.tags as AdventureSeedData['tags'],
-        authorId: input.authorId,
         draftId: undefined,
         visibility: input.visibility,
         status: 'pending',
@@ -72,6 +71,12 @@ export const listSeedingAdventures = async (status?: SeedingStatus): Promise<Adv
         .toArray();
 };
 
+export const seedingExists = async (title: string): Promise<boolean> => {
+    const database = await getSeedingAdventureDatabase();
+    const existing = await database.countDocuments({ title });
+    return existing > 0;
+};
+
 export const createSeedingAdventure = async (input: SeedingAdventureUploadInput, pictureIds: string[]): Promise<AdventureSeedData> => {
     const database = await getSeedingAdventureDatabase();
     const now = new Date();
@@ -79,8 +84,8 @@ export const createSeedingAdventure = async (input: SeedingAdventureUploadInput,
 
     const result = await database.findOneAndUpdate(
         {
-            'source.type': input.source.type,
-            ...(input.source.type === 'wikipedia'
+            'source.provider': input.source.provider,
+            ...(input.source.provider === 'wikipedia'
                 ? { 'source.wikipediaPageId': input.source.wikipediaPageId }
                 : { 'source.userId': input.source.userId }),
         },
@@ -158,6 +163,17 @@ export const approveOrRejectSeedingAdventure = async (decision: SeedingDecisionI
         return { seed: updatedSeed, decision: review };
     }
 
+    const adventureSource: AdventureSource = updatedSeed.source.provider === 'wikipedia'
+        ? {
+            ...updatedSeed.source,
+            review: {
+                reviewerId: review.reviewerId,
+                reviewedAt: review.reviewedAt,
+                decision: 'approved',
+            },
+        }
+        : updatedSeed.source;
+
     const adventure = await createAdventure({
         title: updatedSeed.title,
         description: updatedSeed.description,
@@ -167,12 +183,9 @@ export const approveOrRejectSeedingAdventure = async (decision: SeedingDecisionI
         category: updatedSeed.category,
         pictureIds: updatedSeed.pictureIds,
         tags: updatedSeed.tags,
-        authorId: updatedSeed.authorId,
-        draftId: updatedSeed._id,
-        visibility: updatedSeed.visibility,
-        source: {
-            provider: updatedSeed.source.type === 'wikipedia' ? 'wikipedia' : 'user',
-        },
+        visibility: 'public', // Seed-Adventures werden immer öffentlich, unabhängig von der ursprünglichen Sichtbarkeit
+        source: adventureSource,
+        createdAt: new Date(), // Das tatsächliche Erstellungsdatum des Adventures ist das Datum der Genehmigung
     });
 
     return {

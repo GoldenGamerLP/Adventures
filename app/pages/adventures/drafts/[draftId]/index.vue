@@ -11,11 +11,9 @@
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
-      <Button as-child>
-        <NuxtLink to="/adventures/drafts">
-          {{ $t('actions_back') }}
-        </NuxtLink>
-      </Button>
+      <LazyAppNavigationGoBackButton>
+        {{ $t('actions_back') }}
+      </LazyAppNavigationGoBackButton>
     </EmptyContent>
     <Button
       variant="link"

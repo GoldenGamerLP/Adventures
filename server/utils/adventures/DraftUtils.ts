@@ -10,7 +10,7 @@ import { DRAFT_CONFIG } from "~~/shared/constants/Constants";
 import { calculateCompletionPercent } from "~~/shared/utils/SharedUtils";
 import { getCollection } from "../database/DBUtils";
 import { markPicturesAsPublished } from "../pictures/PictureUtils";
-import { publishFromDraft } from "./AdventureUtils";
+import { getAdventureById, publishFromDraft } from "./AdventureUtils";
 
 const getDraftDB = async () => getCollection<AdventureDraft>('adventure_drafts');
 
@@ -53,7 +53,7 @@ export async function createDraft(input: CreateDraftInput): Promise<AdventureDra
         _id: new ObjectId().toString(),
         state: 'draft',
         authorId: input.authorId,
-        formData: {},
+        formData: {} as any,
         pictureIds: [],
         createdAt: now,
         updatedAt: now,
@@ -75,17 +75,31 @@ export async function createDraft(input: CreateDraftInput): Promise<AdventureDra
  * @returns 
  */
 export async function getOrCreateNewEditableDraft(adventureId: string, authorId: string): Promise<AdventureDraft> {
+    return createEditableDraftFromAdventure(adventureId, authorId);
+}
+
+/**
+ * Erstellt (oder lädt) einen Edit-Draft aus einem veröffentlichten Adventure.
+ * Funktioniert auch für genehmigte Seedings: bei Wikipedia-Quelle ist der Reviewer der Editor-Owner.
+ */
+export async function createEditableDraftFromAdventure(adventureId: string, requesterId: string): Promise<AdventureDraft> {
     const adventure = await getAdventureById(adventureId);
 
     if (!adventure) {
         throw createError({ statusCode: 404, statusMessage: 'Adventure not found' });
     }
 
+    const editorOwnerId = getEditableOwnerId(adventure);
+
+    if (editorOwnerId !== requesterId) {
+        throw createError({ statusCode: 403, statusMessage: 'Forbidden: You do not own this adventure' });
+    }
+
     const draftDB = await getDraftDB();
     const existingDraft = await draftDB.findOne({
-        _id: adventure.draftId,
-        authorId,
-        state: 'published', // Nur veröffentlichte Drafts sind gültige Edit-Drafts
+        _id: adventure._id, // Suche nach Draft mit gleicher ID wie Adventure (da Drafts und Adventures die gleiche ID haben)
+        authorId: requesterId,
+        state: 'published',
     });
 
     if (existingDraft) {
@@ -93,7 +107,6 @@ export async function getOrCreateNewEditableDraft(adventureId: string, authorId:
     }
 
     const newDraft = convertAdventureToDraft(adventure);
-
     await draftDB.insertOne(newDraft);
 
     return newDraft;
@@ -135,11 +148,11 @@ export async function getDraftWithMeta(
 }
 
 const enrichDraftWithPictures = async (draft: AdventureDraftWithMeta): Promise<AdventureDraftWithPictures> => {
-    const pictures = await getPicturesByDraftId(draft._id);
+    const registeredPictures = await getPicturesByDraftId(draft._id);
 
     return {
         ...draft,
-        pictures,
+        registeredPictures,
     };
 };
 
@@ -306,11 +319,12 @@ export async function publishDraft(
 
 function convertAdventureToDraft(adventure: Adventure): AdventureDraft {
     const now = new Date();
+    const ownerId = getEditableOwnerId(adventure);
 
     const draft: AdventureDraft = {
-        _id: adventure.draftId,
+        _id: adventure._id, // Verwende die gleiche ID wie das Adventure, damit die Verbindung zwischen beiden erhalten bleibt (z.B. für Bilder)
         state: 'published',
-        authorId: adventure.authorId,
+        authorId: ownerId,
         formData: {
             title: adventure.title,
             description: adventure.description,
@@ -320,7 +334,8 @@ function convertAdventureToDraft(adventure: Adventure): AdventureDraft {
             tags: adventure.tags,
             schedule: adventure.schedule,
             visibility: adventure.visibility,
-        },
+            pictureIds: adventure.pictureIds,
+        } as any,
         pictureIds: adventure.pictureIds,
         createdAt: now,
         updatedAt: now,
@@ -328,6 +343,21 @@ function convertAdventureToDraft(adventure: Adventure): AdventureDraft {
     };
 
     return draft;
+}
+
+function getEditableOwnerId(adventure: Adventure): string {
+    if (adventure.source.provider === 'user') {
+        return adventure.source.userId;
+    }
+
+    if (adventure.source.review?.reviewerId) {
+        return adventure.source.review.reviewerId;
+    }
+
+    throw createError({
+        statusCode: 409,
+        statusMessage: 'Adventure without editable owner source cannot be converted to draft',
+    });
 }
 
 /**

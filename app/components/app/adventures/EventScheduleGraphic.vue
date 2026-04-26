@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="text-lg font-semibold">
+    <h2 class="text-lg font-semibold mb-2">
       {{ $t('component_schedule_title') }}
     </h2>
 
@@ -57,7 +57,7 @@
       </Item>
     </template>
 
-    <template v-if="schedule.slots">
+    <template v-if="schedule.slots?.length">
       <div class="space-y-2 mt-4">
         <h3 class="text-sm font-medium">
           {{ $t('component_schedule_opening_hours') }}
@@ -98,13 +98,10 @@
           <div class="flex-1 h-2 bg-border mx-2 rounded-full relative overflow-hidden">
             <div class="absolute inset-y-0 rounded-full bg-primary transition-all" :style="durationBarStyle"></div>
           </div>
-          <div class="flex flex-col items-center text-xs text-muted-foreground shrink-0 w-6">
-            <FlagTriangleLeftIcon class="size-4" />
-          </div>
         </div>
 
         <!-- Scale labels -->
-        <div class="flex justify-between mt-1 px-6 text-xs text-muted-foreground font-mono">
+        <div class="flex justify-between mt-1 px-6 text-xs text-muted-foreground ml-4">
           <span>0h</span>
           <span>12h</span>
           <span>24h</span>
@@ -147,7 +144,6 @@ import {
   Calendar as CalendarIcon,
   CalendarPlusIcon,
   CalendarRange,
-  FlagTriangleLeftIcon,
   FlagTriangleRightIcon,
   InfinityIcon
 } from 'lucide-vue-next';
@@ -168,7 +164,7 @@ const durationBarPercent = computed(() => {
   const dur = props.schedule.estimatedDuration;
   const leftPer = (dur.min / MAX_ADVENTURE_DURATION_MINUTES) * 100;
   const rightPer = ((dur.max) / MAX_ADVENTURE_DURATION_MINUTES) * 100;
-  const midPer = Math.max(Math.min(leftPer + rightPer / 2, 90), 10);
+  const midPer = Math.max(Math.min(leftPer + rightPer / 2, 85), 15);
   return { midPer };
 });
 

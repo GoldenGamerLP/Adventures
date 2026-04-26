@@ -18,6 +18,11 @@ area(3600062761)->.nrw;
     ["wikidata"~"^Q[0-9]+$"]
     ["name"~".+"]
     (area.nrw);
+    node
+    ["tourism"="museum"]
+    ["wikidata"~"^Q[0-9]+$"]
+    ["name"~".+"]
+    (area.nrw);
 );
 out body geom;
 `;
@@ -31,8 +36,6 @@ const wikiDataRefinedDetailsFilePath = "data/wikiDataRefinedDetails.json";
 const imagesDirectory = "data/images";
 const seedingEndpoint = process.env.SEEDING_ENDPOINT || "http://localhost:3000/api/v1/seeding/adventures";
 const seedingApiKey = process.env.SEEDING_API_KEY || "";
-const seedingAuthorId = process.env.SEEDING_AUTHOR_ID || "seeding-script";
-const objectIdPattern = /^[0-9a-fA-F]{24}$/;
 
 interface RefinedAdventure {
     id: string;
@@ -336,7 +339,7 @@ const downloadImages = async () => {
         const element = refinedItems[i];
         const imagesUrls = element.pictures as string[];
 
-        for (let image of imagesUrls) {
+        for (const image of imagesUrls) {
             const splitName = image.split("/");
             const imageName = decodeURIComponent(splitName[splitName.length - 1]);
             const filePath = `${imagesDirectory}/${imageName}`;
@@ -435,16 +438,6 @@ const uploadToSeedingApi = async () => {
         return;
     }
 
-    if (!seedingAuthorId) {
-        console.warn("Skipping upload step: SEEDING_AUTHOR_ID is missing.");
-        return;
-    }
-
-    if (!objectIdPattern.test(seedingAuthorId) && false) {
-        console.warn("Skipping upload step: SEEDING_AUTHOR_ID must be a valid MongoDB ObjectId (24 hex chars).");
-        return;
-    }
-
     const data = await fs.readFile(wikiDataRefinedDetailsFilePath, { encoding: 'utf8' });
     const refinedItems = JSON.parse(data) as RefinedAdventure[];
     const uploadedWikiIds = new Set<string>();
@@ -512,9 +505,8 @@ const uploadToSeedingApi = async () => {
             slots: [],
         }));
         formData.set('visibility', 'unlisted');
-        //formData.set('authorId', seedingAuthorId);
         formData.set('source', JSON.stringify({
-            type: 'wikipedia',
+            provider: 'wikipedia',
             wikipediaPageId: item.id,
             externalUrl: item.wikipedia || `https://www.wikidata.org/wiki/${item.id}`,
             attribution: 'Wikidata / Wikimedia Commons',

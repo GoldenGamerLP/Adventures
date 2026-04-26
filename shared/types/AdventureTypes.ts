@@ -2,21 +2,31 @@ import type { EventSchedule } from "#shared/types/EventTypes";
 import type { GeoLocation } from "#shared/types/GeoTypes";
 import type { UserSummary } from "./UserProfileTypes";
 
-export interface AdventureSource {
+export interface AdventureSourceReview {
+    reviewerId: string;
+    reviewedAt: Date;
+    decision: 'approved' | 'rejected';
+    reason?: string;
+}
+
+export interface AdventureSourceBase {
     provider: 'user' | 'wikipedia';
 }
 
-export interface UserAdventureSource extends AdventureSource {
+export interface UserAdventureSource extends AdventureSourceBase {
     provider: 'user';
     userId: string; // ID des Users, der das Adventure erstellt hat
 }
 
-export interface WikipediaAdventureSource extends AdventureSource {
+export interface WikipediaAdventureSource extends AdventureSourceBase {
     provider: 'wikipedia';
     wikipediaPageId: string; // z.B. "Q12345"
     externalUrl?: string;    // z.B. Link zum Original
     attribution?: string;    // Wichtig für ODbL / CC-Lizenzen
+    review?: AdventureSourceReview;
 }
+
+export type AdventureSource = UserAdventureSource | WikipediaAdventureSource;
 
 //Interface for protoyping purposes
 export interface Adventure {
@@ -32,8 +42,8 @@ export interface Adventure {
     updatedAt: Date;
     pictureIds: string[];
     tags: AdventureTypeKey[];
-    authorId: string;
-    draftId?: string; // Optional: Seed-Adventures durchlaufen nicht zwingend den Draft-Prozess
+    //Draft id ist nun redundant da DraftId und AdventureId immer gleich sind.
+    //draftId?: string; // Optional: Seed-Adventures durchlaufen nicht zwingend den Draft-Prozess
     visibility: 'public' | 'private' | 'unlisted';
 
     // --- Future Proofing & Seeding ---

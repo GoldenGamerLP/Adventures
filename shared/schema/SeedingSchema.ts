@@ -41,7 +41,6 @@ export const SeedingAdventureUploadSchema = z.object({
         },
     })),
     visibility: z.enum(['public', 'private', 'unlisted']),
-    authorId: ObjectIdSchema.optional().nullable().default(""), // Optional, falls die Seeding-Quelle keinen spezifischen Author hat
     source: jsonValue(AdventureSourceSchema),
     pictures: z.array(fileSchema).max(DRAFT_CONFIG.MAX_PICTURES_PER_DRAFT).min(DRAFT_CONFIG.MIN_PICTURES_PER_DRAFT),
 });
@@ -60,7 +59,6 @@ export const SeedingAdventureRecordSchema = z.object({
     updatedAt: z.coerce.date(),
     pictureIds: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/, 'VALIDATION_OBJECT_ID_FORMAT')),
     tags: z.array(z.enum(ADVENTURE_TYPE_KEYS)).max(MAX_SELECTORS_SELECTED),
-    authorId: ObjectIdSchema.optional(), // Optional, falls die Seeding-Quelle keinen spezifischen Author hat
     draftId: ObjectIdSchema.optional(),
     visibility: z.enum(['public', 'private', 'unlisted']),
     status: z.enum(['pending', 'approved', 'rejected']),
@@ -75,7 +73,7 @@ export type SeedingAdventureRecordInput = z.infer<typeof SeedingAdventureRecordS
 export const SeedingDecisionSchema = z.object({
     adventureId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'VALIDATION_OBJECT_ID_FORMAT'),
     approved: z.boolean(),
-    reviewerId: ObjectIdSchema.optional(),
+    reviewerId: ObjectIdSchema,
     reason: z.string().max(1000).optional(),
     reviewedAt: z.coerce.date().default(() => new Date()),
 });
