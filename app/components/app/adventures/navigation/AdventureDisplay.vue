@@ -1,10 +1,14 @@
 <template>
-  <NuxtLink :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id }, query: useRoute().query }"
+  <NuxtLink
+    :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id }, query: useRoute().query }"
     class="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md"
-    prefetch>
+    prefetch
+  >
     <div class="relative">
-      <AppMiscImageScrollGallery :picture-ids="adventure.pictureIds"
-        :style="{ 'view-transition-name': `adventure-image-${adventure._id}` }" />
+      <AppMiscImageScrollGallery
+        :picture-ids="adventure.pictureIds"
+        :style="{ 'view-transition-name': `adventure-image-${adventure._id}` }"
+      />
       <div class="absolute top-2 left-2">
         <AppAdventuresTagsSelectorGraphic :selected-tags="adventure.tags" />
       </div>
@@ -17,12 +21,17 @@
       <!-- Title row -->
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0 flex-1">
-          <button v-if="adventure.source.provider === 'user'" class="text-xs font-medium text-muted-foreground p-0.5"
-            @click.stop.prevent="goToAuthor()">
+          <button
+            v-if="adventure.source.provider === 'user'"
+            class="text-xs font-medium text-muted-foreground p-0.5"
+            @click.stop.prevent="goToAuthor()"
+          >
             {{ t('component_adventures_author_prefix', { name: adventure.author.name }) }}
           </button>
-          <h2 class="line-clamp-1 text-base font-semibold leading-snug"
-            :style="{ 'view-transition-name': `adventure-title-${adventure._id}` }">
+          <h2
+            class="line-clamp-1 text-base font-semibold leading-snug"
+            :style="{ 'view-transition-name': `adventure-title-${adventure._id}` }"
+          >
             {{ adventure.title }}
           </h2>
           <p class="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
@@ -31,8 +40,11 @@
         </div>
         <div class="shrink-0">
           <AppPlaylistsAddToPlaylistDialog :adventure="adventure" class="ml-auto" />
-          <AppAdventuresLikeButton :is-liked="adventure.isLikedByUser" :adventure-id="adventure._id"
-            :likes-count="adventure.likesCount" />
+          <AppAdventuresLikeButton
+            :is-liked="adventure.isLikedByUser"
+            :adventure-id="adventure._id"
+            :likes-count="adventure.likesCount"
+          />
         </div>
       </div>
 
@@ -62,11 +74,14 @@
         <div>
           <Popover v-if="adventure.location?.coordinates">
             <PopoverTrigger as-child>
-              <button type="button"
+              <button
+                type="button"
                 class="w-full rounded-lg border bg-muted/40 px-2.5 py-2 text-left transition-colors hover:bg-muted/60"
-                @click.stop.prevent>
+                @click.stop.prevent
+              >
                 <div
-                  class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                >
                   <MapPin class="size-3" />
                   {{ adventure.location.distance ? t('component_adventures_tile_distance') :
                     t('component_adventures_tile_location') }}
@@ -80,8 +95,13 @@
             </PopoverTrigger>
             <PopoverContent class="w-72 overflow-hidden p-0" side="top">
               <ClientOnly>
-                <LMap :zoom="13" :center="adventure.location.coordinates" class="h-44 aspect-square w-full"
-                  style="z-index: 0" :use-global-leaflet="false">
+                <LMap
+                  :zoom="13"
+                  :center="adventure.location.coordinates"
+                  class="h-44 aspect-square w-full"
+                  style="z-index: 0"
+                  :use-global-leaflet="false"
+                >
                   <LTileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <LMarker :lat-lng="adventure.location.coordinates" />
                 </LMap>
@@ -93,7 +113,8 @@
           </Popover>
           <div v-else class="rounded-lg border bg-muted/40 px-2.5 py-2">
             <div
-              class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              class="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
               <MapPin class="size-3" />
               {{ t('component_adventures_tile_category') }}
             </div>
