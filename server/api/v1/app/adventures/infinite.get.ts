@@ -21,8 +21,5 @@ export default defineEventHandler(async (event) => {
     const { limit: _limit, pageParam: _pageParam, ...filter } = data;
 
     const adventures = await getAdventuresByFilterAndUser(user, filter, limit, pageParam);
-    return {
-        success: true,
-        data: adventures,
-    };
+    return adventures;
 });

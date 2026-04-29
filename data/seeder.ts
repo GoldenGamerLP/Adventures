@@ -1,7 +1,10 @@
 import fs from "fs/promises";
+import type { AdventureTypeKey } from "../shared/types/AdventureTypes";
 
 const wikiDataUrl = "https://www.wikidata.org/w/api.php";
+const wikipediaApiUrl = "https://de.wikipedia.org/w/api.php";
 const turboPassUrl = "https://overpass-api.de/api/interpreter";
+
 const query = `
 [out:json]
 [timeout:85]
@@ -47,6 +50,16 @@ interface RefinedAdventure {
     };
     wikipedia?: string | null;
     pictures: string[];
+    facts?: {
+        officialWebsite?: string | null;
+        inceptionYear?: string | null;
+        elevation?: number | null;
+        height?: number | null;
+        instanceOfQId?: string | null;
+        heritageStatusQId?: string | null;
+        instanceOfLabel?: string | null;
+        heritageStatusLabel?: string | null;
+    };
 }
 
 const fileExists = async (path: string) => {
@@ -88,6 +101,13 @@ const getImageFileNameFromUrl = (imageUrl: string) => {
     return decodeURIComponent(splitName[splitName.length - 1]);
 }
 
+/**
+ * 
+ * Dieser Schritt holt die Rohdaten von der Overpass API, um alle relevanten Orte aus der OSM Query zu bekommen, die als Seeds dienen können. Er speichert die Daten in "data/overpassData.json", damit sie in den nächsten Schritten weiterverarbeitet werden können.
+ * (Dieser Schritt ist notwendig, um die Rohdaten von OSM zu bekommen, die wir dann in den nächsten Schritten bereinigen und anreichern. Ohne diesen Schritt hätten wir keine Daten, mit denen wir arbeiten könnten.)
+ * 
+ * @returns Die Daten werden direkt in "data/overpassData.json" gespeichert, damit sie in den nächsten Schritten weiterverarbeitet werden können.
+ */
 const loadOverpassData = async () => {
     const isAvailable = await fileExists(overpassDataFilePath);
     if (isAvailable) {
@@ -122,6 +142,14 @@ const loadOverpassData = async () => {
     };
 }
 
+/**
+ * 
+ * Dieser Schritt extrahiert alle Wikidata-IDs aus den OSM-Daten, die wir über die Overpass API erhalten haben. Das ist notwendig, weil die OSM-Daten nur die Wikidata-ID enthalten, aber nicht die eigentlichen Informationen wie Beschreibung, Bilder oder andere Fakten, die wir für die Seeds brauchen.
+ * (Dieser Schritt ist notwendig, um die Rohdaten von Wikidata zu bekommen, die wir dann in den nächsten Schritten bereinigen und anreichern.)
+ * 
+ * @returns Die gesammelten Wikidata-IDs werden in "data/wikiIds.json" gespeichert, damit sie in den nächsten Schritten weiterverarbeitet werden können.
+ * 
+ */
 const collectWikiDataTags = async () => {
     const data = await fs.readFile(overpassDataFilePath, { encoding: 'utf8' });
 
@@ -179,6 +207,14 @@ async function tryWithRetry(fn: () => Promise<void>, retries: number, delay: num
     }
 }
 
+/**
+ * 
+ * Dieser Schritt holt die vollständigen Details von Wikidata für alle gesammelten Wikidata-IDs. Das ist notwendig, weil die OSM-Daten nur die Wikidata-ID enthalten, aber nicht die eigentlichen Informationen wie Beschreibung, Bilder oder andere Fakten, die wir für die Seeds brauchen.
+ * (Dieser Schritt ist Notwendig, um die Rohdaten von Wikidata zu bekommen, die wir dann in den nächsten Schritten bereinigen und anreichern. Ohne diesen Schritt hätten wir nur die Wikidata-IDs, aber keine der eigentlichen Informationen, die wir für die Seeds verwenden können.)
+ * 
+ * @param batchSize 50: Die Anzahl an Ids pro Anfrage an die WikiData API.
+ * @returns Die Daten werden direkt in "data/wikiDataDetails.json" gespeichert, damit sie in den nächsten Schritten weiterverarbeitet werden können.
+ */
 const lookupWikiDataDetails = async (batchSize: number = 50) => {
     const isAvailable = await fileExists(wikiDataDetailsFilePath);
     if (isAvailable) {
@@ -196,7 +232,7 @@ const lookupWikiDataDetails = async (batchSize: number = 50) => {
         const idsParam = batchIds.join("|");
 
 
-        const response = await fetch(`${wikiDataUrl}?action=wbgetentities&ids=${idsParam}&format=json&props=labels|descriptions|claims|siteclaims&languages=de`, {
+        const response = await fetch(`${wikiDataUrl}?action=wbgetentities&ids=${idsParam}&format=json&props=labels|descriptions|claims|sitelinks&languages=de`, {
             headers: {
                 "Accept": "application/json",
                 "User-Agent": "AdventuresAppSeed/1.0",
@@ -219,6 +255,12 @@ const lookupWikiDataDetails = async (batchSize: number = 50) => {
     console.log(`WikiData details saved to ${wikiDataDetailsFilePath}`);
 }
 
+/**
+ * 
+ * Dieser Schritt kombiniert die rohen Wikidata-Details mit den OSM-Daten, um die besten verfügbaren Informationen zu extrahieren. Er entfernt unnötige Felder und speichert nur die relevanten Informationen, die wir für die Seeds brauchen.
+ * (Dieser Schritt ist notwendig um die Daten Sauber darzustellen)
+ * 
+ */
 //Combine osm data with wikidata details, remove unnecessary fields and save to new file
 //Use OSMName, wiki description, wiki claims for location, and wiki sitelinks for wikipedia links, collect pictures from claims if available
 const refineWikiDataDetails = async () => {
@@ -238,22 +280,26 @@ const refineWikiDataDetails = async () => {
             continue;
         }
 
-        const wikiDescription = wikiItem.descriptions?.de?.value || wikiItem.descriptions?.en?.value || "";
-        const osmDescription = osmItem.tags.description || osmItem.tags['description'] || "";
 
-        const wikiName = wikiItem.labels?.de?.value || wikiItem.labels?.en?.value || "";
-        const osmName = osmItem.tags.name || osmItem.tags['name:de'] || osmItem.tags['name:en'] || "";
-
-        const refinedItem = {
+        const refinedItem: any = {
             id: wikiItem.id,
-            name: wikiName.length > 0 ? wikiName : osmName,
-            description: osmDescription.length > wikiDescription.length ? osmDescription : wikiDescription || "No description available",
+            name: getNameOfDetails(wikiItem, osmItem),
+            description: getDescriptionOfDetails(wikiItem, osmItem),
             location: {
                 lat: osmItem.lat,
                 lon: osmItem.lon,
             },
-            wikipedia: wikiItem.sitelinks?.dewiki?.title ? `https://de.wikipedia.org/wiki/${wikiItem.sitelinks.dewiki.title}` : null,
+            wikipedia: wikiItem.sitelinks?.dewiki?.title ? `https://de.wikipedia.org/wiki/${encodeURI(wikiItem.sitelinks.dewiki.title)}` : null,
             pictures: wikiItem.claims?.P18 ? wikiItem.claims.P18.map((claim: any) => claim.mainsnak.datavalue.value) : [],
+            // Neue Extraktionen über unsere Hilfsfunktionen:
+            facts: {
+                officialWebsite: getClaimString(wikiItem, 'P856'), // P856: Website (Text)
+                inceptionYear: getClaimYear(wikiItem, 'P571'), // P571: Baujahr/Entstehungsjahr (Date)
+                elevation: getClaimQuantity(wikiItem, 'P2044'), // P2044: Höhe (Quantity)
+                height: getClaimQuantity(wikiItem, 'P2048'), // P2048: Bauhöhe z.B. von Türmen
+                instanceOfQId: getClaimQId(wikiItem, 'P31'), // P31: Ist ein... (Q-ID, z.B. Q34685=Turm)
+                heritageStatusQId: getClaimQId(wikiItem, 'P1435'), // P1435: Denkmalschutzstatus
+            }
         };
         refinedDetails.push(refinedItem);
     }
@@ -263,6 +309,193 @@ const refineWikiDataDetails = async () => {
     console.log(`Refined WikiData details saved to ${wikiDataRefinedDetailsFilePath}`);
 };
 
+const getDescriptionOfDetails = (wikiItem: any, osmItem: any): String => {
+    const wikiDescription = wikiItem.descriptions?.de?.value || wikiItem.descriptions?.en?.value || "";
+    const osmDescription = osmItem.tags.description || osmItem.tags['description'] || "";
+    return osmDescription.length > wikiDescription.length ? osmDescription : wikiDescription || "No description available";
+};
+
+const getNameOfDetails = (wikiItem: any, osmItem: any): String => {
+    const wikiName = wikiItem.labels?.de?.value || wikiItem.labels?.en?.value || "";
+    const osmName = osmItem.tags.name || osmItem.tags['name:de'] || osmItem.tags['name:en'] || "";
+    return wikiName.length > 0 ? wikiName : osmName;
+};
+
+// Hilfsfunktion für Strings/URLs (z.B. P856 Website)
+const getClaimString = (wikiItem: any, property: string): string | null => {
+    const claim = wikiItem.claims?.[property]?.[0]?.mainsnak?.datavalue?.value;
+    return typeof claim === 'string' ? claim : null;
+};
+
+// Hilfsfunktion für Zeitangaben (z.B. P571 Baujahr) -> Liefert oft "+1659-01-01T00:00:00Z"
+const getClaimYear = (wikiItem: any, property: string): string | null => {
+    const timeValue = wikiItem.claims?.[property]?.[0]?.mainsnak?.datavalue?.value?.time;
+    if (timeValue) {
+        // Extrahiert das Jahr (z.B. "+1899-00-00..." -> "1899")
+        const match = timeValue.match(/\+?(\d{3,4})/);
+        return match ? match[1] : null;
+    }
+    return null;
+};
+
+// Hilfsfunktion für Nummern/Höhen (z.B. P2044 Höhe)
+const getClaimQuantity = (wikiItem: any, property: string): number | null => {
+    const amount = wikiItem.claims?.[property]?.[0]?.mainsnak?.datavalue?.value?.amount;
+    return amount ? parseFloat(amount) : null;
+};
+
+// Hilfsfunktion für Q-IDs (z.B. P31 Instance of)
+const getClaimQId = (wikiItem: any, property: string): string | null => {
+    return wikiItem.claims?.[property]?.[0]?.mainsnak?.datavalue?.value?.id || null;
+};
+
+/**
+ * 
+ * Dieser Schritt holt die Labels für die Q-IDs (z.B. "Instance of" -> "Turm") von Wikidata und die Beschreibungstexte von Wikipedia. Das ist notwendig, um die Daten in der App verständlicher zu machen, da Q-IDs allein nicht aussagekräftig sind.
+ * Außerdem werden die Wikipedia-Extracts nur dann übernommen, wenn sie länger als 50 Zeichen sind, um zu vermeiden, dass kurze oder unbrauchbare Beschreibungen die OSM-Beschreibungen überschreiben, die oft schon recht gut sind.
+ * (Dieser Schritt ist Optional aber für die Qualität der Seeds sehr empfehlenswert, da er die Daten deutlich anreichertert und lesbarer macht. Ohne diesen Schritt hätten wir nur kryptische Q-IDs und oft sehr kurze oder fehlende Beschreibungen.)
+ * 
+ * @param batchSize 50: Wikidata erlaubt bis zu 50 IDs pro Anfrage.
+ */
+// Neuer Schritt: Löst Q-IDs über Wikidata auf und holt echte Beschreibungstexte (Extracts) über Wikipedia API
+const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
+    const data = await fs.readFile(wikiDataRefinedDetailsFilePath, { encoding: 'utf8' });
+    const refinedItems = JSON.parse(data);
+
+    // 1. Alle benötigten Q-IDs sammeln
+    const qIdsToResolve = new Set<string>();
+    refinedItems.forEach((item: any) => {
+        if (item.facts?.instanceOfQId) qIdsToResolve.add(item.facts.instanceOfQId);
+        if (item.facts?.heritageStatusQId) qIdsToResolve.add(item.facts.heritageStatusQId);
+    });
+
+    const qIdsArray = Array.from(qIdsToResolve);
+    const qIdLabels: Record<string, string> = {};
+    console.log(`Resolving ${qIdsArray.length} Q-IDs on Wikidata...`);
+
+    // Q-IDs in Batches bei Wikidata anfragen
+    for (let i = 0; i < qIdsArray.length; i += batchSize) {
+        const batch = qIdsArray.slice(i, i + batchSize);
+        const idsParam = batch.join("|");
+        try {
+            const res = await fetch(`${wikiDataUrl}action=wbgetentities&ids=${idsParam}&format=json&props=labels&languages=de`, {
+                headers: { "Accept": "application/json", "User-Agent": "AdventuresAppSeed/1.0" }
+            });
+
+            if (!res.ok) {
+                console.error(`HTTP Error while resolving Q-IDs: ${res.status}`, await res.text());
+                continue;
+            }
+
+            const json = await res.json();
+            if (json.entities) {
+                Object.values(json.entities).forEach((entity: any) => {
+                    if (entity.labels?.de?.value) {
+                        qIdLabels[entity.id] = entity.labels.de.value;
+                    }
+                });
+            }
+
+            // Kleine Pause zwischen den Anfragen, um die Wikidata API nicht zu überlasten
+            await sleep(500);
+        } catch (e) {
+            console.error("Error resolving Q-IDs", e);
+        }
+    }
+
+    // 2. Wikipedia-Titel extrahieren
+    const wikiTitlesToResolve = new Set<string>();
+    refinedItems.forEach((item: any) => {
+        if (item.wikipedia) {
+            const title = decodeURIComponent(item.wikipedia.split('/').pop() || "");
+            if (title) wikiTitlesToResolve.add(title);
+        }
+    });
+
+    const wikiTitlesArray = Array.from(wikiTitlesToResolve);
+    const wikipediaExtracts: Record<string, string> = {};
+    console.log(`Fetching ${wikiTitlesArray.length} texts from Wikipedia DE...`);
+
+    // Wikipedia-Texte in Batches bei Wikipedia anfragen
+    for (let i = 0; i < wikiTitlesArray.length; i += batchSize) {
+        const batch = wikiTitlesArray.slice(i, i + batchSize);
+        const titlesParam = batch.join("|");
+
+        let success = false;
+        let retries = 5;
+
+        while (!success && retries > 0) {
+            try {
+                //&exintro=1 um nur die Einleitung zu bekommen, &explaintext=1 um reinen Text statt HTML zu erhalten
+                const res = await fetch(`${wikipediaApiUrl}?action=query&prop=extracts&exintro=1&explaintext=1&redirects=1&titles=${encodeURIComponent(titlesParam)}&format=json`, {
+                    headers: { "Accept": "application/json", "User-Agent": "AdventuresSeeApp" }
+                });
+
+                if (res.status === 429) {
+                    const retryAfter = res.headers.get("retry-after") || "5";
+                    console.warn(`[429 Wikipedia API] Sleeping for ${retryAfter}s...`);
+                    await sleep(parseInt(retryAfter, 10) * 1000);
+                    retries--;
+                    continue;
+                }
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const json = await res.json();
+                if (json.query?.pages) {
+                    Object.values(json.query.pages).forEach((page: any) => {
+                        if (page.title && page.extract) {
+                            wikipediaExtracts[page.title] = page.extract;
+                        }
+                    });
+                }
+                success = true;
+            } catch (e) {
+                console.error("Error fetching Wikipedia extracts... Retrying in 3s", e);
+                await sleep(3000);
+                retries--;
+            }
+        }
+    }
+
+    // 3. Gesammelte Daten zurück ins Objekt schreiben
+    const enhancedItems = refinedItems.map((item: any) => {
+        // Labels setzen
+        if (item.facts) {
+            if (item.facts.instanceOfQId && qIdLabels[item.facts.instanceOfQId]) {
+                item.facts.instanceOfLabel = qIdLabels[item.facts.instanceOfQId];
+            }
+            if (item.facts.heritageStatusQId && qIdLabels[item.facts.heritageStatusQId]) {
+                item.facts.heritageStatusLabel = qIdLabels[item.facts.heritageStatusQId];
+            }
+        }
+
+        // Wikipedia Text einfügen, wenn vorhanden (und lang genug)
+        if (item.wikipedia) {
+            const originalTitle = decodeURIComponent(item.wikipedia.split('/').pop() || "");
+            // Wikipedia gibt Spaces statt Underscores zurück
+            const lookupTitle = originalTitle.replace(/_/g, ' ');
+            const extract = wikipediaExtracts[lookupTitle] || wikipediaExtracts[originalTitle];
+
+            if (extract && extract.length > 50) {
+                item.description = extract;
+            }
+        }
+        return item;
+    });
+
+    await fs.writeFile(wikiDataRefinedDetailsFilePath, JSON.stringify(enhancedItems, null, 2));
+    console.log(`Enhanced data with Wikipedia texts and Q-ID labels saved to ${wikiDataRefinedDetailsFilePath}`);
+};
+
+/**
+ * 
+ * Dieser Schritt, holt die echten Bild-URLs von Wikimedia Commons, basierend auf den Dateinamen aus P18. Das ist notwendig, weil die P18-Felder oft nur den Dateinamen enthalten (z.B. "Dom_zu_Koeln.jpg"), aber nicht die direkte URL zum Bild.
+ * (Notwendig da Adventures App mindestens ein Bild pro Adventure braucht, und die Wikimedia API oft optimierte Thumbnail-URLs zurückgibt, die direkt eingebunden werden können, ohne dass wir die Bilder selbst hosten müssen.)
+ * 
+ * @param batchSize 50: Wikimedia erlaubt bis zu 50 Dateien pro Anfrage.
+ * @returns Die Daten werden direkt in "data/wikiDataRefinedDetails.json" mit den echten Bild-URLs gespeichert.
+ */
 const collectImages = async (batchSize: number = 50) => {
     // Lese die bereinigten Daten ein, denn hier stehen bereits die P18-Dateinamen drin ("pictures")
     const data = await fs.readFile(wikiDataRefinedDetailsFilePath, { encoding: 'utf8' });
@@ -312,7 +545,7 @@ const collectImages = async (batchSize: number = 50) => {
             }
         }
 
-        console.log(`Fetched images for batch ${i / batchSize + 1} (${batch.length} items)`);
+        //console.log(`Fetched images for batch ${i / batchSize + 1} (${batch.length} items)`);
     }
 
     // Jetzt mappen wir die fertigen URLs zurück in unsere Items
@@ -321,7 +554,7 @@ const collectImages = async (batchSize: number = 50) => {
             ...item,
             pictures: item.pictures.map((pic: string) => imageUrls[pic]).filter(Boolean)
         };
-    });
+    }).filter((item: any) => item.pictures.length > 0); // Optional: Nur Items behalten, die jetzt echte Bilder haben
 
     await fs.mkdir("data", { recursive: true });
     // Wir speichern das fertige Ergebnis, das jetzt die echten hochauflösenden URLs enthält
@@ -329,6 +562,12 @@ const collectImages = async (batchSize: number = 50) => {
     console.log(`Seed data with images saved to ${wikiDataRefinedDetailsFilePath}`);
 };
 
+/**
+ * 
+ * Dieser Schritt lädt die Bilder von den Wikimedia URLs herunter und speichert sie lokal im "data/images" Ordner. Das ist notwendig, weil die Adventures App die Bilder direkt von unserem Server laden soll, um Ladezeiten zu optimieren und nicht von externen Quellen abhängig zu sein.
+ * (Notwendig da jedes Adventures mindestens ein Bild braucht)
+ * 
+ */
 const downloadImages = async () => {
     const data = await fs.readFile(wikiDataRefinedDetailsFilePath, { encoding: 'utf8' });
     const refinedItems = JSON.parse(data);
@@ -355,11 +594,21 @@ const downloadImages = async () => {
 
             while (retries > 0 && !success) {
                 try {
-                    const imageData = await fetch(image, {
+                    if (!image.startsWith("http")) {
+                        console.warn(`Invalid image URL: ${image}. Skipping.`);
+                        break;
+                    }
+
+                    const imageData = await fetch(encodeURI(image), {
                         headers: {
                             "User-Agent": "AdventuresAppSeed/1.0",
                         }
                     });
+
+                    if (imageData.status === 404) {
+                        console.warn(`Image not found (404): ${imageName}. Skipping.`);
+                        break; // Gehe zum nächsten Bild, da dieses nicht existiert
+                    }
 
                     // 429 Too Many Requests abfangen
                     if (imageData.status === 429) {
@@ -385,49 +634,89 @@ const downloadImages = async () => {
                     success = true;
 
                     // Wir erhöhen die Standard-Pause leicht auf 1000ms, um unter dem Radar zu bleiben
-                    await new Promise(res => setTimeout(res, 1000));
+                    await new Promise(res => setTimeout(res, 500));
                 } catch (error) {
                     console.error(`Network Error while downloading image ${image}! Retrying...`, error);
-                    retries--;
-                    await new Promise(res => setTimeout(res, 5000)); // Bei echtem Netzwerkfehler 5 Sekunden warten
+                    retries--; // Bei echtem Netzwerkfehler 5 Sekunden warten
                 }
             }
+
+            console.log(`Finished ${i + 1} of ${refinedItems.length}.`)
 
             if (!success) {
                 console.error(`Gave up downloading ${imageName} after multiple attempts.`);
             }
+
         }
     }
     console.log("Image downloading finished.");
 }
+
+const resizeImage = async (imagePath: string): Promise<File> => {
+    const bufferedImage = await fs.readFile(imagePath);
+    const imageType = getContentType(imagePath);
+    const imageBitmap = await loadImage(imagePath)
+    const maxDimension = 1200;
+    let targetWidth = imageBitmap.width;
+    let targetHeight = imageBitmap.height;
+    if (imageBitmap.width > maxDimension || imageBitmap.height > maxDimension) {
+        const aspectRatio = imageBitmap.width / imageBitmap.height;
+        if (aspectRatio > 1) {
+            targetWidth = maxDimension;
+            targetHeight = Math.round(maxDimension / aspectRatio);
+        }
+        else {
+            targetHeight = maxDimension;
+            targetWidth = Math.round(maxDimension * aspectRatio);
+        }
+    }
+    const offscreenCanvas = new OffscreenCanvas(targetWidth, targetHeight);
+    const ctx = offscreenCanvas.getContext('2d');
+    if (ctx) {
+        ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
+        const resizedBlob = await offscreenCanvas.convertToBlob({ type: 'webp', quality: 0.75 });
+        const resizedBuffer = Buffer.from(await resizedBlob.arrayBuffer());
+        return new File([resizedBuffer], imagePath.split('/').pop() || "resized_image.webp", {
+            type: 'image/webp',
+            lastModified: Date.now(),
+        });
+    }
+
+    throw new Error(`Could not get canvas context for resizing ${imagePath}`);
+}
+
 
 // Eine kleine Helfer-Funktion für dein Upload-Skript:
 function categorizeAdventure(name: string, description: string) {
     const text = (name + " " + description).toLowerCase();
 
     let category: 'indoor' | 'outdoor' | 'mixed' = 'outdoor'; // Default bei POIs meist Outdoor
-    let tags: string[] = [];
+    let tags: AdventureTypeKey[] = [];
 
     // Outdoor & Natur
     if (text.includes("berg") || text.includes("halde") || text.includes("gipfel")) tags.push('hiking', 'nature');
     if (text.includes("see") || text.includes("fluss") || text.includes("mündung")) tags.push('nature', 'swimming');
-    if (text.includes("park") || text.includes("wald")) tags.push('nature', 'cycling');
+    if (text.includes("park") || text.includes("wald") || text.includes("flora") || text.includes("fauna")) tags.push('nature', 'cycling');
 
     // Indoor & Kultur
-    if (text.includes("höhle") || text.includes("burg") || text.includes("schloss")) {
+    if (text.includes("höhle") || text.includes("burg") || text.includes("schloss") || text.includes("dom") || text.includes("kirche")) {
         category = 'mixed';
-        tags.push('sightseeing', 'photography');
+        tags.push('sightseeing', 'photography', 'day_trip', 'family_friendly');
     }
     if (text.includes("museum") || text.includes("brauerei")) {
         category = 'indoor';
-        tags.push('sightseeing', 'culinary');
+        tags.push('sightseeing', 'day_trip', 'photography');
+    }
+    if (text.includes("denkmal") || text.includes("zoo") || text.includes("aquarium")) {
+        category = 'mixed';
+        tags.push('sightseeing', 'family_friendly', 'photography');
     }
 
     // Wenn nichts passt, Fallback:
     if (tags.length === 0) tags.push('nature', 'day_trip');
 
     // Mache Tags unique und nimm maximal 3 (oder dein MAX_SELECTORS_SELECTED)
-    tags = [...new Set(tags)].slice(0, 2);
+    tags = [...new Set(tags)].sort((a, b) => a.localeCompare(b)).slice(0, 3);
 
     return { category, tags };
 }
@@ -463,11 +752,7 @@ const uploadToSeedingApi = async () => {
                 continue;
             }
 
-            const imageBuffer = await fs.readFile(filePath);
-            imageFiles.push(new File([imageBuffer], imageName, {
-                type: getContentType(imageName),
-                lastModified: Date.now(),
-            }));
+            imageFiles.push(new File([await fs.readFile(filePath)], imageName, { type: 'image/webp' }));
 
             if (imageFiles.length >= 5) {
                 break;
@@ -483,7 +768,7 @@ const uploadToSeedingApi = async () => {
         const { category, tags } = categorizeAdventure(item.name, item.description);
 
         const formData = new FormData();
-        formData.set('title', item.name.slice(0, 100));
+        formData.set('title', item.name.slice(0, 100).trim().normalize());
         formData.set('description', item.description.slice(0, 5000));
         formData.set('tags', JSON.stringify(tags));
         formData.set('difficulty', 'easy');
@@ -581,11 +866,12 @@ const uploadToSeedingApi = async () => {
 
 const runSeeder = async () => {
     await tryWithRetry(loadOverpassData, maxTries, retryDelay);
-    await collectWikiDataTags();
-    await lookupWikiDataDetails();
-    await refineWikiDataDetails();
-    await collectImages();
-    await downloadImages();
+    //await collectWikiDataTags();
+    //await lookupWikiDataDetails();
+    //await refineWikiDataDetails();
+    //await enhanceWithWikipediaAndLabels();
+    //await collectImages();
+    //await downloadImages();
     await uploadToSeedingApi();
 };
 

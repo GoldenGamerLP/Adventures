@@ -471,7 +471,7 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Om
         }
     }
 
-    const response = await adventureDB
+    const response = adventureDB
         .aggregate<AdventureWithMeta>(query)
         .skip(pageParam * limit)
         .limit(limit);

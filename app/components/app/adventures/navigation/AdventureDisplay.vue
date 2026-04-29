@@ -9,7 +9,7 @@
         :picture-ids="adventure.pictureIds"
         :style="{ 'view-transition-name': `adventure-image-${adventure._id}` }"
       />
-      <div class="absolute top-2 left-2">
+      <div class="absolute top-2 left-2 max-w-64">
         <AppAdventuresTagsSelectorGraphic :selected-tags="adventure.tags" />
       </div>
       <div class="absolute top-2 right-2 text-xs text-white/90 bg-black/50 px-2 py-1 rounded-lg">

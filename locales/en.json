@@ -264,6 +264,7 @@
 	"geo_unknown_state": "Unknown",
 	"geo_unknown_country": "Unknown",
 	"geo_unknown_postal_code": "Unknown",
+	"adventure_type_family_friendly": "Family-friendly",
 	"adventure_type_hiking": "Hiking",
 	"adventure_type_cycling": "Cycling",
 	"adventure_type_mountainbiking": "Mountain biking",

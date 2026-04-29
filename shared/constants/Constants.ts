@@ -45,7 +45,7 @@ export const FETCH_KEY_FOR_YOU_PAGE = 'adventures-for-you-page';
 
 export const MAX_ADVENTURE_DURATION_MINUTES = 24 * 60; // 24 Stunden in Minuten
 
-export const MAX_SELECTORS_SELECTED = 2;
+export const MAX_SELECTORS_SELECTED = 3;
 
 export const DEFAULT_GEOIP = {
     location: {

@@ -160,6 +160,7 @@ export const ADVENTURE_TYPES: AdventureType[] = [
     { key: 'public_viewing', label: 'Public Viewing', iconKey: 'Tv', category: 'social' },
     { key: 'culinary', label: 'Kulinarik', iconKey: 'CookingPot', category: 'social' },
     { key: 'meetup', label: 'Meetup / Treffen', iconKey: 'Users', category: 'social' },
+    { key: 'family_friendly', label: 'Familienfreundlich', iconKey: 'Users', category: 'social' },
     // Travel
     { key: 'day_trip', label: 'Tagesausflug', iconKey: 'Backpack', category: 'travel' },
     { key: 'roadtrip', label: 'Roadtrip', iconKey: 'Car', category: 'travel' },
