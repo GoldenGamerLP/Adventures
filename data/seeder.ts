@@ -32,13 +32,25 @@ out body geom;
 const maxTries = 3;
 const retryDelay = 5000; // 5 seconds
 
+//1. Step: Load Overpass Data
 const overpassDataFilePath = "data/overpassData.json";
+//2. Step: Collect WikiData IDs
 const wikiDataIdsFilePath = "data/wikiIds.json";
+//3. Step: Lookup WikiData Details
 const wikiDataDetailsFilePath = "data/wikiDataDetails.json";
-const wikiDataRefinedDetailsFilePath = "data/wikiDataRefinedDetails.json";
+//4. Step: Combine OSM and WikiData, remove unnecessary fields
+const osmAndWikiDataDetailsPath = "data/osmAndWikiData.json";
+//5. Step: Enhance with Wikipedia Extracts and Q-ID Labels
+const refinedDetailsJsonPath = "data/wikiDataRefinedDetails.json";
+//6. Step: Collect real image URLs from Wikimedia Commons
+const refinedPicturesJsonPath = "data/wikiDataRefinedDetailsWithPictures.json";
+//7. Step: Download images locally
 const imagesDirectory = "data/images";
+
 const seedingEndpoint = process.env.SEEDING_ENDPOINT || "http://localhost:3000/api/v1/seeding/adventures";
 const seedingApiKey = process.env.SEEDING_API_KEY || "";
+
+const userAgent = "AdventuresAppSeed/1.0 Bot (https://adventures.street14.work)";
 
 interface RefinedAdventure {
     id: string;
@@ -121,7 +133,7 @@ const loadOverpassData = async () => {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Accept": "application/json",
-                "User-Agent": "AdventuresAppSeed/1.0",
+                "User-Agent": userAgent,
             },
             body: `data=${encodeURIComponent(query)}`,
         });
@@ -235,7 +247,7 @@ const lookupWikiDataDetails = async (batchSize: number = 50) => {
         const response = await fetch(`${wikiDataUrl}?action=wbgetentities&ids=${idsParam}&format=json&props=labels|descriptions|claims|sitelinks&languages=de`, {
             headers: {
                 "Accept": "application/json",
-                "User-Agent": "AdventuresAppSeed/1.0",
+                "User-Agent": userAgent,
             },
         });
 
@@ -263,7 +275,12 @@ const lookupWikiDataDetails = async (batchSize: number = 50) => {
  */
 //Combine osm data with wikidata details, remove unnecessary fields and save to new file
 //Use OSMName, wiki description, wiki claims for location, and wiki sitelinks for wikipedia links, collect pictures from claims if available
-const refineWikiDataDetails = async () => {
+const combineOsmWithWikiData = async () => {
+    if (!await fileExists(wikiDataDetailsFilePath) || !await fileExists(overpassDataFilePath)) {
+        console.error("Required files not found. Please run the previous steps first.");
+        return;
+    }
+
     const wikiData = await fs.readFile(wikiDataDetailsFilePath, { encoding: 'utf8' });
     const wikiDataDetails = JSON.parse(wikiData);
     const osmData = await fs.readFile(overpassDataFilePath, { encoding: 'utf8' });
@@ -305,17 +322,17 @@ const refineWikiDataDetails = async () => {
     }
 
     await fs.mkdir("data", { recursive: true });
-    await fs.writeFile(wikiDataRefinedDetailsFilePath, JSON.stringify(refinedDetails, null, 2));
-    console.log(`Refined WikiData details saved to ${wikiDataRefinedDetailsFilePath}`);
+    await fs.writeFile(osmAndWikiDataDetailsPath, JSON.stringify(refinedDetails, null, 2));
+    console.log(`Refined WikiData details saved to ${osmAndWikiDataDetailsPath}`);
 };
 
-const getDescriptionOfDetails = (wikiItem: any, osmItem: any): String => {
+const getDescriptionOfDetails = (wikiItem: any, osmItem: any): string => {
     const wikiDescription = wikiItem.descriptions?.de?.value || wikiItem.descriptions?.en?.value || "";
     const osmDescription = osmItem.tags.description || osmItem.tags['description'] || "";
     return osmDescription.length > wikiDescription.length ? osmDescription : wikiDescription || "No description available";
 };
 
-const getNameOfDetails = (wikiItem: any, osmItem: any): String => {
+const getNameOfDetails = (wikiItem: any, osmItem: any): string => {
     const wikiName = wikiItem.labels?.de?.value || wikiItem.labels?.en?.value || "";
     const osmName = osmItem.tags.name || osmItem.tags['name:de'] || osmItem.tags['name:en'] || "";
     return wikiName.length > 0 ? wikiName : osmName;
@@ -359,7 +376,17 @@ const getClaimQId = (wikiItem: any, property: string): string | null => {
  */
 // Neuer Schritt: Löst Q-IDs über Wikidata auf und holt echte Beschreibungstexte (Extracts) über Wikipedia API
 const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
-    const data = await fs.readFile(wikiDataRefinedDetailsFilePath, { encoding: 'utf8' });
+    if (!await fileExists(osmAndWikiDataDetailsPath)) {
+        console.error("Required file not found. Please run the previous steps first.");
+        return;
+    }
+
+    if (await fileExists(refinedDetailsJsonPath)) {
+        console.log("Skipping enhancement, found file.")
+        return;
+    }
+
+    const data = await fs.readFile(osmAndWikiDataDetailsPath, { encoding: 'utf8' });
     const refinedItems = JSON.parse(data);
 
     // 1. Alle benötigten Q-IDs sammeln
@@ -383,7 +410,7 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
             });
 
             if (!res.ok) {
-                console.error(`HTTP Error while resolving Q-IDs: ${res.status}`, await res.text());
+                console.error(`HTTP Error while resolving Q-IDs: ${res.status}`);
                 continue;
             }
 
@@ -397,7 +424,7 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
             }
 
             // Kleine Pause zwischen den Anfragen, um die Wikidata API nicht zu überlasten
-            await sleep(500);
+            await sleep(3000);
         } catch (e) {
             console.error("Error resolving Q-IDs", e);
         }
@@ -428,7 +455,7 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
             try {
                 //&exintro=1 um nur die Einleitung zu bekommen, &explaintext=1 um reinen Text statt HTML zu erhalten
                 const res = await fetch(`${wikipediaApiUrl}?action=query&prop=extracts&exintro=1&explaintext=1&redirects=1&titles=${encodeURIComponent(titlesParam)}&format=json`, {
-                    headers: { "Accept": "application/json", "User-Agent": "AdventuresSeeApp" }
+                    headers: { "Accept": "application/json", "User-Agent": userAgent }
                 });
 
                 if (res.status === 429) {
@@ -484,8 +511,8 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
         return item;
     });
 
-    await fs.writeFile(wikiDataRefinedDetailsFilePath, JSON.stringify(enhancedItems, null, 2));
-    console.log(`Enhanced data with Wikipedia texts and Q-ID labels saved to ${wikiDataRefinedDetailsFilePath}`);
+    await fs.writeFile(refinedDetailsJsonPath, JSON.stringify(enhancedItems, null, 2));
+    console.log(`Enhanced data with Wikipedia texts and Q-ID labels saved to ${refinedDetailsJsonPath}`);
 };
 
 /**
@@ -497,8 +524,18 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
  * @returns Die Daten werden direkt in "data/wikiDataRefinedDetails.json" mit den echten Bild-URLs gespeichert.
  */
 const collectImages = async (batchSize: number = 50) => {
+    if (!await fileExists(refinedDetailsJsonPath)) {
+        console.error("Required file not found. Please run the previous steps first.");
+        return;
+    }
+
+    if (await fileExists(refinedPicturesJsonPath)) {
+        console.log("Skipping image collection, found file.")
+        return;
+    }
+
     // Lese die bereinigten Daten ein, denn hier stehen bereits die P18-Dateinamen drin ("pictures")
-    const data = await fs.readFile(wikiDataRefinedDetailsFilePath, { encoding: 'utf8' });
+    const data = await fs.readFile(refinedDetailsJsonPath, { encoding: 'utf8' });
     const refinedItems = JSON.parse(data);
 
     // Alle einzigartigen Dateinamen (z.B. "Dom_zu_Koeln.jpg") sammeln
@@ -523,7 +560,7 @@ const collectImages = async (batchSize: number = 50) => {
         const response = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&iiurlwidth=800&titles=${encodeURIComponent(titlesParam)}&format=json`, {
             headers: {
                 "Accept": "application/json",
-                "User-Agent": "AdventuresAppSeed/1.0",
+                "User-Agent": userAgent,
             },
         });
 
@@ -554,22 +591,32 @@ const collectImages = async (batchSize: number = 50) => {
             ...item,
             pictures: item.pictures.map((pic: string) => imageUrls[pic]).filter(Boolean)
         };
-    }).filter((item: any) => item.pictures.length > 0); // Optional: Nur Items behalten, die jetzt echte Bilder haben
+    }).filter((item: any) => item.pictures.length > 0 && item.pictures.every(isValidImageUrl)); // Optional: Nur Items behalten, die jetzt echte Bilder haben
+
+    console.log(`Resolved image URLs for ${refinedItems.length} items. ${finalAdventures.length} items have valid images and will be kept.`);
 
     await fs.mkdir("data", { recursive: true });
     // Wir speichern das fertige Ergebnis, das jetzt die echten hochauflösenden URLs enthält
-    await fs.writeFile(wikiDataRefinedDetailsFilePath, JSON.stringify(finalAdventures, null, 2));
-    console.log(`Seed data with images saved to ${wikiDataRefinedDetailsFilePath}`);
+    await fs.writeFile(refinedPicturesJsonPath, JSON.stringify(finalAdventures, null, 2));
+    console.log(`Seed data with images saved to ${refinedPicturesJsonPath}`);
 };
 
+const isValidImageUrl = (url: string) => {
+    return url.startsWith("http") && (url.endsWith(".jpg") || url.endsWith(".jpeg") || url.endsWith(".png") || url.endsWith(".webp") || url.endsWith(".gif") || url.endsWith(".bmp") || url.endsWith(".tiff"));
+}
+
 /**
- * 
  * Dieser Schritt lädt die Bilder von den Wikimedia URLs herunter und speichert sie lokal im "data/images" Ordner. Das ist notwendig, weil die Adventures App die Bilder direkt von unserem Server laden soll, um Ladezeiten zu optimieren und nicht von externen Quellen abhängig zu sein.
  * (Notwendig da jedes Adventures mindestens ein Bild braucht)
  * 
  */
 const downloadImages = async () => {
-    const data = await fs.readFile(wikiDataRefinedDetailsFilePath, { encoding: 'utf8' });
+    if (!await fileExists(refinedPicturesJsonPath)) {
+        console.error("Required file not found. Please run the previous steps first.");
+        return;
+    }
+
+    const data = await fs.readFile(refinedPicturesJsonPath, { encoding: 'utf8' });
     const refinedItems = JSON.parse(data);
 
     await fs.mkdir(imagesDirectory, { recursive: true }); // Sicherstellen, dass das Verzeichnis existiert
@@ -578,9 +625,15 @@ const downloadImages = async () => {
         const element = refinedItems[i];
         const imagesUrls = element.pictures as string[];
 
-        for (const image of imagesUrls) {
+        for (const rawImage of imagesUrls) {
+            // Bereinige kaputte Wikimedia-URLs (z.B. überflüssige Punkte am Ende des Dateinamens)
+            const image = rawImage.replace(/\.+$/, '');
+
             const splitName = image.split("/");
             const imageName = decodeURIComponent(splitName[splitName.length - 1]);
+            // Verhindere ungültige oder zu kurze Dateinamen
+            if (!imageName || imageName.length < 3) continue;
+
             const filePath = `${imagesDirectory}/${imageName}`;
 
             // Überspringe bereits heruntergeladene Bilder. Das schont die API bei Neustarts!
@@ -594,12 +647,13 @@ const downloadImages = async () => {
 
             while (retries > 0 && !success) {
                 try {
+                    // Fallback: Wenn es gar keine URL ist, direkt abbrechen statt 5x Timeout zu triggern
                     if (!image.startsWith("http")) {
                         console.warn(`Invalid image URL: ${image}. Skipping.`);
                         break;
                     }
 
-                    const imageData = await fetch(encodeURI(image), {
+                    const imageData = await fetch(image, {
                         headers: {
                             "User-Agent": "AdventuresAppSeed/1.0",
                         }
@@ -727,7 +781,7 @@ const uploadToSeedingApi = async () => {
         return;
     }
 
-    const data = await fs.readFile(wikiDataRefinedDetailsFilePath, { encoding: 'utf8' });
+    const data = await fs.readFile(refinedPicturesJsonPath, { encoding: 'utf8' });
     const refinedItems = JSON.parse(data) as RefinedAdventure[];
     const uploadedWikiIds = new Set<string>();
 
@@ -865,13 +919,21 @@ const uploadToSeedingApi = async () => {
 }
 
 const runSeeder = async () => {
+    //1: Load OSM data via Overpass API
     await tryWithRetry(loadOverpassData, maxTries, retryDelay);
-    //await collectWikiDataTags();
-    //await lookupWikiDataDetails();
-    //await refineWikiDataDetails();
-    //await enhanceWithWikipediaAndLabels();
-    //await collectImages();
-    //await downloadImages();
+    //2: Collect Wikidata IDs from OSM data
+    await collectWikiDataTags();
+    //3: Fetch Wikidata details for all collected IDs
+    await lookupWikiDataDetails();
+    //4: Combine OSM and Wikidata details, extract relevant info and save to new file
+    await combineOsmWithWikiData();
+    //5: Enhance data with Wikipedia extracts and resolve Q-ID labels
+    await enhanceWithWikipediaAndLabels();
+    //6: Collect real image URLs from Wikimedia Commons based on P18 filenames
+    await collectImages();
+    //7: Download images locally to "data/images" folder
+    await downloadImages();
+    //8: Upload the final seeds to the Seeding API
     await uploadToSeedingApi();
 };
 

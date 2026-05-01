@@ -29,3 +29,5 @@ wikiDataDetails.json
 wikiDataRefinedDetails.json
 wikiIds.json
 /data/images/*
+osmAndWikiData.json
+wikiDataRefinedDetailsWithPictures.json

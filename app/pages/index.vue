@@ -10,14 +10,24 @@
         <!-- Action Buttons -->
         <div class="flex items-center gap-1">
           <!-- Create Adventure Button -->
-          <Button v-if="user" variant="ghost" size="icon" as-child>
+          <Button
+            v-if="user"
+            variant="ghost"
+            size="icon"
+            as-child
+          >
             <NuxtLink :to="{ name: 'adventures-drafts' }">
               <BookMarkedIcon />
               <span class="sr-only">{{ $t('sr_open_drafts') }}</span>
             </NuxtLink>
           </Button>
 
-          <Button v-if="user" variant="ghost" size="icon" as-child>
+          <Button
+            v-if="user"
+            variant="ghost"
+            size="icon"
+            as-child
+          >
             <NuxtLink :to="{ name: 'profile' }">
               <UserCog />
               <span class="sr-only">{{ $t('sr_open_profile_settings') }}</span>
@@ -53,7 +63,12 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" size="sm" :disabled="isFetchingNewAdventures" @click="resetFilters">
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="isFetchingNewAdventures"
+            @click="resetFilters"
+          >
             {{ $t('common_actions_reset_filters') }}
           </Button>
         </EmptyContent>
@@ -71,7 +86,12 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" size="sm" :disabled="isFetchingNewAdventures" @click="resetFilters">
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="isFetchingNewAdventures"
+            @click="resetFilters"
+          >
             {{ $t('common_actions_reset_filters') }}
           </Button>
         </EmptyContent>
@@ -79,14 +99,21 @@
 
       <!-- Adventures List -->
       <div v-else ref="listElement" class="mt-3">
-        <div class="relative w-full" :style="{
-          height: `${totalSize}px`,
-        }">
-          <div v-for="virtualRow in virtualRows" :key="String(virtualRow.key)" class="absolute top-0 left-0 w-full"
+        <div
+          class="relative w-full"
+          :style="{
+            height: `${totalSize}px`,
+          }"
+        >
+          <div
+            v-for="virtualRow in virtualRows"
+            :key="String(virtualRow.key)"
+            class="absolute top-0 left-0 w-full"
             :style="{
               height: `${virtualRow.size}px`,
               transform: `translateY(${virtualRow.start}px)`,
-            }">
+            }"
+          >
             <div v-if="accumulatedAdventures[virtualRow.index]">
               <LazyAppAdventuresNavigationAdventureDisplay :adventure="accumulatedAdventures[virtualRow.index]!" />
             </div>
