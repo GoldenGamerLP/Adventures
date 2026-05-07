@@ -1,10 +1,16 @@
 import fs from "fs/promises";
 import type { AdventureTypeKey } from "../shared/types/AdventureTypes";
+import type { OpeningSlots } from "../shared/types/EventTypes";
 
 const wikiDataUrl = "https://www.wikidata.org/w/api.php";
 const wikipediaApiUrl = "https://de.wikipedia.org/w/api.php";
 const turboPassUrl = "https://overpass-api.de/api/interpreter";
 
+/**
+ * 1. Node: tourism=attraction + wikidata tag + name
+ * 2. Node: tourism=viewpoint + wikidata tag + name
+ * 3. Node: tourism=museum + wikidata tag + name
+ */
 const query = `
 [out:json]
 [timeout:85]
@@ -21,11 +27,22 @@ area(3600062761)->.nrw;
     ["wikidata"~"^Q[0-9]+$"]
     ["name"~".+"]
     (area.nrw);
-    node
+  node
     ["tourism"="museum"]
     ["wikidata"~"^Q[0-9]+$"]
     ["name"~".+"]
     (area.nrw);
+  node
+    ["tourism"="attraction"]
+    ["attraction"="nature"]
+    ["wikidata"~"^Q[0-9]+$"]
+    ["name"~".+"]
+    (area.nrw);  
+  node
+    ["tourism"="picnic_site"]
+    ["wikidata"~"^Q[0-9]+$"]
+    ["name"~".+"]
+    (area.nrw);  
 );
 out body geom;
 `;
@@ -316,6 +333,10 @@ const combineOsmWithWikiData = async () => {
                 height: getClaimQuantity(wikiItem, 'P2048'), // P2048: Bauhöhe z.B. von Türmen
                 instanceOfQId: getClaimQId(wikiItem, 'P31'), // P31: Ist ein... (Q-ID, z.B. Q34685=Turm)
                 heritageStatusQId: getClaimQId(wikiItem, 'P1435'), // P1435: Denkmalschutzstatus
+                openingDaysOfWeek: getClaimQId(wikiItem, 'P3025'), // P3025: Öffnungszeiten als Q-ID (z.B. Q100157387 für "tuesday to friday")
+                openingStartTime: getClaimQId(wikiItem, 'P8626'), // P8626: Öffnungszeit Beginn als Q-ID
+                openingCloseTime: getClaimQId(wikiItem, 'P8627'), // P8627: Öffnungszeit Ende als Q-ID
+                osmOpeningHours: osmItem.tags.opening_hours || null, // OSM Öffnungszeiten als Fallback
             }
         };
         refinedDetails.push(refinedItem);
@@ -382,9 +403,10 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
     }
 
     if (await fileExists(refinedDetailsJsonPath)) {
-        console.log("Skipping enhancement, found file.")
+        console.log("Skipping request, found file.")
         return;
     }
+
 
     const data = await fs.readFile(osmAndWikiDataDetailsPath, { encoding: 'utf8' });
     const refinedItems = JSON.parse(data);
@@ -394,6 +416,9 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
     refinedItems.forEach((item: any) => {
         if (item.facts?.instanceOfQId) qIdsToResolve.add(item.facts.instanceOfQId);
         if (item.facts?.heritageStatusQId) qIdsToResolve.add(item.facts.heritageStatusQId);
+        if (item.facts?.openingDaysOfWeek) qIdsToResolve.add(item.facts.openingDaysOfWeek);
+        if (item.facts?.openingStartTime) qIdsToResolve.add(item.facts.openingStartTime);
+        if (item.facts?.openingCloseTime) qIdsToResolve.add(item.facts.openingCloseTime);
     });
 
     const qIdsArray = Array.from(qIdsToResolve);
@@ -405,12 +430,12 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
         const batch = qIdsArray.slice(i, i + batchSize);
         const idsParam = batch.join("|");
         try {
-            const res = await fetch(`${wikiDataUrl}action=wbgetentities&ids=${idsParam}&format=json&props=labels&languages=de`, {
-                headers: { "Accept": "application/json", "User-Agent": "AdventuresAppSeed/1.0" }
+            const res = await fetch(`${wikiDataUrl}?action=wbgetentities&ids=${idsParam}&format=json&props=labels&languages=de`, {
+                headers: { "Accept": "application/json", "User-Agent": userAgent }
             });
 
             if (!res.ok) {
-                console.error(`HTTP Error while resolving Q-IDs: ${res.status}`);
+                console.error(`HTTP Error while resolving Q-IDs: ${res.statusText}`);
                 continue;
             }
 
@@ -420,6 +445,7 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
                     if (entity.labels?.de?.value) {
                         qIdLabels[entity.id] = entity.labels.de.value;
                     }
+
                 });
             }
 
@@ -494,6 +520,15 @@ const enhanceWithWikipediaAndLabels = async (batchSize: number = 50) => {
             }
             if (item.facts.heritageStatusQId && qIdLabels[item.facts.heritageStatusQId]) {
                 item.facts.heritageStatusLabel = qIdLabels[item.facts.heritageStatusQId];
+            }
+            if (item.facts.openingDaysOfWeek && qIdLabels[item.facts.openingDaysOfWeek]) {
+                item.facts.openingDaysOfWeekLabel = qIdLabels[item.facts.openingDaysOfWeek];
+            }
+            if (item.facts.openingStartTime && qIdLabels[item.facts.openingStartTime]) {
+                item.facts.openingStartTimeLabel = qIdLabels[item.facts.openingStartTime];
+            }
+            if (item.facts.openingCloseTime && qIdLabels[item.facts.openingCloseTime]) {
+                item.facts.openingCloseTimeLabel = qIdLabels[item.facts.openingCloseTime];
             }
         }
 
@@ -775,6 +810,89 @@ function categorizeAdventure(name: string, description: string) {
     return { category, tags };
 }
 
+function constructOpeningHours(facts: any): OpeningSlots[] {
+    const slots: OpeningSlots[] = [];
+    //Opening Slots inteface:
+    // export interface OpeningSlots {
+    //dayOfWeek: number; // 0=Montag, 6=Sonntag
+    //from: number; // Minuten seit Mitternacht (0-1439)
+    //to: number;   // Minuten seit Mitternacht (0-1439)
+
+
+    const openingHours = facts.osmOpeningHours || null; // OSM Öffnungszeiten als Fallback
+    if (openingHours) {
+        //Format: Mo-Fr 10:00-18:00; Sa 10:00-14:00 || May-Oct: Sa,Su 11:00-17:00
+        const parts = openingHours.split(";").map((part: string) => part.trim());
+        parts.forEach((part: string) => {
+            const [daysPart, timePart] = part.split(" ").map((p: string) => p.trim());
+            if (!timePart) return;
+
+            const days = parseDays(daysPart);
+            const [fromStr, toStr] = timePart.split("-").map((t: string) => t.trim());
+            const from = parseTime(fromStr);
+            const to = parseTime(toStr);
+            if (from !== null && to !== null) {
+                days.forEach((day: number) => {
+                    slots.push({ dayOfWeek: day, from, to });
+                }
+                );
+            }
+        });
+    }
+    return slots;
+}
+
+function parseTime(timeStr: string): number | null {
+    if (!timeStr) return null;
+    const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+    if (match) {
+        const hours = parseInt(match[1], 10);
+        const minutes = parseInt(match[2], 10);
+        return hours * 60 + minutes;
+    }
+    return null;
+}
+
+function parseDays(daysStr: string): number[] {
+    const dayMap: Record<string, number> = {
+        "mo": 0,
+        "di": 1,
+        "mi": 2,
+        "do": 3,
+        "fr": 4,
+        "sa": 5,
+        "so": 6,
+        //Englisch
+        "su": 6,
+        "tu": 1,
+        "we": 2,
+        "th": 3,
+    };
+
+    const days: number[] = [];
+    const parts = daysStr.split(",").map((p: string) => p.trim().toLowerCase());
+    parts.forEach((part: string) => {
+        if (part.includes("-")) {
+            const [start, end] = part.split("-").map((d: string) => d.trim().toLowerCase());
+            const startDay = dayMap[start];
+            const endDay = dayMap[end];
+            if (startDay !== undefined && endDay !== undefined) {
+                for (let d = startDay; d !== (endDay + 1) % 7; d = (d + 1) % 7) {
+                    days.push(d);
+                }
+            }
+        }
+        else {
+            const day = dayMap[part];
+            if (day !== undefined) {
+                days.push(day);
+            }
+        }
+    }
+    );
+    return days;
+}
+
 const uploadToSeedingApi = async () => {
     if (!seedingApiKey) {
         console.warn("Skipping upload step: SEEDING_API_KEY is missing.");
@@ -820,6 +938,7 @@ const uploadToSeedingApi = async () => {
         }
 
         const { category, tags } = categorizeAdventure(item.name, item.description);
+        const slots = constructOpeningHours(item.facts);
 
         const formData = new FormData();
         formData.set('title', item.name.slice(0, 100).trim().normalize());
@@ -834,21 +953,21 @@ const uploadToSeedingApi = async () => {
             name: item.name,
         }));
         formData.set('schedule', JSON.stringify({
-            type: 'flexible',
+            type: slots.length === 0 ? 'flexible' : slots.length === 1 ? 'fixed' : 'range',
             estimatedDuration: {
                 min: 60,
                 max: 180,
             },
             isApproximate: true,
             repeatsAnnually: false,
-            slots: [],
+            slots: slots,
         }));
         formData.set('visibility', 'unlisted');
         formData.set('source', JSON.stringify({
             provider: 'wikipedia',
             wikipediaPageId: item.id,
             externalUrl: item.wikipedia || `https://www.wikidata.org/wiki/${item.id}`,
-            attribution: 'Wikidata / Wikimedia Commons',
+            attribution: 'CC-BY-SA 3.0, Daten von Wikidata/Wikipedia, Bilder von Wikimedia Commons',
         }));
 
         for (const imageFile of imageFiles) {

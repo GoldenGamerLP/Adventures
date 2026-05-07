@@ -38,7 +38,9 @@
           <LazyAppAuthCredentialsActionDrawer v-if="!user" />
         </div>
       </div>
-      <section class="flex items-center gap-2 mx-2 py-1.5 sm:mx-0 overflow-x-auto touch-pan-x">
+      <section
+        class="flex flex-nowrap items-center gap-2 mx-2 py-1.5 sm:mx-0 overflow-x-auto overflow-y-hidden touch-pan-x"
+      >
         <AppNavigationPillnavShowChangeLocation />
         <AppAdventuresNavigationAdventureSearch />
         <AppAdventuresNavigationMaskPills />
@@ -46,13 +48,8 @@
     </nav>
 
     <main>
-      <!-- Loading State -->
-      <div v-if="isFetchingNewAdventures && !accumulatedAdventures.length" class="mt-6 space-y-4">
-        <AppAdventuresNavigationAdventureSkeleton v-for="i in 3" :key="i" />
-      </div>
-
       <!-- Error State -->
-      <Empty v-else-if="hasError">
+      <Empty v-if="hasError">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <SearchAlert />
@@ -63,19 +60,14 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="isFetchingNewAdventures"
-            @click="resetFilters"
-          >
+          <Button variant="outline" size="sm" @click="resetFilters">
             {{ $t('common_actions_reset_filters') }}
           </Button>
         </EmptyContent>
       </Empty>
 
       <!-- Empty State -->
-      <Empty v-else-if="!accumulatedAdventures.length && !isFetchingNewAdventures">
+      <Empty v-else-if="!accumulatedAdventures.length && infinitScrollState === 'end'">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <SearchAlert />
@@ -86,12 +78,7 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="isFetchingNewAdventures"
-            @click="resetFilters"
-          >
+          <Button variant="outline" size="sm" @click="resetFilters">
             {{ $t('common_actions_reset_filters') }}
           </Button>
         </EmptyContent>
@@ -108,16 +95,23 @@
           <div
             v-for="virtualRow in virtualRows"
             :key="String(virtualRow.key)"
-            class="absolute top-0 left-0 w-full"
+            ref="virtualItemEls"
+            :data-index="virtualRow.index"
             :style="{
-              height: `${virtualRow.size}px`,
               transform: `translateY(${virtualRow.start}px)`,
+              top: '0',
+              left: '0',
+              width: '100%',
+              position: 'absolute',
             }"
           >
-            <div v-if="accumulatedAdventures[virtualRow.index]">
+            <div v-if="accumulatedAdventures[virtualRow.index]" class="mb-4">
               <LazyAppAdventuresNavigationAdventureDisplay :adventure="accumulatedAdventures[virtualRow.index]!" />
             </div>
           </div>
+        </div>
+        <div v-if="infinitScrollState === 'fetching'" class="flex flex-col gap-3 mt-3">
+          <AppAdventuresNavigationAdventureSkeleton v-for="n in 3" :key="n" />
         </div>
       </div>
     </main>
@@ -149,6 +143,9 @@ useHead({
   ],
 });
 
+const virtualItemEls = ref<HTMLElement[]>([]);
+
+
 useSeoMeta({
   ogTitle: () => $t('title') as string,
   ogDescription: () => $t('meta_description') as string,
@@ -157,40 +154,52 @@ useSeoMeta({
 
 const searchMaskObject = useSearchMask();
 const { resetFilters, fetchNextPage } = searchMaskObject;
-const { mask, accumulatedAdventures, isFetchingNewAdventures, hasNextPage, hasError, errorMessage } = searchMaskObject;
+const { mask, accumulatedAdventures, infinitScrollState, hasNextPage, hasError, errorMessage } = searchMaskObject;
 
 const user = useUser();
 const { currentColorMode } = useColorMode();
 
 const rowVirtualizerOptions = computed(() => ({
   count: hasNextPage.value ? accumulatedAdventures.value.length + 1 : accumulatedAdventures.value.length,
-  estimateSize: () => 545,
-  overscan: 3,
+  estimateSize: () => 500,
+  overscan: 2,
 }));
 
 const rowVirtualizer = useWindowVirtualizer(rowVirtualizerOptions);
 const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems());
 const totalSize = computed(() => rowVirtualizer.value.getTotalSize());
 
-watchEffect(() => {
-  const [lastItem] = [...virtualRows.value].reverse();
+onMounted(async () => {
+  await fetchNextPage(true);
+  measureAll();
 
-  if (!lastItem) {
-    return;
-  }
+  watchEffect(() => {
+    const [lastItem] = [...virtualRows.value].reverse();
 
-  if (
-    lastItem.index >= accumulatedAdventures.value.length - 1
-    && hasNextPage.value
-    && !isFetchingNewAdventures.value
-  ) {
-    fetchNextPage();
-  }
-});
+    if (!lastItem) {
+      return;
+    }
 
-onMounted(() => {
-  fetchNextPage(true);
+    if (
+      lastItem.index >= accumulatedAdventures.value.length - 1
+      && hasNextPage.value
+      && infinitScrollState.value !== 'fetching'
+    ) {
+      fetchNextPage();
+    }
+  });
 })
+
+onUpdated(() => {
+  measureAll();
+})
+
+function measureAll() {
+  rowVirtualizer.value.measureElement(null)
+  virtualItemEls.value.forEach((el) => {
+    if (el) rowVirtualizer.value.measureElement(el)
+  })
+}
 
 const computedIcon = computed(() => {
   if (currentColorMode.value === 'dark') {

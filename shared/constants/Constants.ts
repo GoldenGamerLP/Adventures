@@ -88,3 +88,5 @@ export const APP_ERROR_CODES = {
 // Konfig
 export const MAX_GUEST_VIEWS_PER_ADVENTURE = 100; // Danach keine neuen Gäste mehr tracken
 export const VIEW_COOLDOWN_MS = 5 * 60 * 1000;      // 5 Min Cooldown zwischen Views
+
+export const INFINITE_SCROLL_PAGE_SIZE = 5;

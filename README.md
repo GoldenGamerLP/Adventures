@@ -7,42 +7,12 @@ Adventures is a platform for sharing and discovering outdoor and indoor activiti
 
 ## TODO
 
-- Seeding pipeline verebssern! Bessere Fehlerbehandlung, Logging, Fortschrittsanzeige, und ganz wichtig: die Möglichkeit, bereits genehmigte Abenteuer zu aktualisieren, ohne dass sie ihren Status verlieren.
-- Seeding: Noch mehr Daten anzeigen
-- Bessere reviewed anzeige, auhtor Id auflösen und zeit anzeigen wann es reviewd wurde + ändern des statuss (approved, rejected) ermöglichen
+- Besserer Algorithmus für die Empfehlungen, z.B. basierend auf den Interessen der Nutzer oder der Beliebtheit von Abenteuern und den Interessen von benutzuern
+- Attributionen für wikipedia einträge überarbeiten, damit die Quelle klarer ist
 
 - Crop Editor für Bilder
 - Kommentare/Bewertungssystem
 - Auf Profil Seite die Abenteuer in Kartenansicht anzeigen
-
-- Markdown in der Beschreibung erlauben
-
-- Playlists
-- Erstellen
-- Quick add
-- Löschen
-- Bearbeiten
-
-- Translation durchgehen und überprüfen
-
-- Pipeline fehler fixen:
- > [build 7/7] RUN bun --bun run build:
-46.28  ERROR  Please define the MONGODB_URI environment variable inside .env.local
-46.28 
-46.28     at node_modules/.cache/nuxt/.nuxt/prerender/chunks/nitro/nitro.mjs:1161:13
-46.28     at moduleEvaluation (native:1:11)
-46.28     at moduleEvaluation (native:1:11)
-46.28     at requestImportModule (native:2)
-46.28     at processTicksAndRejections (native:7:39) 
-46.28 
-46.28 
-46.65 error: script "build" exited with code 1
-------
-
- 1 warning found (use docker --debug to expand):
- - RedundantTargetPlatform: Setting platform to predefined $TARGETPLATFORM in FROM is redundant as this is the default behavior (line 18)
-Dockerfile:15
---------------------
 
 - Wöchentliche Öffnungszeiten auf mobile ansicht besser anzeigen
 

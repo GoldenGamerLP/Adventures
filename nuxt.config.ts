@@ -19,6 +19,9 @@ export default defineNuxtConfig({
     secretKey: process.env.NUXT_TURNSTILE_SECRET_KEY || '',
   },
   routeRules: {
+    // Static assets - immutable, long cache
+    '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/api/v1/app/pictures/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     'a.tile.openstreetmap.org/**': {
       security: {
         headers: {

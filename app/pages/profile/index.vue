@@ -68,7 +68,7 @@
         <!-- Tabs -->
         <RekaTabsRoot :default-value="useRoute().hash.slice(1) || 'about'" class="flex flex-col">
           <RekaTabsList
-            class="relative shrink-0 flex mb-4 bg-accent p-1.5 rounded-lg text-sm overflow-x-auto overflow-y-hidden"
+            class="relative shrink-0 flex mb-4 p-1.5 rounded-lg text-sm overflow-x-auto overflow-y-hidden justify-around bg-muted"
             aria-label="Profil-Tabs"
           >
             <RekaTabsIndicator

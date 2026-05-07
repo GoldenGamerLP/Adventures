@@ -1,12 +1,11 @@
+import { INFINITE_SCROLL_PAGE_SIZE } from '~~/shared/constants/Constants';
 import type { AdventuresQueryFilterType } from '~~/shared/schema/AdventuresSchema';
 
-const PAGE_SIZE = 3;
-
 export const useSearchMask = () => {
-    const currentPage = useState('currentPage', () => 1);
-    //Anfangszustand true: Damit die loading skeletons angezeigt werden
-    const isFetchingNewAdventures = useState('isFetchingNewAdventures', () => true);
     const { geolocation } = useGeoLocation();
+    const currentPage = useState('currentPage', () => 0);
+    //Anfangszustand true: Damit die loading skeletons angezeigt werden
+    const infinitScrollState = useState('infiniteScrollState', () => "idle" as 'idle' | 'fetching' | 'error' | 'end');
     const accumulatedAdventures = useState<AdventureWithMeta[]>('accumulatedAdventures', () => []);
     const fetchingError = useState<string | null>('fetchingError', () => null);
 
@@ -17,9 +16,9 @@ export const useSearchMask = () => {
     }));
 
     const fetchNextPage = async (force = false) => {
-        if (isFetchingNewAdventures.value && !force || fetchingError.value) return;
+        if (infinitScrollState.value === 'fetching' || infinitScrollState.value === 'end' || fetchingError.value && !force) return;
 
-        isFetchingNewAdventures.value = true;
+        infinitScrollState.value = 'fetching';
 
         try {
             const data = await $fetch('/api/v1/app/adventures/infinite', {
@@ -30,22 +29,21 @@ export const useSearchMask = () => {
             });
 
             if (data) {
-                accumulatedAdventures.value.push(...data);
+                accumulatedAdventures.value = [...accumulatedAdventures.value, ...data];
                 currentPage.value += 1;
             }
 
-            if (!data || data.length < PAGE_SIZE && accumulatedAdventures.value.length === 0) {
-                fetchingError.value = "No adventures found with the current filters.";
-            }
-
+            if ((!data || data.length < INFINITE_SCROLL_PAGE_SIZE)) {
+                // Kein Ergebnis für die Suchmaske, self-locking, damit nicht ständig neue Anfragen gesendet werden
+                infinitScrollState.value = 'end';
+                console.log('No adventures found for the current search mask.');
+            } else infinitScrollState.value = 'idle';
         } catch (error) {
             console.error('Error fetching adventures:', error);
             if (error instanceof Error) {
+                infinitScrollState.value = 'error';
                 fetchingError.value = error.message;
             }
-        }
-        finally {
-            isFetchingNewAdventures.value = false;
         }
     };
 
@@ -53,15 +51,16 @@ export const useSearchMask = () => {
         return {
             ...state.value.mask,
             pageParam: currentPage.value,
-            limit: PAGE_SIZE,
+            limit: INFINITE_SCROLL_PAGE_SIZE,
         }
     });
 
     const computedHasNextPage = computed(() => {
-        return accumulatedAdventures.value.length % PAGE_SIZE === 0;
+        if (infinitScrollState.value === 'fetching' || infinitScrollState.value === 'end' || fetchingError.value) return false;
+        return accumulatedAdventures.value.length % INFINITE_SCROLL_PAGE_SIZE === 0;
     });
 
-    const hasError = computed(() => !!fetchingError.value);
+    const hasError = computed(() => infinitScrollState.value === 'error' || !!fetchingError.value);
 
     /** Geo-Daten in die Suchmaske übernehmen */
     const applyGeoFilter = () => {
@@ -76,11 +75,14 @@ export const useSearchMask = () => {
     };
 
     const refreshSearch = () => {
+        infinitScrollState.value = 'idle';
         fetchingError.value = null;
         accumulatedAdventures.value = [];
-        currentPage.value = 1;
+        currentPage.value = 0;
         fetchNextPage();
     }
+
+
 
     watch(geolocation, (newCoords) => {
         if (newCoords) {
@@ -96,7 +98,7 @@ export const useSearchMask = () => {
         applyGeoFilter,
         refreshSearch,
         accumulatedAdventures,
-        isFetchingNewAdventures,
+        infinitScrollState,
         fetchNextPage,
         hasNextPage: computedHasNextPage,
         hasError,

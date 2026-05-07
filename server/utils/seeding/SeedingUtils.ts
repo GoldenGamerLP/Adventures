@@ -8,7 +8,6 @@ import { createAdventure } from "../adventures/AdventureUtils";
 import { getCollection } from "../database/DBUtils";
 import { createKeyedError } from "../errors/ApiErrorUtils";
 
-const getSeedingApprovalDatabase = async () => getCollection<AdventureSeedData>('seeding_approvals');
 const getSeedingAdventureDatabase = async () => getCollection<AdventureSeedData>('seeding_adventures');
 
 export const assertSeedingApiKey = (event: Parameters<typeof getRequestHeaders>[0]) => {
@@ -61,13 +60,14 @@ export const findSeedingAdventureById = async (adventureId: string): Promise<Adv
     return database.findOne({ _id: adventureId });
 };
 
-export const listSeedingAdventures = async (status?: SeedingStatus): Promise<AdventureSeedData[]> => {
+export const listSeedingAdventures = async (status: SeedingStatus, page = 0, limit = 10): Promise<AdventureSeedData[]> => {
     const database = await getSeedingAdventureDatabase();
-    const query = status ? { status } : {};
 
     return database
-        .find(query)
+        .find({ status })
         .sort({ createdAt: -1 })
+        .skip(page * limit)
+        .limit(limit)
         .toArray();
 };
 
@@ -116,7 +116,6 @@ const buildDecision = (decision: SeedingDecisionInput): SeedingDecision => ({
 
 export const approveOrRejectSeedingAdventure = async (decision: SeedingDecisionInput): Promise<{ seed: AdventureSeedData; adventure?: Adventure; decision: SeedingDecision }> => {
     const seedDatabase = await getSeedingAdventureDatabase();
-    const approvalDatabase = await getSeedingApprovalDatabase();
     const seed = await seedDatabase.findOne({ _id: decision.adventureId });
 
     if (!seed) {
@@ -151,12 +150,6 @@ export const approveOrRejectSeedingAdventure = async (decision: SeedingDecisionI
                 updatedAt: updatedSeed.updatedAt,
             },
         }
-    );
-
-    await approvalDatabase.updateOne(
-        { _id: seed._id },
-        { $set: updatedSeed },
-        { upsert: true }
     );
 
     if (!review.approved) {

@@ -29,7 +29,7 @@
             <Avatar>
               <AvatarImage :src="toPicturePath(user?.profilePictureId)" alt="Reviewer Avatar" />
               <AvatarFallback>
-                <User />
+                <UserIcon />
               </AvatarFallback>
             </Avatar>
             {{ user?.name || 'Unbekannter Nutzer' }}
@@ -60,141 +60,107 @@
       {{ seeds?.length || 0 }} Einträge · Filter: {{ statusFilter }}
     </div>
 
-    <div class="grid gap-3">
-      <Card v-for="seed in seeds" :key="seed._id">
-        <CardHeader class="space-y-2">
-          <div class="flex items-center justify-between gap-2">
-            <CardTitle class="text-lg leading-tight">
-              {{ seed.title }}
-            </CardTitle>
-            <Badge variant="outline">
-              {{ seed.status }}
-            </Badge>
-          </div>
-          <p class="text-sm text-muted-foreground line-clamp-3">
-            {{ seed.description }}
-          </p>
-        </CardHeader>
-        <CardContent class="space-y-3">
-          <img
-            v-if="seed.pictureIds?.[0]"
-            :src="`/api/v1/app/pictures/${seed.pictureIds[0]}`"
-            :alt="seed.title"
-            class="w-full h-48 object-cover rounded-md border"
-          />
-
-          <div class="text-xs text-muted-foreground space-y-1">
-            <div>ID: {{ seed._id }}</div>
-            <div>
-              Source: {{ seed.source.provider }} · {{ seed.source.provider === 'wikipedia' ?
-                seed.source.wikipediaPageId : seed.source.userId }}
-            </div>
-          </div>
-
-          <div class="grid gap-2">
-            <Label :for="`reason-${seed._id}`">Ablehnungsgrund (optional)</Label>
-            <Textarea
-              :id="`reason-${seed._id}`"
-              v-model="reasons[seed._id]"
-              placeholder="Optionaler Grund bei Decline"
-              rows="2"
+    <div ref="listElement" class="mt-3">
+      <div
+        class="relative w-full"
+        :style="{
+          height: `${totalSize}px`,
+        }"
+      >
+        <div
+          v-for="virtualRow in virtualRows"
+          :key="virtualRow.key + ''"
+          ref="virtualItemEls"
+          :data-index="virtualRow.index"
+          class="mb-4"
+          :style="{
+            transform: `translateY(${virtualRow.start}px)`,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+          }"
+        >
+          <div>
+            <AppSeedingAventureEntry
+              :seed="seeds[virtualRow.index]!"
+              :can-review="canReview"
+              :index="virtualRow.index"
+              :api-key="apiKey"
+              @review="removeSeedFromSeeds"
             />
           </div>
-
-          <div class="flex gap-2 flex-wrap">
-            <Button
-              :disabled="!canReview || isSubmittingId === seed._id || seed.status !== 'pending'"
-              @click="reviewSeed(seed._id, true)"
-            >
-              Accept
-            </Button>
-            <Button
-              variant="destructive"
-              :disabled="!canReview || isSubmittingId === seed._id || seed.status !== 'pending'"
-              @click="reviewSeed(seed._id, false)"
-            >
-              Decline
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { toast } from 'vue-sonner';
+import { useWindowVirtualizer } from '@tanstack/vue-virtual';
+import { UserIcon } from 'lucide-vue-next';
 import type { AdventureSeedData } from '~~/shared/types/SeedingTypes';
 
 type SeedingStatus = 'pending' | 'approved' | 'rejected';
 
 definePageMeta({
-    layout: 'navigation-bar',
-    middleware: 'auth-requirement',
+  layout: 'navigation-bar',
+  middleware: 'auth-requirement',
 });
 
 const apiKey = ref('');
 const user = useUser();
 const statusFilter = ref<SeedingStatus>('pending');
-const reasons = ref<Record<string, string>>({});
-const isSubmittingId = ref<string | null>(null);
+const virtualItemEls = ref<HTMLElement[]>([]);
 
 const {
-    data: seeds,
-    pending: isLoading,
-    error: listError,
-    refresh,
+  data: seeds,
+  pending: isLoading,
+  error: listError,
+  refresh,
 } = useFetch<AdventureSeedData[]>('/api/v1/seeding/adventures', {
-    server: false,
-    immediate: false,
-    query: computed(() => ({ status: statusFilter.value })),
-    headers: computed(() => ({
-        'x-api-key': apiKey.value,
-    })),
-    watch: false,
+  server: false,
+  immediate: false,
+  query: computed(() => ({ status: statusFilter.value, limit: 1000 })),
+  headers: computed(() => ({
+    'x-api-key': apiKey.value,
+  })),
+  watch: false,
 });
 
+const rowVirtualizerOptions = computed(() => ({
+  count: seeds.value?.length || 0,
+  estimateSize: () => 584,
+  overscan: 3,
+}));
+
+const rowVirtualizer = useWindowVirtualizer(rowVirtualizerOptions);
+const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems());
+const totalSize = computed(() => rowVirtualizer.value.getTotalSize());
+
 const canReview = computed(() => {
-    return apiKey.value.length > 0 && user;
+  return apiKey.value.length > 0 && user;
 });
 
 const loadByStatus = async (status: SeedingStatus) => {
-    statusFilter.value = status;
-    await refresh();
+  statusFilter.value = status;
+  await refresh();
+  measureVirtualItems();
 };
 
 const loadPending = () => loadByStatus('pending');
 const loadApproved = () => loadByStatus('approved');
 const loadRejected = () => loadByStatus('rejected');
 
-const reviewSeed = async (adventureId: string, approved: boolean) => {
-    if (!canReview.value) {
-        toast.error('Bitte API Key und Reviewer ID eintragen.');
-        return;
-    }
 
-    isSubmittingId.value = adventureId;
+const removeSeedFromSeeds = (index: number) => {
+  seeds.value = seeds.value?.filter((_, i) => i !== index) || [];
+};
 
-    try {
-        await $fetch(`/api/v1/seeding/adventures/${adventureId}`, {
-            method: 'PATCH',
-            headers: {
-                'x-api-key': apiKey.value,
-            },
-            body: {
-                reviewerId: user.value?._id,
-                approved,
-                reason: reasons.value[adventureId] || undefined,
-            },
-        });
-
-        toast.success(approved ? 'Adventure akzeptiert.' : 'Adventure abgelehnt.');
-        await refresh();
-    } catch (error) {
-        console.error(error);
-        toast.error('Review konnte nicht gespeichert werden.');
-    } finally {
-        isSubmittingId.value = null;
-    }
+const measureVirtualItems = () => {
+  rowVirtualizer.value.measure();
+  virtualItemEls.value.forEach((el) => {
+    rowVirtualizer.value.measureElement(el);
+  });
 };
 </script>

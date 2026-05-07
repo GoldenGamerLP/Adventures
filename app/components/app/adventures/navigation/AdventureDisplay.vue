@@ -1,7 +1,7 @@
 <template>
   <NuxtLink
     :to="{ name: 'adventures-adventureId', params: { 'adventureId': adventure._id }, query: useRoute().query }"
-    class="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md"
+    class="group flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow transition-all duration-200 hover:shadow-md"
     prefetch
   >
     <div class="relative">
@@ -12,9 +12,9 @@
       <div class="absolute top-2 left-2 max-w-64">
         <AppAdventuresTagsSelectorGraphic :selected-tags="adventure.tags" />
       </div>
-      <div class="absolute top-2 right-2 text-xs text-white/90 bg-black/50 px-2 py-1 rounded-lg">
+      <Badge variant="secondary" class="absolute top-3 right-3 gap-1">
         {{ $tc('component_adventures_views_count', { count: adventure.viewCount.totalViews }) }}
-      </div>
+      </Badge>
     </div>
 
     <div class="flex flex-col gap-3 p-4">
@@ -29,12 +29,12 @@
             {{ t('component_adventures_author_prefix', { name: adventure.author.name }) }}
           </button>
           <h2
-            class="line-clamp-1 text-base font-semibold leading-snug"
+            class="line-clamp-1 text-base font-semibold leading-snug capitalize"
             :style="{ 'view-transition-name': `adventure-title-${adventure._id}` }"
           >
             {{ adventure.title }}
           </h2>
-          <p class="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+          <p class="mt-0.5 line-clamp-1 text-sm text-muted-foreground capitalize">
             {{ adventure.description }}
           </p>
         </div>

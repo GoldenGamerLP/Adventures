@@ -1,9 +1,5 @@
 <template>
-  <div>
-    <h2 class="text-lg font-semibold mb-2">
-      {{ $t('component_schedule_title') }}
-    </h2>
-
+  <div class="space-y-8">
     <!-- Wann? -->
     <template v-if="schedule.type === 'flexible'">
       <Item variant="muted">
@@ -58,8 +54,8 @@
     </template>
 
     <template v-if="schedule.slots?.length">
-      <div class="space-y-2 mt-4">
-        <h3 class="text-sm font-medium">
+      <div class="space-y-2">
+        <h3 class="text-sm font-semibold">
           {{ $t('component_schedule_opening_hours') }}
         </h3>
         <div class="flex flex-wrap gap-4">
@@ -67,7 +63,7 @@
             v-for="day in 7"
             :key="day"
             class="flex flex-col items-center text-xs text-muted-foreground"
-            :class="{ 'text-primary font-semibold': hasSlot(day - 1) }"
+            :class="{ 'text-secondary-foreground font-semibold bg-secondary rounded px-2 py-1': hasSlot(day - 1) }"
           >
             <p>{{ getDayOfWeeklabel(day - 1) }}</p>
             <p>{{ getFormattedSlotTime(day - 1) }}</p>
@@ -77,31 +73,28 @@
     </template>
 
     <!-- Wie lange? -->
-    <div class="space-y-2 mt-4">
-      <h3 class="text-sm font-medium">
+    <div class="space-y-2">
+      <h3 class="text-sm font-semibold">
         {{ $t('component_schedule_estimated_duration') }}
       </h3>
       <div class="relative w-full pt-6 pb-2">
         <!-- Min/Max position labels -->
         <div
-          class="absolute top-2 text-xs font-medium text-primary -translate-x-1/2 whitespace-nowrap"
-          :style="{ left: durationBarPercent.midPer + '%' }"
+          class="absolute top-0 text-xs font-medium text-secondary-foreground -translate-x-1/2 whitespace-nowrap bg-secondary py-0.5 px-1.5 rounded-lg"
+          :style="{ left: durationBarPercent.left + durationBarPercent.width / 2 + '%' }"
         >
           {{ minLabel }} - {{ maxLabel }}
         </div>
 
         <!-- Bar row -->
-        <div class="flex items-center w-full">
-          <div class="flex flex-col items-center text-xs text-muted-foreground shrink-0 w-6">
-            <FlagTriangleRightIcon class="size-4" />
-          </div>
-          <div class="flex-1 h-2 bg-border mx-2 rounded-full relative overflow-hidden">
+        <div class="flex items-center w-full mt-2">
+          <div class="flex-1 h-2 bg-muted mx-2 rounded-full relative overflow-hidden shadow-inner">
             <div class="absolute inset-y-0 rounded-full bg-primary transition-all" :style="durationBarStyle"></div>
           </div>
         </div>
 
         <!-- Scale labels -->
-        <div class="flex justify-between mt-1 px-6 text-xs text-muted-foreground ml-4">
+        <div class="flex justify-between mt-1 text-xs text-muted-foreground">
           <span>0h</span>
           <span>12h</span>
           <span>24h</span>
@@ -110,7 +103,7 @@
     </div>
 
     <ItemGroup class="border rounded-lg mt-4">
-      <Item v-if="schedule.isApproximate">
+      <Item v-if="schedule.isApproximate" class="bg-destructive/10">
         <ItemMedia variant="icon">
           <BadgeAlert />
         </ItemMedia>
@@ -144,7 +137,6 @@ import {
   Calendar as CalendarIcon,
   CalendarPlusIcon,
   CalendarRange,
-  FlagTriangleRightIcon,
   InfinityIcon
 } from 'lucide-vue-next';
 import { MAX_ADVENTURE_DURATION_MINUTES } from '~~/shared/constants/Constants';
@@ -162,10 +154,9 @@ const maxLabel = computed(() => formatDuration(props.schedule.estimatedDuration.
 
 const durationBarPercent = computed(() => {
   const dur = props.schedule.estimatedDuration;
-  const leftPer = (dur.min / MAX_ADVENTURE_DURATION_MINUTES) * 100;
-  const rightPer = ((dur.max) / MAX_ADVENTURE_DURATION_MINUTES) * 100;
-  const midPer = Math.max(Math.min(leftPer + rightPer / 2, 85), 15);
-  return { midPer };
+  const left = (dur.min / MAX_ADVENTURE_DURATION_MINUTES) * 100;
+  const width = ((dur.max - dur.min) / MAX_ADVENTURE_DURATION_MINUTES) * 100;
+  return { left, width };
 });
 
 const getDayOfWeeklabel = (dayOfWeek: number): string => {
