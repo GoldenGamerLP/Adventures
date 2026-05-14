@@ -1,6 +1,8 @@
 import fs from "fs/promises";
 import type { AdventureTypeKey } from "../shared/types/AdventureTypes";
 import type { OpeningSlots } from "../shared/types/EventTypes";
+//const { createCanvas, loadImage } = require('canvas') als neues importieren
+import { createCanvas, loadImage, Node } from 'canvas';
 
 const wikiDataUrl = "https://www.wikidata.org/w/api.php";
 const wikipediaApiUrl = "https://de.wikipedia.org/w/api.php";
@@ -742,14 +744,13 @@ const downloadImages = async () => {
 }
 
 const resizeImage = async (imagePath: string): Promise<File> => {
-    const bufferedImage = await fs.readFile(imagePath);
+    const bufferedImage = await loadImage(imagePath);
     const imageType = getContentType(imagePath);
-    const imageBitmap = await loadImage(imagePath)
     const maxDimension = 1200;
-    let targetWidth = imageBitmap.width;
-    let targetHeight = imageBitmap.height;
-    if (imageBitmap.width > maxDimension || imageBitmap.height > maxDimension) {
-        const aspectRatio = imageBitmap.width / imageBitmap.height;
+    let targetWidth = bufferedImage.width;
+    let targetHeight = bufferedImage.height;
+    if (bufferedImage.width > maxDimension || bufferedImage.height > maxDimension) {
+        const aspectRatio = bufferedImage.width / bufferedImage.height;
         if (aspectRatio > 1) {
             targetWidth = maxDimension;
             targetHeight = Math.round(maxDimension / aspectRatio);
@@ -759,16 +760,11 @@ const resizeImage = async (imagePath: string): Promise<File> => {
             targetWidth = Math.round(maxDimension * aspectRatio);
         }
     }
-    const offscreenCanvas = new OffscreenCanvas(targetWidth, targetHeight);
-    const ctx = offscreenCanvas.getContext('2d');
-    if (ctx) {
-        ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
-        const resizedBlob = await offscreenCanvas.convertToBlob({ type: 'webp', quality: 0.75 });
-        const resizedBuffer = Buffer.from(await resizedBlob.arrayBuffer());
-        return new File([resizedBuffer], imagePath.split('/').pop() || "resized_image.webp", {
-            type: 'image/webp',
-            lastModified: Date.now(),
-        });
+    const canvas = createCanvas(targetWidth, targetHeight);
+    const ctx = canvas.getContext('2d');
+    if(ctx) {
+        ctx.drawImage(bufferedImage, 0, 0, targetWidth, targetHeight);
+        return canvas.toBuffer('image/webp', { quality: 0.25 });
     }
 
     throw new Error(`Could not get canvas context for resizing ${imagePath}`);
@@ -924,7 +920,7 @@ const uploadToSeedingApi = async () => {
                 continue;
             }
 
-            imageFiles.push(new File([await fs.readFile(filePath)], imageName, { type: 'image/webp' }));
+            imageFiles.push(new File([await resizeImage(filePath)], imageName, { type: 'image/webp' }));
 
             if (imageFiles.length >= 5) {
                 break;
@@ -1056,4 +1052,7 @@ const runSeeder = async () => {
     await uploadToSeedingApi();
 };
 
-runSeeder();
+//runSeeder();
+const path = "Q:\\DEV\\workspace\\web\\Adventures\\data\\images\\23Haus_Nottbeck_2.JPG";
+
+//resizeImage(path);

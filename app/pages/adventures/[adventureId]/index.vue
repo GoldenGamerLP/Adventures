@@ -45,6 +45,10 @@ const { data: adventure, error, pending } = await useFetch<AdventureWithMeta>(
   }
 );
 
+definePageMeta({
+  layout: 'navigation-bar',
+})
+
 useHead({
   titleTemplate: (titleChunk) => {
     const suffix = $t('title_template_suffix') as string;

@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { DEFAULT_MAX_SEARCH_RADIUS_KM } from "~~/shared/constants/Constants";
-import type { AdventuresQueryFilterType } from "~~/shared/schema/AdventuresSchema";
+import type { AdventuresQueryFilterType, SimilarAdventuresFilterType } from "~~/shared/schema/AdventuresSchema";
 import type { Adventure, AdventureCategory, AdventureWithMeta } from "~~/shared/types/AdventureTypes";
 import type { AdventureDraft } from "~~/shared/types/DraftTypes";
 import type { UserSummary } from "~~/shared/types/UserProfileTypes";
@@ -116,6 +116,67 @@ const publishFromDraft = async (draft: AdventureDraft): Promise<Adventure> => {
             userId: draft.authorId,
         },
     }, draft._id);
+}
+
+const findSimilarAdventures = async (filter: SimilarAdventuresFilterType): Promise<AdventureWithMeta[]> => {
+    const adventureDB = await getAdventureDB();
+    const radiusInMeters = (filter.radius || DEFAULT_MAX_SEARCH_RADIUS_KM) * 1000;
+
+    const query: any[] = [
+        {
+            $geoNear: {
+                near: {
+                    type: "Point",
+                    coordinates: [filter.location[0], filter.location[1]],
+                },
+                distanceField: "location.distance",
+                maxDistance: radiusInMeters,
+                spherical: true,
+                query: {
+                    _id: { $ne: filter.adventureId },
+                    'location.coordinates': { $exists: true },
+                    visibility: 'public',
+                }
+            }
+        },
+        {
+            $match: {
+                visibility: 'public',
+            }
+        },
+        {
+            $lookup: {
+                from: 'adventure_likes',
+                let: { adventureId: '$_id' },
+                pipeline: [
+                    //group and sum
+                    { $match: { $expr: { $and: [{ $eq: ['$adventureId', '$$adventureId'] }] } } },
+                    { $group: { _id: null, count: { $sum: 1 } } }
+                ],
+                as: 'likes'
+            }
+        },
+        {
+            $addFields: {
+                likesCount: { $cond: { if: { $isArray: "$likes" }, then: { $arrayElemAt: ["$likes.count", 0] }, else: 0 } }
+            }
+        },
+        {
+            $sort: {
+                likesCount: -1,
+                createdAt: -1,
+                "location.distance": 1,
+            }
+        },
+        {
+            $limit: filter.limit || 5,
+        }
+    ];
+
+    const response = adventureDB.aggregate<AdventureWithMeta>(query);
+
+    const results = await response.toArray();
+    return Promise.all(results.map(enrichAdventureWithViews));
 }
 
 const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Omit<AdventuresQueryFilterType, 'limit' | 'pageParam'>, limit = 25, pageParam = 0): Promise<AdventureWithMeta[]> => {
@@ -799,7 +860,5 @@ const getAdventuresByAuthor = async (authorId: string, user?: UserSummary, visib
     return Promise.all(adventures.map(enrichAdventureWithViews));
 }
 
-export {
-    getAdventureById, getAdventureByIdWithMeta, getAdventuresByAuthor, getAdventuresByFilterAndUser, getAllAdventures, publishFromDraft, updateAdventure, validateAdventureOwnership
-};
+export { findSimilarAdventures, getAdventureById, getAdventureByIdWithMeta, getAdventuresByAuthor, getAdventuresByFilterAndUser, getAllAdventures, publishFromDraft, updateAdventure, validateAdventureOwnership };
 

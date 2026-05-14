@@ -52,7 +52,7 @@ export interface Adventure {
 
 export interface AdventureWithMeta extends Adventure {
     author: UserSummary;
-    location?: GeoLocation & {
+    location: GeoLocation & {
         distance?: number; // in meters
     };
     viewCount: AdventureViewCounter;

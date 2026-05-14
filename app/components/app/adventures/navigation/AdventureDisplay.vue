@@ -13,7 +13,7 @@
         <AppAdventuresTagsSelectorGraphic :selected-tags="adventure.tags" />
       </div>
       <Badge variant="secondary" class="absolute top-3 right-3 gap-1">
-        {{ $tc('component_adventures_views_count', { count: adventure.viewCount.totalViews }) }}
+        {{ $tc('common_views_plural', { count: adventure.viewCount.totalViews }) }}
       </Badge>
     </div>
 

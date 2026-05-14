@@ -16,12 +16,19 @@ export const AdventuresQueryFilterSchema = z.object({
     [AdventureSearchQueryKeys.CATEGORY]: z.enum([AdventureCategory.INDOOR, AdventureCategory.OUTDOOR, AdventureCategory.MIXED]).optional(),
     //AdventureTypeKey als Tags
     [AdventureSearchQueryKeys.TAGS]: z.coerce.string().array().optional(),
-    limit: z.coerce.number().int().min(1).max(50).optional().default(25),
+    limit: z.coerce.number().int().min(1).max(10).optional().default(5),
     pageParam: z.coerce.number().int().min(0).optional().default(0),
 });
 
-export type AdventuresQueryFilterType = z.infer<typeof AdventuresQueryFilterSchema>;
+export const SimilarAdventuresFilterSchema = z.object({
+    adventureId: ObjectIdSchema,
+    location: z.tuple([z.coerce.number().min(-180).max(180), z.coerce.number().min(-90).max(90)]),
+    radius: z.coerce.number().min(0).optional(),
+    limit: z.coerce.number().int().min(1).max(10).optional().default(5),
+});
 
+export type AdventuresQueryFilterType = z.infer<typeof AdventuresQueryFilterSchema>;
+export type SimilarAdventuresFilterType = z.infer<typeof SimilarAdventuresFilterSchema>;    
 
 export const AdventureLikeSchema = z.object({
     adventureId: ObjectIdSchema,
