@@ -146,9 +146,10 @@ const hydrateLikedAdevnturesList = async (list: VirtualList): Promise<AdventureL
         }
     ]).toArray();
 
+    console.log(result)
     const ownerObject = await getUserById(userId);
 
-    return { ...list, entryCount: likedAdventureCount, previewImages: result ? result[0]!.images : [], owner: ownerObject! };
+    return { ...list, entryCount: likedAdventureCount, previewImages: result.length ? result[0]!.images : [], owner: ownerObject! };
 }
 
 export {

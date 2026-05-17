@@ -10,12 +10,20 @@ export type User = {
   createdAt: string;
   lastLogin: string;
   lastIP?: string;
+
+  //Rollen und Berechtigungen
+  roles: UserPermissionRoles[];
 };
 
 export enum SessionDetails {
   IP_ADDRESS = "ip_address",
   USER_AGENT = "user_agent",
   DEVICE = "device",
+}
+
+export enum UserPermissionRoles {
+  SEEDING = "seeding",
+  ADVENTURE_MODERATION = "adventure_moderation",
 }
 
 export type Session = {

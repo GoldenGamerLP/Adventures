@@ -2,7 +2,7 @@ import { PictureGetSchema } from "#shared/schema/PictureSchema";
 import { isDraftPicture, isPublishedPicture, isUserSourcePicture } from "#shared/types/PictureTypes";
 import { getPictureById, openDownloadStreamForPicture } from "~~/server/utils/pictures/PictureUtils";
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const { data, error } = await getValidatedRouterParams(event, PictureGetSchema.safeParseAsync);
 
     if (error) {
@@ -57,4 +57,10 @@ export default defineEventHandler(async (event) => {
     setResponseHeader(event, "Content-Disposition", `inline; filename="${fileName}"`);
 
     return openDownloadStreamForPicture(picture);
+}, {
+    shouldBypassCache: () => import.meta.dev,
+    maxAge: 60 * 60, // 1 Stunde
+    staleMaxAge: 60 * 60 * 24, // 24 Stunden
+    getKey: (event) => getRouterParam(event, "pictureId") || "unknown_picture",
+    swr: true,
 });

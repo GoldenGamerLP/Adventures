@@ -105,6 +105,8 @@ import { AlertCircle, CheckCircle2 } from 'lucide-vue-next';
 import { useForm } from 'vee-validate';
 import { RegisterSchema } from '~~/shared/schema/AuthenticationSchema';
 
+const emits = defineEmits(['success']);
+
 const { $t } = useI18n();
 
 const isLoading = ref(false);
@@ -145,6 +147,7 @@ const onSubmit = handleSubmit(async (values) => {
     await hydrateUser();
     injectAuthDrawerOpen!.value = false;
     await useSafeRedirect();
+    emits('success');
   } catch (error: any) {
     console.error('Registration error:', error);
     const code = error.data?.data?.code || error.statusText || 'UNKNOWN_ERROR';

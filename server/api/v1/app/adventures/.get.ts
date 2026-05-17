@@ -14,5 +14,9 @@ export default defineEventHandler(async (event) => {
         })
     };
 
-    return getAdventuresByFilterAndUser(user, data);
+    const limit = data.limit;
+    const pageParam = data.pageParam;
+    const { limit: _limit, pageParam: _pageParam, ...filter } = data;
+
+    return getAdventuresByFilterAndUser(user, filter, limit, pageParam);
 });

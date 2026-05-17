@@ -67,7 +67,7 @@
         <FormField v-slot="{ componentField }" name="pictureIds">
           <FormItem>
             <FormControl>
-              <AppDraftsImagesForm v-bind="componentField" :draft-id="draftId" :draft-pictures="draftData?.pictures" />
+              <AppDraftsImagesForm v-bind="componentField" :draft-id="draftId" :draft-pictures="draftData?.registeredPictures" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -86,7 +86,11 @@
               <FormItem>
                 <FormLabel>{{ t('component_drafts_form_title_label') }}</FormLabel>
                 <FormControl>
-                  <Input type="text" :placeholder="t('component_drafts_form_title_placeholder')" v-bind="componentField" />
+                  <Input
+                    type="text"
+                    :placeholder="t('component_drafts_form_title_placeholder')"
+                    v-bind="componentField"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -172,11 +176,15 @@
                       v-bind="componentField"
                     >
                       <ToggleGroupItem value="outdoor">
-                        <Sun class="h-4 w-4 mr-1" />
+                        <Sun />
                         {{ t('component_adventures_category_outdoor') }}
                       </ToggleGroupItem>
+                      <ToggleGroupItem value="mixed">
+                        <ScaleIcon />
+                        {{ t('component_adventures_category_mixed') }}
+                      </ToggleGroupItem>
                       <ToggleGroupItem value="indoor">
-                        <Home class="h-4 w-4 mr-1" />
+                        <Home />
                         {{ t('component_adventures_category_indoor') }}
                       </ToggleGroupItem>
                     </ToggleGroup>
@@ -401,7 +409,7 @@ import {
   Loader2,
   MapPin,
   MapPinCheck,
-  Save, Send,
+  Save, ScaleIcon, Send,
   Settings,
   Sun,
   Trash2,

@@ -2,8 +2,8 @@
   <div class="relative pb-20 sm:pb-0">
     <slot></slot>
     <nav
-      class="fixed bottom-0 max-w-2xl w-full left-1/2 -translate-x-1/2 bg-background/95 border-t backdrop-blur-sm shadow-lg sm:hidden z-50"
-      :aria-label="$t('common_nav_main')"
+      class="fixed bottom-0 max-w-2xl w-full left-1/2 -translate-x-1/2 bg-background/95 border-t backdrop-blur-sm shadow-lg sm:hidden z-1001"
+      :aria-label="$t('common_nav_main') as string"
     >
       <ol class="flex justify-around py-2 relative">
         <li v-for="item in navigationItems" :key="item.href" @click.passive="startTracking(item)">

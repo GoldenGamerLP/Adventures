@@ -5,9 +5,10 @@
     :disabled="!user || isLoading"
     @click.stop.prevent="toggleLikeStatus(!changeableLikeStatus)"
   >
-    <Heart :class="{ 'fill-red-500': changeableLikeStatus }" />
-    {{ changeableLikeStatus ? props.likesCount + 1 : props.likesCount }}
-    <span class="sr-only">{{ changeableLikeStatus ? t('component_adventures_unlike_sr') : t('component_adventures_like_sr') }}</span>
+    <Heart :class="{ 'fill-red-500': changeableLikeStatus, 'animate-ping duration-100': isLoading }" />
+    {{ changeableLikesCount }}
+    <span class="sr-only">{{ changeableLikeStatus ? t('component_adventures_unlike_sr') :
+      t('component_adventures_like_sr') }}</span>
   </Button>
 </template>
 
@@ -29,6 +30,7 @@ const { t } = useI18n();
 const user = useUser();
 
 const changeableLikeStatus = toRef(props.isLiked);
+const changeableLikesCount = ref(props.likesCount);
 const isLoading = ref(false);
 
 const toggleLikeStatus = useThrottleFn(async (state: boolean) => {
@@ -41,11 +43,16 @@ const toggleLikeStatus = useThrottleFn(async (state: boolean) => {
             method: 'POST',
         });
         changeableLikeStatus.value = result;
+        if(result) {
+            changeableLikesCount.value++;
+        } else {
+            changeableLikesCount.value--;
+        }
     } catch (error) {
         changeableLikeStatus.value = !state;
         console.error('Fehler beim Ändern des Like-Status:', error);
     } finally {
         isLoading.value = false;
     }
-}, 1350);
+}, 1000);
 </script>

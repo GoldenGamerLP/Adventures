@@ -1,13 +1,23 @@
 import { ObjectId } from "mongodb";
 import { DEFAULT_MAX_SEARCH_RADIUS_KM } from "~~/shared/constants/Constants";
-import type { AdventuresQueryFilterType } from "~~/shared/schema/AdventuresSchema";
-import type { Adventure, AdventureWithMeta } from "~~/shared/types/AdventureTypes";
+import type { AdventuresQueryFilterType, SimilarAdventuresFilterType } from "~~/shared/schema/AdventuresSchema";
+import type { Adventure, AdventureCategory, AdventureWithMeta } from "~~/shared/types/AdventureTypes";
 import type { AdventureDraft } from "~~/shared/types/DraftTypes";
 import type { UserSummary } from "~~/shared/types/UserProfileTypes";
 import { getCollection } from "../database/DBUtils";
 import { getViewCounter } from "./ViewsUtils";
 
 const getAdventureDB = async () => getCollection<Adventure>('adventures');
+
+const normalizeSchedule = (schedule: AdventureDraft['formData']['schedule']): Adventure['schedule'] => ({
+    type: schedule.type,
+    estimatedDuration: schedule.estimatedDuration,
+    isApproximate: schedule.isApproximate,
+    repeatsAnnually: schedule.repeatsAnnually,
+    slots: schedule.slots,
+    startDate: schedule.startDate ? schedule.startDate.toISOString() : undefined,
+    endDate: schedule.endDate ? schedule.endDate.toISOString() : undefined,
+});
 
 export const ensureAdventureIndexes = async (): Promise<void> => {
     //Index für schnelle Abfragen nach DraftId
@@ -18,27 +28,37 @@ export const ensureAdventureIndexes = async (): Promise<void> => {
         adventureDB.createIndex({ 'title': 'text' }),
         adventureDB.createIndex({ visibility: 1 }),
         adventureDB.createIndex({ createdAt: -1 }),
+        adventureDB.createIndex({ 'source.userId': 1 }),
+        adventureDB.createIndex({ 'source.review.reviewerId': 1 }),
     ]);
 
     console.log('[AdventureUtils] Adventure indexes created');
 }
 
-
-const createAdventure = async (adventure: Omit<Adventure, '_id' | 'createdAt' | 'updatedAt'>): Promise<Adventure> => {
+/**
+ * 
+ * Erstellt ein Adventure basierend auf den übergebenen Daten. Wenn eine ID übergeben wird, wird versucht ein bestehendes Adventure mit dieser ID zu aktualisieren (z.B. bei Veröffentlichung eines Drafts), ansonsten wird ein neues Adventure erstellt.
+ * 
+ * @param adventure Daten eines Adventures, ohne _id und updatedAt (da diese Felder automatisch generiert bzw. aktualisiert werden)
+ * @param id Optional: Wenn eine ID übergeben wird, wird versucht ein bestehendes Adventure mit dieser ID zu aktualisieren, ansonsten wird ein neues Adventure erstellt. Dies ist vor allem für die Veröffentlichung von Drafts relevant, damit die Draft-ID als Referenz im Adventure gespeichert werden kann.
+ * @returns Das erstellte oder aktualisierte Adventure mit generierter ID und aktualisiertem Timestamp
+ */
+export const createAdventure = async (adventure: Omit<Adventure, '_id' | 'updatedAt'>, id?: string): Promise<Adventure> => {
     //Erstelle neues Adventure-Dokument oder Aktualisiere ein bestehendes
     const adventureDB = await getAdventureDB();
 
-    const foundAdventure = await adventureDB.findOne({ draftId: adventure.draftId });
+    const foundAdventure = await adventureDB.findOne({ _id: id }) as Adventure | null;
 
     if (foundAdventure) {
-        return await updateAdventure(foundAdventure._id, adventure) as Adventure;
+        //Wenn Adventure mit der ID bereits existiert, aktualisiere es mit den neuen Daten (z.B. bei Veröffentlichung eines Drafts)
+        return await updateAdventure(id!, adventure) as Adventure;
     }
 
     const now = new Date();
     const newAdventure: Adventure = {
-        _id: new ObjectId().toString(),
+        _id: id || new ObjectId().toString(),
         ...adventure,
-        createdAt: now,
+        createdAt: adventure.createdAt || now,
         updatedAt: now,
     };
     await adventureDB.insertOne(newAdventure);
@@ -48,16 +68,22 @@ const createAdventure = async (adventure: Omit<Adventure, '_id' | 'createdAt' | 
 const getAdventureById = async (id: string): Promise<Adventure | null> => {
     const adventureDB = await getAdventureDB();
 
-    return await adventureDB.findOne({ _id: id });
+    return await adventureDB.findOne({ _id: id }) as Adventure | null;
 }
 
 const validateAdventureOwnership = async (adventureId: string, userId: string): Promise<boolean> => {
     const adventureDB = await getAdventureDB();
-    const adventure = await adventureDB.findOne({ _id: adventureId, authorId: userId });
+    const adventure = await adventureDB.findOne({
+        _id: adventureId,
+        $or: [
+            { 'source.userId': userId },
+            { 'source.review.reviewerId': userId },
+        ],
+    });
     return !!adventure;
 }
 
-const updateAdventure = async (id: string, updates: Partial<Omit<Adventure, '_id' | 'createdAt' | 'authorId'>>): Promise<Adventure | null> => {
+const updateAdventure = async (id: string, updates: Partial<Omit<Adventure, '_id' | 'createdAt'>>): Promise<Adventure | null> => {
     const adventureDB = await getAdventureDB();
     const now = new Date();
     const result = await adventureDB.findOneAndUpdate(
@@ -70,7 +96,7 @@ const updateAdventure = async (id: string, updates: Partial<Omit<Adventure, '_id
 
 const getAllAdventures = async (): Promise<Adventure[]> => {
     const adventureDB = await getAdventureDB();
-    return await adventureDB.find().toArray();
+    return await adventureDB.find().toArray() as Adventure[];
 }
 
 const publishFromDraft = async (draft: AdventureDraft): Promise<Adventure> => {
@@ -78,18 +104,82 @@ const publishFromDraft = async (draft: AdventureDraft): Promise<Adventure> => {
         title: draft.formData.title!,
         description: draft.formData.description!,
         location: draft.formData.location,
-        schedule: draft.formData.schedule,
+        schedule: normalizeSchedule(draft.formData.schedule),
         difficulty: draft.formData.difficulty!,
-        category: draft.formData.category!,
+        category: draft.formData.category! as AdventureCategory,
         pictureIds: draft.pictureIds,
-        tags: draft.formData.tags || [],
-        authorId: draft.authorId,
-        draftId: draft._id,
+        tags: (draft.formData.tags || []) as Adventure['tags'],
         visibility: draft.formData.visibility!,
-    });
+        createdAt: new Date(),
+        source: {
+            provider: 'user',
+            userId: draft.authorId,
+        },
+    }, draft._id);
 }
 
-const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: AdventuresQueryFilterType, limit = 25): Promise<AdventureWithMeta[]> => {
+const findSimilarAdventures = async (filter: SimilarAdventuresFilterType): Promise<AdventureWithMeta[]> => {
+    const adventureDB = await getAdventureDB();
+    const radiusInMeters = (filter.radius || DEFAULT_MAX_SEARCH_RADIUS_KM) * 1000;
+
+    const query: any[] = [
+        {
+            $geoNear: {
+                near: {
+                    type: "Point",
+                    coordinates: [filter.location[0], filter.location[1]],
+                },
+                distanceField: "location.distance",
+                maxDistance: radiusInMeters,
+                spherical: true,
+                query: {
+                    _id: { $ne: filter.adventureId },
+                    'location.coordinates': { $exists: true },
+                    visibility: 'public',
+                }
+            }
+        },
+        {
+            $match: {
+                visibility: 'public',
+            }
+        },
+        {
+            $lookup: {
+                from: 'adventure_likes',
+                let: { adventureId: '$_id' },
+                pipeline: [
+                    //group and sum
+                    { $match: { $expr: { $and: [{ $eq: ['$adventureId', '$$adventureId'] }] } } },
+                    { $group: { _id: null, count: { $sum: 1 } } }
+                ],
+                as: 'likes'
+            }
+        },
+        {
+            $addFields: {
+                likesCount: { $cond: { if: { $isArray: "$likes" }, then: { $arrayElemAt: ["$likes.count", 0] }, else: 0 } }
+            }
+        },
+        {
+            $sort: {
+                likesCount: -1,
+                createdAt: -1,
+                "location.distance": 1,
+            }
+        },
+        {
+            $limit: filter.limit || 5,
+        }
+    ];
+
+    const response = adventureDB.aggregate<AdventureWithMeta>(query);
+
+    const results = await response.toArray();
+    return Promise.all(results.map(enrichAdventureWithViews));
+}
+
+const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Omit<AdventuresQueryFilterType, 'limit' | 'pageParam'>, limit = 25, pageParam = 0): Promise<AdventureWithMeta[]> => {
     const adventureDB = await getAdventureDB();
     const query: any = [];
 
@@ -261,9 +351,21 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
 
     //GeoQuery must be first stage, second stage author lookup
     query.push({
+        $set: {
+            ownerUserId: {
+                $cond: [
+                    { $eq: ['$source.provider', 'user'] },
+                    '$source.userId',
+                    '$source.review.reviewerId',
+                ],
+            },
+        },
+    });
+
+    query.push({
         $lookup: {
             from: 'users',
-            localField: 'authorId',
+            localField: 'ownerUserId',
             foreignField: '_id',
             as: 'author',
             pipeline: [
@@ -280,7 +382,27 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
 
 
     query.push({
-        $unwind: '$author'
+        $unwind: {
+            path: '$author',
+            preserveNullAndEmptyArrays: true,
+        }
+    });
+
+    query.push({
+        $lookup: {
+            from: 'adventure_view_counters',
+            localField: '_id',
+            foreignField: 'adventureId',
+            as: 'viewCounter'
+        }
+    });
+
+    query.push({
+        $addFields: {
+            viewCount: {
+                $ifNull: [{ $arrayElemAt: ["$viewCounter", 0] }, { totalViews: 0, uniqueUsers: 0, uniqueGuests: 0 }]
+            }
+        }
     });
 
     //Duration filter
@@ -410,7 +532,10 @@ const getAdventuresByFilterAndUser = async (user: UserSummary | null, filter: Ad
         }
     }
 
-    const response = await adventureDB.aggregate<AdventureWithMeta>(query).limit(limit);
+    const response = adventureDB
+        .aggregate<AdventureWithMeta>(query)
+        .skip(pageParam * limit)
+        .limit(limit);
     const results = await response.toArray();
     return Promise.all(results.map(enrichAdventureWithViews));
 }
@@ -425,6 +550,15 @@ const enrichAdventureWithViews = async (adventure: AdventureWithMeta): Promise<A
 
 const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise<AdventureWithMeta | null> => {
     const adventureDB = await getAdventureDB();
+    const visibilityOrOwnerClauses: any[] = [{ visibility: { $in: ['public', 'unlisted'] } }];
+
+    if (user?._id) {
+        visibilityOrOwnerClauses.push(
+            { 'source.userId': user._id },
+            { 'source.review.reviewerId': user._id },
+        );
+    }
+
     const query: any[] = [
         {
             $match: {
@@ -433,16 +567,24 @@ const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise
         },
         {
             $match: {
-                $or: [
-                    { visibility: { $in: ['public', 'unlisted'] } },
-                    { authorId: user?._id }
-                ]
+                $or: visibilityOrOwnerClauses,
             }
+        },
+        {
+            $set: {
+                ownerUserId: {
+                    $cond: [
+                        { $eq: ['$source.provider', 'user'] },
+                        '$source.userId',
+                        '$source.review.reviewerId',
+                    ],
+                },
+            },
         },
         {
             $lookup: {
                 from: 'users',
-                localField: 'authorId',
+                localField: 'ownerUserId',
                 foreignField: '_id',
                 as: 'author',
                 pipeline: [
@@ -456,7 +598,12 @@ const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise
                 ]
             }
         },
-        { $unwind: '$author' },
+        {
+            $unwind: {
+                path: '$author',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
     ];
 
     if (user) {
@@ -478,7 +625,6 @@ const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise
         });
 
         query.push(
-
             {
                 $lookup:
                 {
@@ -504,7 +650,8 @@ const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise
             {
                 $unwind:
                 {
-                    path: "$playlistsIds"
+                    path: "$playlistsIds",
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
@@ -622,7 +769,26 @@ const getAdventureByIdWithMeta = async (id: string, user?: UserSummary): Promise
 const getAdventuresByAuthor = async (authorId: string, user?: UserSummary, visibility: 'all' | 'public' | 'unlisted' | 'private' = 'public'): Promise<AdventureWithMeta[]> => {
     const adventureDB = await getAdventureDB();
     const query: any[] = [
-        { $match: { authorId, ...(visibility && visibility !== 'all' ? { visibility } : {}) } },
+        {
+            $match: {
+                ...(visibility && visibility !== 'all' ? { visibility } : {}),
+                $or: [
+                    { 'source.userId': authorId },
+                    { 'source.review.reviewerId': authorId },
+                ],
+            },
+        },
+        {
+            $set: {
+                ownerUserId: {
+                    $cond: [
+                        { $eq: ['$source.provider', 'user'] },
+                        '$source.userId',
+                        '$source.review.reviewerId',
+                    ],
+                },
+            },
+        },
     ]
 
     if (user) {
@@ -666,7 +832,7 @@ const getAdventuresByAuthor = async (authorId: string, user?: UserSummary, visib
         query.push({
             $lookup: {
                 from: 'users',
-                localField: 'authorId',
+                localField: 'ownerUserId',
                 foreignField: '_id',
                 as: 'author',
                 pipeline: [
@@ -694,8 +860,5 @@ const getAdventuresByAuthor = async (authorId: string, user?: UserSummary, visib
     return Promise.all(adventures.map(enrichAdventureWithViews));
 }
 
-export {
-    createAdventure,
-    getAdventureById, getAdventureByIdWithMeta, getAdventuresByAuthor, getAdventuresByFilterAndUser, getAllAdventures, publishFromDraft, updateAdventure, validateAdventureOwnership
-};
+export { findSimilarAdventures, getAdventureById, getAdventureByIdWithMeta, getAdventuresByAuthor, getAdventuresByFilterAndUser, getAllAdventures, publishFromDraft, updateAdventure, validateAdventureOwnership };
 

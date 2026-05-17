@@ -2,6 +2,32 @@ import type { EventSchedule } from "#shared/types/EventTypes";
 import type { GeoLocation } from "#shared/types/GeoTypes";
 import type { UserSummary } from "./UserProfileTypes";
 
+export interface AdventureSourceReview {
+    reviewerId: string;
+    reviewedAt: Date;
+    decision: 'approved' | 'rejected';
+    reason?: string;
+}
+
+export interface AdventureSourceBase {
+    provider: 'user' | 'wikipedia';
+}
+
+export interface UserAdventureSource extends AdventureSourceBase {
+    provider: 'user';
+    userId: string; // ID des Users, der das Adventure erstellt hat
+}
+
+export interface WikipediaAdventureSource extends AdventureSourceBase {
+    provider: 'wikipedia';
+    wikipediaPageId: string; // z.B. "Q12345"
+    externalUrl?: string;    // z.B. Link zum Original
+    attribution?: string;    // Wichtig für ODbL / CC-Lizenzen
+    review?: AdventureSourceReview;
+}
+
+export type AdventureSource = UserAdventureSource | WikipediaAdventureSource;
+
 //Interface for protoyping purposes
 export interface Adventure {
     _id: string;
@@ -16,14 +42,17 @@ export interface Adventure {
     updatedAt: Date;
     pictureIds: string[];
     tags: AdventureTypeKey[];
-    authorId: string;
-    draftId: string;
+    //Draft id ist nun redundant da DraftId und AdventureId immer gleich sind.
+    //draftId?: string; // Optional: Seed-Adventures durchlaufen nicht zwingend den Draft-Prozess
     visibility: 'public' | 'private' | 'unlisted';
+
+    // --- Future Proofing & Seeding ---
+    source: AdventureSource;
 }
 
 export interface AdventureWithMeta extends Adventure {
     author: UserSummary;
-    location?: GeoLocation & {
+    location: GeoLocation & {
         distance?: number; // in meters
     };
     viewCount: AdventureViewCounter;
@@ -131,6 +160,7 @@ export const ADVENTURE_TYPES: AdventureType[] = [
     { key: 'public_viewing', label: 'Public Viewing', iconKey: 'Tv', category: 'social' },
     { key: 'culinary', label: 'Kulinarik', iconKey: 'CookingPot', category: 'social' },
     { key: 'meetup', label: 'Meetup / Treffen', iconKey: 'Users', category: 'social' },
+    { key: 'family_friendly', label: 'Familienfreundlich', iconKey: 'Users', category: 'social' },
     // Travel
     { key: 'day_trip', label: 'Tagesausflug', iconKey: 'Backpack', category: 'travel' },
     { key: 'roadtrip', label: 'Roadtrip', iconKey: 'Car', category: 'travel' },

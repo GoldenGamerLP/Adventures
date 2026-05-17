@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-2xl mx-auto w-full">
-    <nav class="sticky top-0 mt-1 bg-background z-10 flex flex-col gap-2 pt-2 pb-1 border-b border-b-muted">
+    <nav class="sticky top-0 mt-1 bg-background z-10 flex flex-col gap-2 pt-2 pb-1 border-b border-b-muted h-26">
       <div class="flex items-center mx-2 sm:mx-0">
         <h1 class="font-semibold inline-flex items-center gap-1 mr-auto tracking-widest">
           <img :src="computedIcon" class="size-8" alt="" />
@@ -38,48 +38,36 @@
           <LazyAppAuthCredentialsActionDrawer v-if="!user" />
         </div>
       </div>
-      <ol class="flex items-center gap-2 mx-2 sm:mx-0 flex-wrap">
-        <li>
-          <AppNavigationPillnavShowChangeLocation />
-        </li>
+      <section
+        class="flex flex-nowrap items-center gap-2 mx-2 py-1.5 sm:mx-0 overflow-x-auto overflow-y-hidden touch-pan-x"
+      >
+        <AppNavigationPillnavShowChangeLocation />
+        <AppAdventuresNavigationAdventureSearch />
         <AppAdventuresNavigationMaskPills />
-        <li>
-          <AppAdventuresNavigationAdventureSearch />
-        </li>
-      </ol>
+      </section>
     </nav>
 
     <main>
-      <!-- Loading State -->
-      <div v-if="pending" class="mt-6 space-y-4">
-        <AppAdventuresNavigationAdventureSkeleton v-for="i in 3" :key="i" />
-      </div>
-
       <!-- Error State -->
-      <Empty v-else-if="error">
+      <Empty v-if="hasError">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <SearchAlert />
           </EmptyMedia>
           <EmptyTitle>{{ $t('error_load_adventures') }}</EmptyTitle>
           <EmptyDescription class="text-xs">
-            {{ error }}
+            {{ errorMessage }}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="pending"
-            @click="refreshAndReload"
-          >
-            {{ $t('common_actions_retry') }}
+          <Button variant="outline" size="sm" @click="resetFilters">
+            {{ $t('common_actions_reset_filters') }}
           </Button>
         </EmptyContent>
       </Empty>
 
       <!-- Empty State -->
-      <Empty v-else-if="!adventures?.length">
+      <Empty v-else-if="!accumulatedAdventures.length && infinitScrollState === 'end'">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <SearchAlert />
@@ -90,38 +78,51 @@
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="pending"
-            @click="refreshAndReload()"
-          >
+          <Button variant="outline" size="sm" @click="resetFilters">
             {{ $t('common_actions_reset_filters') }}
           </Button>
         </EmptyContent>
       </Empty>
 
       <!-- Adventures List -->
-      <ol v-else class="mt-6 flex flex-col gap-4 mx-1 sm:mx-0">
-        <li
-          v-for="(adventure, index) in adventures"
-          :key="adventure._id"
-          :style="{ 'animation-delay': `${index * 100}ms`, 'animation-fill-mode': 'both' }"
-          class="animate-in fade-in slide-in-from-bottom-8 duration-300"
+      <div v-else ref="listElement" class="mt-3">
+        <div
+          class="relative w-full"
+          :style="{
+            height: `${totalSize}px`,
+          }"
         >
-          <LazyAppAdventuresNavigationAdventureDisplay :adventure="adventure" />
-        </li>
-      </ol>
+          <div
+            v-for="virtualRow in virtualRows"
+            :key="String(virtualRow.key)"
+            ref="virtualItemEls"
+            :data-index="virtualRow.index"
+            :style="{
+              transform: `translateY(${virtualRow.start}px)`,
+              top: '0',
+              left: '0',
+              width: '100%',
+              position: 'absolute',
+            }"
+          >
+            <div v-if="accumulatedAdventures[virtualRow.index]" class="mb-4">
+              <LazyAppAdventuresNavigationAdventureDisplay :adventure="accumulatedAdventures[virtualRow.index]!" />
+            </div>
+          </div>
+        </div>
+        <div v-if="infinitScrollState === 'fetching'" class="flex flex-col gap-3 mt-3">
+          <AppAdventuresNavigationAdventureSkeleton v-for="n in 3" :key="n" />
+        </div>
+      </div>
     </main>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { refDebounced } from '@vueuse/core';
+import { useWindowVirtualizer } from '@tanstack/vue-virtual';
 import { BookMarkedIcon, SearchAlert, UserCog } from 'lucide-vue-next';
-import { FETCH_KEY_FOR_YOU_PAGE } from '~~/shared/constants/Constants';
-import type { AdventureWithMeta } from '~~/shared/types/AdventureTypes';
 
+//TODO: wenn fetchingadventures und liste ist leer body attribute ändern sodass man beim laden nicht scroll kann
 const { $t } = useI18n();
 
 definePageMeta({
@@ -142,15 +143,63 @@ useHead({
   ],
 });
 
+const virtualItemEls = ref<HTMLElement[]>([]);
+
+
 useSeoMeta({
   ogTitle: () => $t('title') as string,
   ogDescription: () => $t('meta_description') as string,
   ogImage: '/white_adventures_logo.webp',
 });
 
-const { mask, resetFilters } = useSearchMask();
+const searchMaskObject = useSearchMask();
+const { resetFilters, fetchNextPage } = searchMaskObject;
+const { mask, accumulatedAdventures, infinitScrollState, hasNextPage, hasError, errorMessage } = searchMaskObject;
+
 const user = useUser();
 const { currentColorMode } = useColorMode();
+
+const rowVirtualizerOptions = computed(() => ({
+  count: hasNextPage.value ? accumulatedAdventures.value.length + 1 : accumulatedAdventures.value.length,
+  estimateSize: () => 500,
+  overscan: 2,
+}));
+
+const rowVirtualizer = useWindowVirtualizer(rowVirtualizerOptions);
+const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems());
+const totalSize = computed(() => rowVirtualizer.value.getTotalSize());
+
+onMounted(async () => {
+  await fetchNextPage(true);
+  measureAll();
+
+  watchEffect(() => {
+    const [lastItem] = [...virtualRows.value].reverse();
+
+    if (!lastItem) {
+      return;
+    }
+
+    if (
+      lastItem.index >= accumulatedAdventures.value.length - 1
+      && hasNextPage.value
+      && infinitScrollState.value !== 'fetching'
+    ) {
+      fetchNextPage();
+    }
+  });
+})
+
+onUpdated(() => {
+  measureAll();
+})
+
+function measureAll() {
+  rowVirtualizer.value.measureElement(null)
+  virtualItemEls.value.forEach((el) => {
+    if (el) rowVirtualizer.value.measureElement(el)
+  })
+}
 
 const computedIcon = computed(() => {
   if (currentColorMode.value === 'dark') {
@@ -159,16 +208,4 @@ const computedIcon = computed(() => {
     return '/black_adventures_logo.webp';
   }
 });
-
-//TODO: SSR oder nicht ssr sodass die initale website schneller lädt und die adventures erst nachträglich geladen werden?
-const { data: adventures, pending, error, refresh } = useFetch<AdventureWithMeta[]>('/api/v1/app/adventures/', {
-  key: FETCH_KEY_FOR_YOU_PAGE,
-  query: refDebounced(mask, 1500),
-  watch: false,
-});
-
-const refreshAndReload = () => {
-  resetFilters();
-  refresh();
-};
 </script>

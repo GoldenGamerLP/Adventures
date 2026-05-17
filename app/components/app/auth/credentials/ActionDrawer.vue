@@ -31,10 +31,10 @@
             </TabsTrigger>
           </TabsList>
           <TabsContent value="login" class="mt-4">
-            <LazyAppAuthCredentialsLogin />
+            <LazyAppAuthCredentialsLogin @success="reloadForYouPage()" />
           </TabsContent>
           <TabsContent value="register" class="mt-4">
-            <LazyAppAuthCredentialsRegister />
+            <LazyAppAuthCredentialsRegister @success="reloadForYouPage()" />
           </TabsContent>
         </Tabs>
       </div>
@@ -49,8 +49,14 @@ const { $t } = useI18n();
 
 const user = useUser();
 const isOpen = ref(false);
-provide('auth-credentials-drawer-open', isOpen);
 
+const reloadForYouPage = () => {
+  // If we're on the for-you page, we want to reload it to show the new content for the logged in user
+  useSearchMask().refreshSearch();
+};
+
+
+provide('auth-credentials-drawer-open', isOpen);
 
 // Preload the login and register components for faster access
 preloadRouteComponents('/profile');

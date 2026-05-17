@@ -82,5 +82,5 @@ export interface AdventureDraftWithMeta extends AdventureDraft {
 }
 
 export interface AdventureDraftWithPictures extends AdventureDraft {
-    pictures: DraftPicture[];
+    registeredPictures: DraftPicture[];
 }

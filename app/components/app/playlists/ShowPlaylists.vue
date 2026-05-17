@@ -1,21 +1,16 @@
 <template>
   <ItemGroup>
-    <Item>
-      <ItemMedia variant="icon">
-        <PlusIcon />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle>{{ $t('component_playlists_new_playlist') }}</ItemTitle>
-        <ItemDescription>{{ $t('component_playlists_new_playlist_description') }}</ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <AppPlaylistsCreatePlaylistDialog>
-          <Button variant="outline">
-            {{ $t('component_playlists_new_playlist_create') }}
-          </Button>
-        </AppPlaylistsCreatePlaylistDialog>
-      </ItemActions>
-    </Item>
+    <AppPlaylistsCreatePlaylistDialog>
+      <Item>
+        <ItemMedia variant="icon">
+          <PlusIcon />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>{{ $t('component_playlists_new_playlist') }}</ItemTitle>
+          <ItemDescription>{{ $t('component_playlists_new_playlist_description') }}</ItemDescription>
+        </ItemContent>
+      </Item>
+    </AppPlaylistsCreatePlaylistDialog>
     <ItemSeparator />
     <template v-for="(playlist, index) in playlists" :key="playlist._id">
       <NuxtLink :to="`/profile/${playlist.ownerId}/playlists/${playlist._id}`">

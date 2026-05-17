@@ -1,10 +1,7 @@
 <template>
   <!-- Mobile: Horizontal Carousel -->
   <div class="relative">
-    <div
-      ref="scrollContainer"
-      class="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 -mx-4 px-4"
-    >
+    <div ref="scrollContainer" class="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 -mx-4 px-4">
       <div
         v-for="(image, index) in images"
         :key="index"
@@ -49,7 +46,7 @@ import { toPicturePath } from "#shared/utils/SharedUtils";
 import Lightbox from '../misc/Lightbox.vue';
 
 const props = defineProps<{
-    images: string[];
+  images: string[];
 }>();
 
 const lightboxRef = ref<InstanceType<typeof Lightbox>>();
@@ -57,60 +54,60 @@ const scrollContainer = ref<HTMLElement>();
 const activeIndex = ref(0);
 
 const openLightbox = (index: number) => {
-    lightboxRef.value?.open(index);
+  lightboxRef.value?.open(index);
 };
 
 // Scroll zu bestimmtem Bild (mobile)
 const scrollToImage = (index: number) => {
-    if (!scrollContainer.value) return;
-    const children = scrollContainer.value.children;
-    if (children[index]) {
-        (children[index] as HTMLElement).scrollIntoView({
-            behavior: 'smooth',
-            inline: 'center',
-            block: 'nearest',
-        });
-    }
+  if (!scrollContainer.value) return;
+  const children = scrollContainer.value.children;
+  if (children[index]) {
+    (children[index] as HTMLElement).scrollIntoView({
+      behavior: 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    });
+  }
 };
 
 // Intersection Observer für aktiven Index (mobile)
 onMounted(() => {
-    if (!scrollContainer.value) return;
+  if (!scrollContainer.value) return;
 
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    const index = Array.from(scrollContainer.value!.children).indexOf(
-                        entry.target as Element
-                    );
-                    if (index !== -1) {
-                        activeIndex.value = index;
-                    }
-                }
-            });
-        },
-        {
-            root: scrollContainer.value,
-            threshold: 0.6,
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const index = Array.from(scrollContainer.value!.children).indexOf(
+            entry.target as Element
+          );
+          if (index !== -1) {
+            activeIndex.value = index;
+          }
         }
-    );
+      });
+    },
+    {
+      root: scrollContainer.value,
+      threshold: 0.6,
+    }
+  );
 
-    Array.from(scrollContainer.value.children).forEach((child) => {
-        observer.observe(child);
-    });
+  Array.from(scrollContainer.value.children).forEach((child) => {
+    observer.observe(child);
+  });
 
-    onUnmounted(() => observer.disconnect());
+  onUnmounted(() => observer.disconnect());
 });
 </script>
 
 <style scoped>
-.scrollbar-none:not(:hover) {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-.scrollbar-none:not(:hover)::-webkit-scrollbar {
-    display: none;
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 </style>

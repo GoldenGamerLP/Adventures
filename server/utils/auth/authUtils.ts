@@ -48,6 +48,7 @@ export async function createUser(userToCreate: RegisterSchemaType, currentIp: st
     createdAt: new Date().toUTCString(),
     lastLogin: new Date().toUTCString(),
     lastIP: currentIp,
+    roles: [],
   };
 
   const response = await users.insertOne(user);
@@ -115,6 +116,7 @@ export async function getUserById(
         email: 1,
         name: 1,
         profilePictureId: 1,
+        roles: 1,
       },
     }
   ) as Promise<UserSummary | null>;
@@ -185,7 +187,7 @@ export const constructSessionDetailsFromEvent = (event: H3Event<EventHandlerRequ
 
   const ip = event.node.req.headers["x-forwarded-for"] || event.node.req.socket.remoteAddress;
   if (ip) {
-    details.push([SessionDetails.IP_ADDRESS, Array.isArray(ip) ? ip[0] : ip]);
+    details.push([SessionDetails.IP_ADDRESS, Array.isArray(ip) ? ip[0]! : ip]);
   }
 
   const userAgent = event.node.req.headers["user-agent"];
@@ -195,7 +197,7 @@ export const constructSessionDetailsFromEvent = (event: H3Event<EventHandlerRequ
 
   const device = event.node.req.headers["sec-ch-ua-platform"];
   if (device) {
-    details.push([SessionDetails.DEVICE, Array.isArray(device) ? device[0] : device]);
+    details.push([SessionDetails.DEVICE, Array.isArray(device) ? device[0]! : device]);
   }
 
   return details;
@@ -208,7 +210,7 @@ export const searchForUser = async (
 
   const user = await users.findOne(
     { mail: userMail },
-    { projection: { _id: 1, mail: 1, name: 1, lastname: 1 } }
+    { projection: { _id: 1, mail: 1, name: 1, lastname: 1, roles: 1 } }
   );
 
   if (!user) return [];
@@ -219,6 +221,7 @@ export const searchForUser = async (
       name: user.name,
       profilePictureId: user.profilePictureId,
       createdAt: user.createdAt,
+      roles: user.roles,
     },
   ];
 };

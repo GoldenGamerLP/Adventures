@@ -7,8 +7,10 @@ import {
 } from "../utils/auth/authUtils";
 
 export default defineEventHandler(async (event) => {
+  const isSeedingApiRoute = event.path?.startsWith('/api/v1/seeding/');
+
   // Origin verification
-  if (event.method !== "GET") {
+  if (event.method !== "GET" && !isSeedingApiRoute) {
     const originHeader = getHeader(event, "Origin") ?? null;
     const hostHeader = getHeader(event, "Host") ?? null;
     if (!originHeader || !hostHeader) {

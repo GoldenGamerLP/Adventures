@@ -4,7 +4,7 @@ import { AdventureCategory } from '../types/AdventureTypes';
 import { ObjectIdSchema } from '../validation/utils';
 
 export const AdventuresQueryFilterSchema = z.object({
-    [AdventureSearchQueryKeys.QUERY]: z.string().min(1).max(100).optional(),
+    [AdventureSearchQueryKeys.QUERY]: z.string().trim().min(2).max(100).optional(),
     [AdventureSearchQueryKeys.DIFFICULTY]: z.enum(['easy', 'medium', 'hard']).optional(),
     //Duration in format "min,max" e.g. "2,5"
     [AdventureSearchQueryKeys.DURATION]: z.tuple([z.coerce.number().min(15).max(1440), z.coerce.number().min(15).max(1440)]).refine(data => data[0] <= data[1], {
@@ -16,10 +16,19 @@ export const AdventuresQueryFilterSchema = z.object({
     [AdventureSearchQueryKeys.CATEGORY]: z.enum([AdventureCategory.INDOOR, AdventureCategory.OUTDOOR, AdventureCategory.MIXED]).optional(),
     //AdventureTypeKey als Tags
     [AdventureSearchQueryKeys.TAGS]: z.coerce.string().array().optional(),
+    limit: z.coerce.number().int().min(1).max(10).optional().default(5),
+    pageParam: z.coerce.number().int().min(0).optional().default(0),
+});
+
+export const SimilarAdventuresFilterSchema = z.object({
+    adventureId: ObjectIdSchema,
+    location: z.tuple([z.coerce.number().min(-180).max(180), z.coerce.number().min(-90).max(90)]),
+    radius: z.coerce.number().min(0).optional(),
+    limit: z.coerce.number().int().min(1).max(10).optional().default(5),
 });
 
 export type AdventuresQueryFilterType = z.infer<typeof AdventuresQueryFilterSchema>;
-
+export type SimilarAdventuresFilterType = z.infer<typeof SimilarAdventuresFilterSchema>;    
 
 export const AdventureLikeSchema = z.object({
     adventureId: ObjectIdSchema,
@@ -32,3 +41,25 @@ export const AdventureStartEditSchema = z.object({
 export const AdventureGetByIdSchema = z.object({
     adventureId: ObjectIdSchema,
 });
+
+export const AdventureUserSourceSchema = z.object({
+    provider: z.literal('user'),
+    userId: ObjectIdSchema,
+});
+
+export const WikipediaAdventureSourceSchema = z.object({
+    provider: z.literal('wikipedia'),
+    wikipediaPageId: z.string(),
+    externalUrl: z.string().url().optional(),
+    attribution: z.string().optional(),
+    review: z.object({
+        reviewerId: ObjectIdSchema,
+        reviewedAt: z.coerce.date(),
+        decision: z.enum(['approved', 'rejected']),
+        reason: z.string().max(1000).optional(),
+    }).optional(),
+});
+
+export const AdventureSource = z.union([AdventureUserSourceSchema, WikipediaAdventureSourceSchema]);
+
+export type AdventureSource = z.infer<typeof AdventureUserSourceSchema> | z.infer<typeof WikipediaAdventureSourceSchema>;
